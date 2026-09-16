@@ -1,0 +1,209 @@
+"""
+Konstanta + fungsi bantu: timezone, format tanggal, warna, event kalender.
+"""
+
+from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
+
+# ---------------------------------------------------------------------
+# Timezone
+# Semua waktu DISIMPAN di database sebagai UTC (kolom timestamptz),
+# tapi SELALU ditampilkan dan diinput dalam WIB.
+# ---------------------------------------------------------------------
+WIB = ZoneInfo("Asia/Jakarta")
+UTC = ZoneInfo("UTC")
+
+# ---------------------------------------------------------------------
+# Daftar mata kuliah — UBAH DI SINI kalau semester berganti
+# ---------------------------------------------------------------------
+MATA_KULIAH = [
+    "Analisis Kota Cerdas",
+    "Jaringan Komputer dan Komunikasi Data",
+    "Manajemen Proses Bisnis",
+    "Pemrograman Berorientasi Objek",
+    "Pemrograman Terstruktur",
+    "Rekayasa Perangkat Lunak",
+    "Sistem Basis Data",
+    "Sistem Operasi",
+    "UI/UX Design",
+]
+
+JENIS = ["Praktikum", "Teori", "Quiz", "Ujian"]
+PRIORITAS = ["Tinggi", "Sedang", "Rendah"]
+STATUS = ["Belum", "Dikerjakan", "Selesai"]
+
+# Warna chip event di kalender, dibedakan per mata kuliah.
+# Urutannya mengikuti MATA_KULIAH di atas.
+WARNA_MATKUL = {
+    nama: warna
+    for nama, warna in zip(
+        MATA_KULIAH,
+        [
+            "#5B8FF9", "#61DDAA", "#F6BD16", "#7262FD", "#78D3F8",
+            "#9661BC", "#F6903D", "#008685", "#F08BB4",
+        ],
+    )
+}
+
+WARNA_DEADLINE = "#E03131"  # merah untuk penanda tanggal
+
+EMOJI_STATUS = {"Belum": "⭕", "Dikerjakan": "🔄", "Selesai": "✅"}
+EMOJI_PRIORITAS = {"Tinggi": "🔴", "Sedang": "🟡", "Rendah": "🟢"}
+
+
+# ---------------------------------------------------------------------
+# Konversi waktu
+# ---------------------------------------------------------------------
+def now_wib() -> datetime:
+    return datetime.now(WIB)
+
+
+def parse_deadline(value: str | datetime) -> datetime:
+    """String ISO dari Supabase -> datetime aware di zona WIB."""
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        teks = value.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(teks)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(WIB)
+
+
+def to_utc_iso(tanggal: date, jam: time) -> str:
+    """Input form (dianggap WIB) -> string ISO UTC untuk disimpan."""
+    lokal = datetime.combine(tanggal, jam).replace(tzinfo=WIB)
+    return lokal.astimezone(UTC).isoformat()
+
+
+def parse_click_date(raw: str) -> date | None:
+    """
+    Tanggal hasil klik dari streamlit-calendar dikirim sebagai string ISO,
+    umumnya dalam UTC (mis. '2025-09-30T17:00:00.000Z' untuk 1 Okt WIB).
+    Fungsi ini mengubahnya kembali ke tanggal WIB.
+    """
+    if not raw:
+        return None
+    try:
+        teks = raw.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(teks)
+    except ValueError:
+        try:
+            return date.fromisoformat(raw[:10])
+        except ValueError:
+            return None
+    if dt.tzinfo is None:
+        # Tanpa info zona, anggap sudah tanggal lokal
+        return dt.date()
+    return dt.astimezone(WIB).date()
+
+
+# ---------------------------------------------------------------------
+# Format tampilan
+# ---------------------------------------------------------------------
+HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+BULAN = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+]
+
+
+def format_tanggal(d: date) -> str:
+    return f"{HARI[d.weekday()]}, {d.day} {BULAN[d.month - 1]} {d.year}"
+
+
+def format_deadline(value: str | datetime) -> str:
+    dt = parse_deadline(value)
+    return f"{format_tanggal(dt.date())} • {dt:%H:%M} WIB"
+
+
+def sisa_waktu(value: str | datetime) -> tuple[str, str]:
+    """
+    Return (teks, level). Level dipakai untuk memilih warna:
+    'lewat' | 'mendesak' (<24 jam) | 'dekat' (<3 hari) | 'aman'
+    """
+    dt = parse_deadline(value)
+    selisih = dt - now_wib()
+    detik = selisih.total_seconds()
+
+    if detik < 0:
+        lewat = abs(selisih)
+        if lewat.days >= 1:
+            return f"Lewat {lewat.days} hari", "lewat"
+        return f"Lewat {int(lewat.seconds // 3600)} jam", "lewat"
+
+    if detik < 3600:
+        return f"{int(detik // 60)} menit lagi", "mendesak"
+    if detik < 86400:
+        return f"{int(detik // 3600)} jam lagi", "mendesak"
+
+    hari = int(detik // 86400)
+    level = "dekat" if hari < 3 else "aman"
+    return f"{hari} hari lagi", level
+
+
+def ikon_peringatan(value: str | datetime) -> str:
+    _, level = sisa_waktu(value)
+    return "⚠️ " if level in ("mendesak", "dekat") else ""
+
+
+def punya_link(task: dict) -> bool:
+    link = (task.get("link_vclass") or "").strip()
+    return link.lower().startswith(("http://", "https://"))
+
+
+# ---------------------------------------------------------------------
+# Kalender
+# ---------------------------------------------------------------------
+def build_calendar_events(tasks: list[dict]) -> list[dict]:
+    """
+    Dua lapis event:
+    1. Background event merah — satu per TANGGAL unik yang punya deadline,
+       jadi beberapa tugas di hari yang sama tetap satu blok merah.
+    2. Event biasa — satu per tugas, warnanya mengikuti mata kuliah.
+    """
+    events: list[dict] = []
+    tanggal_unik: set[date] = set()
+
+    for t in tasks:
+        dt = parse_deadline(t["deadline"])
+        tanggal_unik.add(dt.date())
+        events.append(
+            {
+                "id": t["id"],
+                "title": f"{EMOJI_STATUS.get(t.get('status'), '')} {t['judul']}",
+                "start": dt.isoformat(),
+                "end": dt.isoformat(),
+                "backgroundColor": WARNA_MATKUL.get(t.get("mata_kuliah"), "#868E96"),
+                "borderColor": WARNA_MATKUL.get(t.get("mata_kuliah"), "#868E96"),
+            }
+        )
+
+    for d in sorted(tanggal_unik):
+        events.append(
+            {
+                "start": d.isoformat(),
+                "end": (d + timedelta(days=1)).isoformat(),
+                "display": "background",
+                "backgroundColor": WARNA_DEADLINE,
+                "allDay": True,
+            }
+        )
+
+    return events
+
+
+def tasks_pada_tanggal(tasks: list[dict], target: date) -> list[dict]:
+    return [t for t in tasks if parse_deadline(t["deadline"]).date() == target]
+
+
+def deadline_terdekat(tasks: list[dict], jumlah: int = 5) -> list[dict]:
+    """Tugas yang belum selesai dan deadline-nya belum lewat."""
+    sekarang = now_wib()
+    kandidat = [
+        t
+        for t in tasks
+        if t.get("status") != "Selesai" and parse_deadline(t["deadline"]) >= sekarang
+    ]
+    kandidat.sort(key=lambda t: parse_deadline(t["deadline"]))
+    return kandidat[:jumlah]
