@@ -6,68 +6,71 @@ jadi file ini cukup jadi halaman sambutan + pengecekan konfigurasi.
 """
 
 import streamlit as st
+from utils.styles import INK_SOFT, inject_base_css
 
-from utils.helpers import MATA_KULIAH, now_wib, format_tanggal
+from utils.helpers import MATA_KULIAH, deadline_terdekat, format_tanggal, now_wib, parse_deadline
 from utils.supabase_client import ConfigError, fetch_tasks
 
-st.set_page_config(
-    page_title="Tugas Kuliah",
-    page_icon="📚",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+st.set_page_config(page_title="Tugas Kuliah", layout="wide", initial_sidebar_state="expanded")
+inject_base_css()
 
-st.title("📚 Manajemen Tugas Kuliah")
-st.caption(f"S1 Sistem Informasi • {format_tanggal(now_wib().date())} • Zona waktu WIB")
+st.title("Tugas Kuliah")
+st.caption(f"S1 Sistem Informasi · {format_tanggal(now_wib().date())} · waktu ditampilkan dalam WIB")
 
-# --- Cek koneksi database lebih awal, supaya pesan errornya jelas ---
 try:
     tasks = fetch_tasks()
 except ConfigError as exc:
-    st.error(f"⚙️ Konfigurasi belum lengkap.\n\n{exc}")
+    st.error(f"Konfigurasi belum lengkap.\n\n{exc}")
     st.stop()
 except Exception as exc:
     st.error(
-        "🔌 Gagal terhubung ke Supabase.\n\n"
+        "Gagal terhubung ke Supabase.\n\n"
         f"Pesan asli: `{exc}`\n\n"
-        "Cek: URL & anon key benar, tabel `tasks` sudah dibuat "
-        "(jalankan `sql/setup.sql`), dan project Supabase tidak sedang paused."
+        "Cek URL & anon key, tabel `tasks` sudah dibuat (jalankan `sql/setup.sql`), "
+        "dan project Supabase tidak sedang paused."
     )
     st.stop()
 
-belum = sum(1 for t in tasks if t.get("status") == "Belum")
-dikerjakan = sum(1 for t in tasks if t.get("status") == "Dikerjakan")
-selesai = sum(1 for t in tasks if t.get("status") == "Selesai")
-
-k1, k2, k3, k4 = st.columns(4)
-k1.metric("Total tugas", len(tasks))
-k2.metric("Belum dikerjakan", belum)
-k3.metric("Sedang dikerjakan", dikerjakan)
-k4.metric("Selesai", selesai)
-
 st.divider()
 
-kiri, kanan = st.columns([2, 1])
+# ---------------------------------------------------------------------
+# Hero: yang paling penting untuk dilihat pertama kali — bukan deretan
+# metrik generik, tapi tugas berikutnya yang deadline-nya paling dekat.
+# ---------------------------------------------------------------------
+terdekat = deadline_terdekat(tasks, jumlah=1)
+
+kiri, kanan = st.columns([2, 1], gap="large")
 
 with kiri:
-    st.subheader("Cara pakai")
+    if terdekat:
+        t = terdekat[0]
+        dt = parse_deadline(t["deadline"])
+        st.markdown('<p class="label-kecil">Deadline berikutnya</p>', unsafe_allow_html=True)
+        st.markdown(f"### {t['judul']}")
+        st.write(f"{t['mata_kuliah']} — {t.get('jenis', '-')}")
+        st.caption(f"{format_tanggal(dt.date())} · {dt:%H:%M} WIB")
+    else:
+        st.markdown('<p class="label-kecil">Deadline berikutnya</p>', unsafe_allow_html=True)
+        st.write("Tidak ada deadline yang akan datang.")
+
+    st.write("")
+    belum = sum(1 for x in tasks if x.get("status") == "Belum")
+    dikerjakan = sum(1 for x in tasks if x.get("status") == "Dikerjakan")
+    st.caption(f"{belum} tugas belum dikerjakan · {dikerjakan} sedang dikerjakan dari {len(tasks)} total")
+
+    st.write("")
     st.markdown(
-        """
-**Kalender** — halaman utama, terbuka untuk siapa saja.
-Tanggal yang punya deadline diberi blok merah. Klik tanggal tersebut untuk
-melihat daftar tugas pada hari itu, lengkap dengan ketentuan dan link VClass.
-
-**Admin** — hanya bisa dibuka oleh pemilik akun admin. Di sini tugas
-ditambah, diubah, dan dihapus.
-
-Gunakan menu di sidebar kiri untuk berpindah halaman.
-        """
-    )
-    st.info(
-        "Tugas yang tidak punya link VClass (misal diumumkan lisan di kelas) "
-        "tetap bisa dicatat — keterangan pengumpulannya ditulis di kolom Ketentuan."
+        "Buka **Kalender** di sidebar untuk melihat semua deadline dan detail tiap tugas. "
+        "Tugas yang tidak punya link VClass tetap dicatat — cara pengumpulannya ada di "
+        "bagian Ketentuan pada tugas tersebut."
     )
 
 with kanan:
-    st.subheader("Mata kuliah")
-    st.markdown("\n".join(f"- {m}" for m in MATA_KULIAH))
+    st.markdown('<p class="label-kecil">Mata kuliah</p>', unsafe_allow_html=True)
+    st.markdown(
+        "".join(
+            f'<div class="baris-list" style="--aksen:{INK_SOFT}"><span class="label-kecil">{m}</span></div>'
+            for m in MATA_KULIAH
+        ),
+        unsafe_allow_html=True,
+    )
