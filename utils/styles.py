@@ -169,7 +169,7 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
 
         hr, [data-testid="stDivider"] {{ border-color: var(--line) !important; }}
 
-        /* DESAIN TOMBOL OUTLINE AKURAT */
+        /* DESAIN TOMBOL OUTLINE */
         .stButton button, .stDownloadButton button, .stLinkButton a {{
             background-color: var(--paper) !important;
             border: 1.5px solid var(--ink) !important;
@@ -195,7 +195,6 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--paper) !important;
         }}
 
-        /* INPUT FIELD & DROPDOWN */
         [data-testid="stTextInput"] input,
         [data-testid="stTextArea"] textarea,
         [data-baseweb="select"] > div {{
@@ -225,7 +224,7 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        /* FILE UPLOADER STYLING FIX */
+        /* PERBAIKAN STYLING FILE UPLOADER */
         [data-testid="stFileUploader"] {{
             background-color: var(--kartu-bg) !important;
             border: 1.5px dashed var(--line) !important;
@@ -244,9 +243,22 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             border: 1.5px solid var(--ink) !important;
             color: var(--ink) !important;
         }}
-        [data-testid="stFileUploaderDropzone"] button:hover {{
-            background-color: var(--ink) !important;
-            color: var(--paper) !important;
+
+        /* Kartu file yang sudah diunggah */
+        [data-testid="stFileUploaderFileData"],
+        div[data-testid="stFileUploaderFileData"] {{
+            background-color: var(--paper) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: 4px !important;
+        }}
+        [data-testid="stFileUploaderFileData"] * {{
+            color: var(--ink) !important;
+            fill: var(--ink) !important;
+        }}
+        [data-testid="stFileUploaderDeleteBtn"] button,
+        [data-testid="stFileUploaderDeleteBtn"] svg {{
+            color: var(--ink) !important;
+            fill: var(--ink) !important;
         }}
 
         [data-testid="stExpander"] {{
@@ -331,6 +343,7 @@ def calendar_css(mode: str | bool = "Sistem") -> str:
                 --cal-ink: {t_dark["ink"]};
                 --cal-paper: {t_dark["paper"]};
                 --cal-soft: {t_dark["ink_soft"]};
+                --cal-line: {t_dark["line"]};
                 --cal-urgent: {t_dark["urgent"]};
             }}
         """
@@ -340,6 +353,7 @@ def calendar_css(mode: str | bool = "Sistem") -> str:
                 --cal-ink: {t_light["ink"]};
                 --cal-paper: {t_light["paper"]};
                 --cal-soft: {t_light["ink_soft"]};
+                --cal-line: {t_light["line"]};
                 --cal-urgent: {t_light["urgent"]};
             }}
         """
@@ -349,6 +363,7 @@ def calendar_css(mode: str | bool = "Sistem") -> str:
                 --cal-ink: {t_light["ink"]};
                 --cal-paper: {t_light["paper"]};
                 --cal-soft: {t_light["ink_soft"]};
+                --cal-line: {t_light["line"]};
                 --cal-urgent: {t_light["urgent"]};
             }}
             @media (prefers-color-scheme: dark) {{
@@ -356,6 +371,7 @@ def calendar_css(mode: str | bool = "Sistem") -> str:
                     --cal-ink: {t_dark["ink"]};
                     --cal-paper: {t_dark["paper"]};
                     --cal-soft: {t_dark["ink_soft"]};
+                    --cal-line: {t_dark["line"]};
                     --cal-urgent: {t_dark["urgent"]};
                 }}
             }}
@@ -365,21 +381,23 @@ def calendar_css(mode: str | bool = "Sistem") -> str:
         {cal_vars}
         .fc {{
             font-family: 'IBM Plex Sans', sans-serif;
-            color: var(--cal-ink);
-            background-color: var(--cal-paper);
+            color: var(--cal-ink) !important;
+            background-color: var(--cal-paper) !important;
+            border-radius: 6px;
         }}
         .fc-toolbar-title {{
             font-family: 'IBM Plex Serif', serif;
-            font-size: 1.15rem !important;
+            font-size: 1.2rem !important;
             font-weight: 600;
-            color: var(--cal-ink);
+            color: var(--cal-ink) !important;
         }}
         .fc-button {{
-            background-color: transparent !important;
+            background-color: var(--cal-paper) !important;
             border: 1.5px solid var(--cal-ink) !important;
             color: var(--cal-ink) !important;
             box-shadow: none !important;
-            border-radius: 3px !important;
+            border-radius: 4px !important;
+            font-weight: 500 !important;
             text-transform: none !important;
         }}
         .fc-button:hover {{
@@ -391,27 +409,30 @@ def calendar_css(mode: str | bool = "Sistem") -> str:
             color: var(--cal-paper) !important;
         }}
         .fc-daygrid-day-number {{
-            color: var(--cal-ink);
+            color: var(--cal-ink) !important;
             font-size: 0.85rem;
+            font-weight: 500;
         }}
         .fc-col-header-cell-cushion {{
-            color: var(--cal-soft);
-            font-weight: 500;
-            font-size: 0.8rem;
+            color: var(--cal-soft) !important;
+            font-weight: 600;
+            font-size: 0.82rem;
         }}
         .fc-scrollgrid, .fc-theme-standard td, .fc-theme-standard th {{
-            border-color: var(--cal-soft)33;
+            border-color: var(--cal-line) !important;
         }}
         .fc-event {{
-            border-radius: 3px;
-            border: none;
-            font-size: 0.8rem;
-            font-weight: 500;
-            padding: 3px 5px;
+            border-radius: 4px !important;
+            border: none !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            padding: 4px 6px !important;
+            margin: 2px 3px !important;
             cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }}
         .fc-daygrid-day.fc-day-today {{
-            background-color: var(--cal-urgent)14 !important;
+            background-color: var(--cal-urgent)1A !important;
         }}
         @media (max-width: 640px) {{
             .fc-toolbar {{
@@ -419,7 +440,7 @@ def calendar_css(mode: str | bool = "Sistem") -> str:
                 gap: 0.4rem;
             }}
             .fc-toolbar-title {{ font-size: 1rem !important; }}
-            .fc-event {{ font-size: 0.72rem; padding: 4px 3px; }}
+            .fc-event {{ font-size: 0.72rem !important; padding: 3px 4px !important; }}
             .fc-daygrid-day-number {{ font-size: 0.75rem; }}
         }}
     """
