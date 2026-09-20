@@ -7,7 +7,7 @@ from streamlit_quill import st_quill
 from utils.auth import current_email, get_authed_client, is_admin, login, logout
 from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import ConfigError, delete_task, fetch_tasks, insert_task, update_task
+from utils.supabase_client import ConfigError, delete_task, fetch_tasks, insert_task, update_task, upload_file
 
 st.set_page_config(page_title="Admin — Tugas Kuliah", layout="wide")
 mode = render_theme_toggle()
@@ -83,6 +83,12 @@ with tab_tambah:
         key="tambah_link",
     )
 
+    f_uploaded = st.file_uploader(
+        "Upload File Soal/Ketentuan (PDF, Gambar, Docs, Zip)",
+        type=["pdf", "png", "jpg", "jpeg", "docx", "zip"],
+        key="tambah_file",
+    )
+
     if st.button("Simpan tugas", type="primary", key="tambah_simpan"):
         link_bersih = link_vclass.strip()
         ketentuan_bersih = _ambil_html(ketentuan_raw)
@@ -91,27 +97,25 @@ with tab_tambah:
         elif link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
             st.error("Link VClass harus diawali http:// atau https:// — atau dikosongkan.")
         else:
-            payload = {
-                "judul": judul.strip(),
-                "mata_kuliah": mata_kuliah,
-                "jenis": jenis,
-                "deadline": to_utc_iso(tgl, jam),
-                "ketentuan": ketentuan_bersih or None,
-                "link_vclass": link_bersih or None,
-                "status": "Belum",
-            }
             try:
+                file_url = upload_file(client, f_uploaded) if f_uploaded else None
+                payload = {
+                    "judul": judul.strip(),
+                    "mata_kuliah": mata_kuliah,
+                    "jenis": jenis,
+                    "deadline": to_utc_iso(tgl, jam),
+                    "ketentuan": ketentuan_bersih or None,
+                    "link_vclass": link_bersih or None,
+                    "file_soal": file_url,
+                    "status": "Belum",
+                }
                 insert_task(client, payload)
                 for k in ["tambah_judul", "tambah_link"]:
                     st.session_state.pop(k, None)
                 st.success("Tugas tersimpan.")
                 st.rerun()
             except Exception as exc:
-                st.error(
-                    "Gagal menyimpan. Kalau pesannya soal row-level security, "
-                    "berarti email di policy RLS belum cocok dengan akun ini.\n\n"
-                    f"Pesan asli: `{exc}`"
-                )
+                st.error(f"Gagal menyimpan data/file.\n\nPesan asli: `{exc}`")
 
 with tab_kelola:
     if not tasks:
@@ -145,6 +149,7 @@ with tab_kelola:
                     "jenis": t.get("jenis"),
                     "deadline_wib": parse_deadline(t["deadline"]).strftime("%Y-%m-%d %H:%M"),
                     "link_vclass": t.get("link_vclass") or "",
+                    "file_soal": t.get("file_soal") or "",
                     "ketentuan": t.get("ketentuan") or "",
                 }
                 for t in hasil
@@ -191,6 +196,15 @@ with tab_kelola:
             )
             e_link = st.text_input("Link VClass", value=t.get("link_vclass") or "", key=f"edit_link_{tid}")
 
+            if t.get("file_soal"):
+                st.markdown(
+                    f'<a href="{t["file_soal"]}" target="_blank">Lihat file saat ini</a>', unsafe_allow_html=True
+                )
+
+            e_file = st.file_uploader(
+                "Ganti File Soal/Ketentuan", type=["pdf", "png", "jpg", "jpeg", "docx", "zip"], key=f"edit_file_{tid}"
+            )
+
             if st.button("Simpan perubahan", key=f"edit_simpan_{tid}"):
                 link_bersih = e_link.strip()
                 ketentuan_bersih = _ambil_html(e_ketentuan_raw)
@@ -198,6 +212,7 @@ with tab_kelola:
                     st.error("Link VClass harus diawali http:// atau https://.")
                 else:
                     try:
+                        file_url = upload_file(client, e_file) if e_file else t.get("file_soal")
                         update_task(
                             client,
                             tid,
@@ -208,6 +223,7 @@ with tab_kelola:
                                 "deadline": to_utc_iso(e_tgl, e_jam),
                                 "ketentuan": ketentuan_bersih or None,
                                 "link_vclass": link_bersih or None,
+                                "file_soal": file_url,
                             },
                         )
                         st.success("Perubahan tersimpan.")

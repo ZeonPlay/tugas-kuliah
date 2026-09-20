@@ -153,9 +153,15 @@ for t in tugas_hari_itu:
         with st.expander("Ketentuan"):
             st.markdown(ketentuan_html, unsafe_allow_html=True)
 
-    if punya_link(t):
-        st.link_button("Buka di VClass", t["link_vclass"])
-    else:
-        st.caption("Tanpa link — lihat bagian Ketentuan untuk cara pengumpulan.")
+    btn_c1, btn_c2 = st.columns(2)
+    with btn_c1:
+        if punya_link(t):
+            st.link_button("Buka di VClass", t["link_vclass"], use_container_width=True)
+        else:
+            st.caption("Tanpa link — lihat bagian Ketentuan untuk cara pengumpulan.")
+
+    with btn_c2:
+        if t.get("file_soal"):
+            st.link_button("Lihat / Download File Soal", t["file_soal"], use_container_width=True)
 
     st.markdown("</div>", unsafe_allow_html=True)

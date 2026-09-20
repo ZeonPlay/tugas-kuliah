@@ -195,16 +195,35 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {{
+        /* Fix Date Picker Popover & Dropdown Options */
+        [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"], [data-baseweb="calendar"] {{
             background-color: var(--kartu-bg) !important;
             border: 1px solid var(--line) !important;
+            color: var(--ink) !important;
         }}
+
+        [data-baseweb="calendar"] button,
+        [data-baseweb="calendar"] div {{
+            color: var(--ink) !important;
+        }}
+
         [role="option"] {{
             background-color: var(--kartu-bg) !important;
             color: var(--ink) !important;
         }}
         [role="option"]:hover, [role="option"][aria-selected="true"] {{
             background-color: var(--line) !important;
+            color: var(--ink) !important;
+        }}
+
+        /* File Uploader Style Fix */
+        [data-testid="stFileUploader"] {{
+            background-color: var(--kartu-bg) !important;
+            border: 1px dashed var(--line) !important;
+            border-radius: 4px;
+            padding: 0.5rem;
+        }}
+        [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] button {{
             color: var(--ink) !important;
         }}
 
