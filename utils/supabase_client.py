@@ -45,7 +45,6 @@ def get_public_client() -> Client:
 
 def build_client_with_token(access_token: str) -> Client:
     url, key = _require_credentials()
-    # Memasang token header Authorization ke seluruh layanan (PostgREST + Storage)
     options = ClientOptions(headers={"Authorization": f"Bearer {access_token}"})
     client = create_client(url, key, options=options)
     client.postgrest.auth(access_token)
@@ -63,19 +62,43 @@ def clear_cache() -> None:
     fetch_tasks.clear()
 
 
+def delete_file_from_storage(client: Client, file_url: str | None) -> None:
+    """Hapus file dari bucket 'task-files' berdasarkan public URL."""
+    if not file_url:
+        return
+    try:
+        file_name = file_url.split("/task-files/")[-1]
+        if file_name:
+            client.storage.from_("task-files").remove([file_name])
+    except Exception:
+        pass
+
+
 def insert_task(client: Client, payload: dict) -> dict:
     response = client.table("tasks").insert(payload).execute()
     clear_cache()
     return (response.data or [{}])[0]
 
 
-def update_task(client: Client, task_id: str, payload: dict) -> dict:
+def update_task(client: Client, task_id: str, payload: dict, old_file_url: str | None = None) -> dict:
+    # Jika file diganti dengan file baru, hapus file lama dari storage
+    if old_file_url and payload.get("file_soal") != old_file_url:
+        delete_file_from_storage(client, old_file_url)
+
     response = client.table("tasks").update(payload).eq("id", task_id).execute()
     clear_cache()
     return (response.data or [{}])[0]
 
 
 def delete_task(client: Client, task_id: str) -> None:
+    # Hapus file lampiran terlebih dahulu jika ada
+    try:
+        res = client.table("tasks").select("file_soal").eq("id", task_id).execute()
+        if res.data and res.data[0].get("file_soal"):
+            delete_file_from_storage(client, res.data[0]["file_soal"])
+    except Exception:
+        pass
+
     client.table("tasks").delete().eq("id", task_id).execute()
     clear_cache()
 

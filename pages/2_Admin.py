@@ -34,6 +34,7 @@ if not is_admin():
         if submit:
             berhasil, pesan = login(email, password)
             if berhasil:
+                st.toast("Login berhasil!")
                 st.rerun()
             else:
                 st.error(pesan)
@@ -47,7 +48,7 @@ if not is_admin():
         if reg_submit:
             berhasil, pesan = signup(reg_email, reg_password)
             if berhasil:
-                st.success(pesan)
+                st.toast("Pendaftaran akun berhasil! Silakan login.")
             else:
                 st.error(pesan)
     st.stop()
@@ -57,6 +58,7 @@ with st.sidebar:
     st.write(current_email())
     if st.button("Keluar", use_container_width=True):
         logout()
+        st.toast("Berhasil keluar.")
         st.rerun()
 
 client = get_authed_client()
@@ -128,7 +130,7 @@ with tab_tambah:
                 insert_task(client, payload)
                 for k in ["tambah_judul", "tambah_link"]:
                     st.session_state.pop(k, None)
-                st.success("Tugas tersimpan.")
+                st.toast("Tugas berhasil disimpan.")
                 st.rerun()
             except Exception as exc:
                 st.error(f"Gagal menyimpan data/file.\n\nPesan asli: `{exc}`")
@@ -246,8 +248,9 @@ with tab_kelola:
                                     "link_vclass": link_bersih or None,
                                     "file_soal": file_url,
                                 },
+                                old_file_url=t.get("file_soal") if e_file else None,
                             )
-                            st.success("Perubahan tersimpan.")
+                            st.toast("Perubahan tersimpan.")
                             st.rerun()
                         except Exception as exc:
                             st.error(f"Gagal menyimpan perubahan.\n\nPesan asli: `{exc}`")
@@ -257,7 +260,7 @@ with tab_kelola:
                 if st.button("Hapus tugas", key=f"hapus_{tid}", disabled=not konfirmasi):
                     try:
                         delete_task(client, tid)
-                        st.success("Tugas dihapus.")
+                        st.toast("Tugas dan file terhapus.")
                         st.rerun()
                     except Exception as exc:
                         st.error(f"Gagal menghapus.\n\nPesan asli: `{exc}`")
@@ -275,7 +278,7 @@ with tab_admin_users:
         else:
             try:
                 client.table("admin_users").insert({"email": new_admin_email.strip().lower()}).execute()
-                st.success(f"Berhasil menambahkan {new_admin_email} ke daftar admin!")
+                st.toast(f"Berhasil menambahkan {new_admin_email}!")
                 st.rerun()
             except Exception as exc:
                 st.error(f"Gagal menambahkan admin: {exc}")
