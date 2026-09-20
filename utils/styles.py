@@ -1,19 +1,11 @@
 """
-Satu tempat untuk semua styling kustom + dukungan tema gelap/terang.
-
-Semua warna diambil lewat get_tokens(dark) — bukan konstanta modul tetap —
-supaya toggle tema di sidebar otomatis mengubah SEMUA halaman sekaligus,
-termasuk warna kalender (yang dirender di iframe terpisah, jadi butuh
-custom_css sendiri lewat calendar_css()).
+Satu tempat untuk semua styling kustom + dukungan tema gelap/terang/sistem.
 """
 
 import colorsys
 
 import streamlit as st
 
-# ---------------------------------------------------------------------
-# Token warna — tema terang (dasar)
-# ---------------------------------------------------------------------
 _LIGHT = {
     "paper": "#F6F4EE",
     "ink": "#21252C",
@@ -45,14 +37,10 @@ _DARK = {
     "urgent": "#D9694C",
     "near": "#D9A354",
     "safe": "#6FA184",
-    # course diisi di bawah, dihitung dari _LIGHT["course"] supaya konsisten
 }
 
 
 def _terangkan(hex_warna: str, tambahan_lightness: float) -> str:
-    """Naikkan lightness (HSL) sebuah warna hex, dipakai supaya warna
-    mata kuliah tetap terbaca di latar gelap tanpa perlu menebak-nebak
-    hex baru satu per satu."""
     hex_warna = hex_warna.lstrip("#")
     r, g, b = (int(hex_warna[i : i + 2], 16) / 255 for i in (0, 2, 4))
     h, l, s = colorsys.rgb_to_hls(r, g, b)
@@ -64,120 +52,199 @@ def _terangkan(hex_warna: str, tambahan_lightness: float) -> str:
 _DARK["course"] = [_terangkan(c, 0.18) for c in _LIGHT["course"]]
 
 
-def get_tokens(dark: bool) -> dict:
-    return _DARK if dark else _LIGHT
+def get_tokens(mode: str | bool = "Sistem") -> dict:
+    if mode is True or mode == "Gelap":
+        return _DARK
+    elif mode is False or mode == "Terang":
+        return _LIGHT
+    return _LIGHT
 
 
-# ---------------------------------------------------------------------
-# Toggle tema — dipanggil di sidebar tiap halaman, SEBELUM inject_base_css
-# ---------------------------------------------------------------------
-def render_theme_toggle() -> bool:
+def render_theme_toggle() -> str:
+    if "tema_mode" not in st.session_state:
+        st.session_state["tema_mode"] = "Sistem"
+
+    opsi = ["Sistem", "Terang", "Gelap"]
+    idx = opsi.index(st.session_state["tema_mode"]) if st.session_state["tema_mode"] in opsi else 0
+
     with st.sidebar:
-        gelap = st.toggle("Tema gelap", key="tema_gelap")
-    return gelap
+        mode = st.selectbox("Tema tampilan", opsi, index=idx, key="select_tema_mode")
+        st.session_state["tema_mode"] = mode
+    return mode
 
 
-# ---------------------------------------------------------------------
-# CSS halaman utama
-# ---------------------------------------------------------------------
-def inject_base_css(dark: bool) -> None:
-    t = get_tokens(dark)
+def inject_base_css(mode: str | bool = "Sistem") -> None:
+    if mode is True or mode == "Gelap":
+        selected_mode = "Gelap"
+    elif mode is False or mode == "Terang":
+        selected_mode = "Terang"
+    else:
+        selected_mode = mode
+
+    t_light = _LIGHT
+    t_dark = _DARK
+
+    if selected_mode == "Gelap":
+        root_css = f"""
+            :root {{
+                --paper: {t_dark["paper"]};
+                --ink: {t_dark["ink"]};
+                --ink-soft: {t_dark["ink_soft"]};
+                --line: {t_dark["line"]};
+                --kartu-bg: {t_dark["kartu_bg"]};
+                --urgent: {t_dark["urgent"]};
+                --near: {t_dark["near"]};
+                --safe: {t_dark["safe"]};
+            }}
+        """
+    elif selected_mode == "Terang":
+        root_css = f"""
+            :root {{
+                --paper: {t_light["paper"]};
+                --ink: {t_light["ink"]};
+                --ink-soft: {t_light["ink_soft"]};
+                --line: {t_light["line"]};
+                --kartu-bg: {t_light["kartu_bg"]};
+                --urgent: {t_light["urgent"]};
+                --near: {t_light["near"]};
+                --safe: {t_light["safe"]};
+            }}
+        """
+    else:
+        root_css = f"""
+            :root {{
+                --paper: {t_light["paper"]};
+                --ink: {t_light["ink"]};
+                --ink-soft: {t_light["ink_soft"]};
+                --line: {t_light["line"]};
+                --kartu-bg: {t_light["kartu_bg"]};
+                --urgent: {t_light["urgent"]};
+                --near: {t_light["near"]};
+                --safe: {t_light["safe"]};
+            }}
+            @media (prefers-color-scheme: dark) {{
+                :root {{
+                    --paper: {t_dark["paper"]};
+                    --ink: {t_dark["ink"]};
+                    --ink-soft: {t_dark["ink_soft"]};
+                    --line: {t_dark["line"]};
+                    --kartu-bg: {t_dark["kartu_bg"]};
+                    --urgent: {t_dark["urgent"]};
+                    --near: {t_dark["near"]};
+                    --safe: {t_dark["safe"]};
+                }}
+            }}
+        """
+
     st.markdown(
         f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
-        :root {{
-            --paper: {t["paper"]};
-            --ink: {t["ink"]};
-            --ink-soft: {t["ink_soft"]};
-            --line: {t["line"]};
-            --kartu-bg: {t["kartu_bg"]};
-            --urgent: {t["urgent"]};
-            --near: {t["near"]};
-            --safe: {t["safe"]};
-        }}
+        {root_css}
 
-        html, body, [class*="css"] {{
+        html, body, .stApp {{
             font-family: 'IBM Plex Sans', sans-serif;
-            color: var(--ink);
+            background-color: var(--paper) !important;
+            color: var(--ink) !important;
         }}
 
-        .stApp {{
-            background-color: var(--paper);
-        }}
-
-        h1, h2, h3 {{
+        h1, h2, h3, h4, h5, h6 {{
             font-family: 'IBM Plex Serif', serif;
             font-weight: 600;
             letter-spacing: -0.01em;
-            color: var(--ink);
+            color: var(--ink) !important;
         }}
 
         h1 {{ font-size: 1.9rem; margin-bottom: 0.1rem; }}
         h2 {{ font-size: 1.35rem; }}
         h3 {{ font-size: 1.1rem; }}
 
-        p, span, div, label {{ color: var(--ink); }}
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stMarkdownContainer"] span {{
+            color: var(--ink);
+        }}
 
         [data-testid="stCaptionContainer"] {{ color: var(--ink-soft) !important; }}
 
         hr, [data-testid="stDivider"] {{ border-color: var(--line) !important; }}
 
         .stButton button, .stLinkButton a, .stDownloadButton button {{
-            border-radius: 3px;
-            border: 1px solid var(--ink);
+            border-radius: 4px;
+            border: 1px solid var(--line) !important;
             box-shadow: none;
-            color: var(--ink);
-            background-color: transparent;
+            color: var(--ink) !important;
+            background-color: var(--kartu-bg) !important;
+        }}
+        .stButton button:hover, .stLinkButton a:hover, .stDownloadButton button:hover {{
+            border-color: var(--ink) !important;
+            background-color: var(--paper) !important;
         }}
         .stButton button[kind="primary"] {{
-            background-color: var(--ink);
-            border-color: var(--ink);
-            color: var(--paper);
+            background-color: var(--ink) !important;
+            border-color: var(--ink) !important;
+            color: var(--paper) !important;
         }}
 
         [data-testid="stTextInput"] input,
         [data-testid="stTextArea"] textarea,
         [data-baseweb="select"] > div {{
-            border-radius: 3px !important;
-            border-color: var(--line) !important;
+            border-radius: 4px !important;
+            border: 1px solid var(--line) !important;
             background-color: var(--kartu-bg) !important;
             color: var(--ink) !important;
         }}
 
+        [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {{
+            background-color: var(--kartu-bg) !important;
+            border: 1px solid var(--line) !important;
+        }}
+        [role="option"] {{
+            background-color: var(--kartu-bg) !important;
+            color: var(--ink) !important;
+        }}
+        [role="option"]:hover, [role="option"][aria-selected="true"] {{
+            background-color: var(--line) !important;
+            color: var(--ink) !important;
+        }}
+
+        [data-testid="stExpander"] {{
+            background-color: var(--kartu-bg) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: 4px !important;
+        }}
+        [data-testid="stExpander"] summary p,
+        [data-testid="stExpander"] summary span,
+        [data-testid="stExpander"] summary svg {{
+            color: var(--ink) !important;
+            fill: var(--ink) !important;
+        }}
+
         [data-testid="stSidebar"] {{
-            background-color: var(--kartu-bg);
-            border-right: 1px solid var(--line);
+            background-color: var(--kartu-bg) !important;
+            border-right: 1px solid var(--line) !important;
         }}
 
         .kartu-tugas {{
             border: 1px solid var(--line);
             border-left: 4px solid var(--aksen, var(--ink));
-            border-radius: 2px;
+            border-radius: 4px;
             padding: 0.85rem 1rem;
             margin-bottom: 0.6rem;
             background-color: var(--kartu-bg);
+            color: var(--ink);
         }}
 
         .baris-list {{
             border-left: 3px solid var(--aksen, var(--line));
             padding: 0.35rem 0 0.35rem 0.7rem;
             margin-bottom: 0.45rem;
+            color: var(--ink);
         }}
 
         .label-kecil {{
             font-size: 0.78rem;
-            color: var(--ink-soft);
-        }}
-
-        .titik-status {{
-            display: inline-block;
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background-color: var(--titik, var(--ink-soft));
-            margin-right: 0.4em;
+            color: var(--ink-soft) !important;
         }}
 
         .badge-lewat {{
@@ -206,57 +273,94 @@ def inject_base_css(dark: bool) -> None:
     )
 
 
-def calendar_css(dark: bool) -> str:
-    """CSS untuk parameter custom_css milik streamlit-calendar.
+def calendar_css(mode: str | bool = "Sistem") -> str:
+    if mode is True or mode == "Gelap":
+        selected_mode = "Gelap"
+    elif mode is False or mode == "Terang":
+        selected_mode = "Terang"
+    else:
+        selected_mode = mode
 
-    Komponen kalender dirender di iframe terpisah, jadi CSS di
-    inject_base_css() TIDAK menjangkaunya — harus lewat sini.
-    """
-    t = get_tokens(dark)
-    ink, paper, ink_soft, urgent = t["ink"], t["paper"], t["ink_soft"], t["urgent"]
+    t_light = _LIGHT
+    t_dark = _DARK
+
+    if selected_mode == "Gelap":
+        cal_vars = f"""
+            :root {{
+                --cal-ink: {t_dark["ink"]};
+                --cal-paper: {t_dark["paper"]};
+                --cal-soft: {t_dark["ink_soft"]};
+                --cal-urgent: {t_dark["urgent"]};
+            }}
+        """
+    elif selected_mode == "Terang":
+        cal_vars = f"""
+            :root {{
+                --cal-ink: {t_light["ink"]};
+                --cal-paper: {t_light["paper"]};
+                --cal-soft: {t_light["ink_soft"]};
+                --cal-urgent: {t_light["urgent"]};
+            }}
+        """
+    else:
+        cal_vars = f"""
+            :root {{
+                --cal-ink: {t_light["ink"]};
+                --cal-paper: {t_light["paper"]};
+                --cal-soft: {t_light["ink_soft"]};
+                --cal-urgent: {t_light["urgent"]};
+            }}
+            @media (prefers-color-scheme: dark) {{
+                :root {{
+                    --cal-ink: {t_dark["ink"]};
+                    --cal-paper: {t_dark["paper"]};
+                    --cal-soft: {t_dark["ink_soft"]};
+                    --cal-urgent: {t_dark["urgent"]};
+                }}
+            }}
+        """
+
     return f"""
+        {cal_vars}
         .fc {{
             font-family: 'IBM Plex Sans', sans-serif;
-            color: {ink};
-            background-color: {paper};
+            color: var(--cal-ink);
+            background-color: var(--cal-paper);
         }}
         .fc-toolbar-title {{
             font-family: 'IBM Plex Serif', serif;
             font-size: 1.15rem !important;
             font-weight: 600;
-            color: {ink};
+            color: var(--cal-ink);
         }}
         .fc-button {{
             background-color: transparent !important;
-            border: 1px solid {ink} !important;
-            color: {ink} !important;
+            border: 1px solid var(--cal-ink) !important;
+            color: var(--cal-ink) !important;
             box-shadow: none !important;
             border-radius: 3px !important;
             text-transform: none !important;
         }}
         .fc-button:hover {{
-            background-color: {ink} !important;
-            color: {paper} !important;
+            background-color: var(--cal-ink) !important;
+            color: var(--cal-paper) !important;
         }}
         .fc-button-active {{
-            background-color: {ink} !important;
-            color: {paper} !important;
+            background-color: var(--cal-ink) !important;
+            color: var(--cal-paper) !important;
         }}
         .fc-daygrid-day-number {{
-            color: {ink};
+            color: var(--cal-ink);
             font-size: 0.85rem;
         }}
         .fc-col-header-cell-cushion {{
-            color: {ink_soft};
+            color: var(--cal-soft);
             font-weight: 500;
             font-size: 0.8rem;
         }}
         .fc-scrollgrid, .fc-theme-standard td, .fc-theme-standard th {{
-            border-color: {ink_soft}33;
+            border-color: var(--cal-soft)33;
         }}
-        /* Satu event ringkasan per tanggal ("2 deadline") — dibuat besar
-           dan jadi satu blok penuh supaya gampang diklik di HP, bukan
-           tumpukan chip kecil per tugas seperti sebelumnya. */
         .fc-event {{
             border-radius: 3px;
             border: none;
@@ -266,7 +370,7 @@ def calendar_css(dark: bool) -> str:
             cursor: pointer;
         }}
         .fc-daygrid-day.fc-day-today {{
-            background-color: {urgent}14 !important;
+            background-color: var(--cal-urgent)14 !important;
         }}
         @media (max-width: 640px) {{
             .fc-toolbar {{

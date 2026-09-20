@@ -1,17 +1,3 @@
-"""
-Halaman admin: login Supabase Auth + CRUD tugas.
-
-Pengecekan is_admin() di sini hanya mengatur tampilan. Perlindungan
-sebenarnya ada di policy RLS (sql/setup.sql): tanpa token admin,
-database menolak INSERT/UPDATE/DELETE apa pun.
-
-Catatan desain: bagian ini SENGAJA tidak memakai st.form(). Editor
-"Ketentuan" pakai streamlit-quill (rich text, seperti Word/Google Docs),
-dan komponen custom seperti itu punya beberapa laporan bermasalah kalau
-diletakkan di dalam st.form (nilainya kadang tidak ikut ter-submit).
-Makanya di sini validasi & simpan dipicu lewat st.button biasa.
-"""
-
 from datetime import time as dtime
 
 import pandas as pd
@@ -19,29 +5,23 @@ import streamlit as st
 from streamlit_quill import st_quill
 
 from utils.auth import current_email, get_authed_client, is_admin, login, logout
-from utils.helpers import JENIS, MATA_KULIAH, STATUS, format_deadline, now_wib, parse_deadline, to_utc_iso
+from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, delete_task, fetch_tasks, insert_task, update_task
 
 st.set_page_config(page_title="Admin — Tugas Kuliah", layout="wide")
-dark = render_theme_toggle()
-inject_base_css(dark)
-tokens = get_tokens(dark)
+mode = render_theme_toggle()
+inject_base_css(mode)
+tokens = get_tokens(mode)
 st.title("Admin")
 
 
 def _ambil_html(hasil_quill) -> str:
-    """streamlit-quill pernah mengembalikan string HTML langsung, dan di
-    beberapa versi/contoh berupa dict berisi 'html'. Ditangani dua-duanya
-    di sini supaya tidak diam-diam gagal simpan kalau versinya beda."""
     if isinstance(hasil_quill, dict):
         return (hasil_quill.get("html") or "").strip()
     return (hasil_quill or "").strip()
 
 
-# ---------------------------------------------------------------------
-# Login
-# ---------------------------------------------------------------------
 if not is_admin():
     st.write("Halaman ini hanya untuk admin. Masuk dengan akun yang terdaftar.")
     with st.form("form_login"):
@@ -79,9 +59,6 @@ except Exception as exc:
 
 tab_tambah, tab_kelola = st.tabs(["Tambah tugas", "Kelola tugas"])
 
-# ---------------------------------------------------------------------
-# Tab 1 — Tambah
-# ---------------------------------------------------------------------
 with tab_tambah:
     judul = st.text_input("Judul tugas", key="tambah_judul")
 
@@ -105,7 +82,6 @@ with tab_tambah:
         placeholder="https://vclass.unila.ac.id/mod/assign/view.php?id=...",
         key="tambah_link",
     )
-    status = st.selectbox("Status", STATUS, index=STATUS.index("Belum"), key="tambah_status")
 
     if st.button("Simpan tugas", type="primary", key="tambah_simpan"):
         link_bersih = link_vclass.strip()
@@ -122,14 +98,11 @@ with tab_tambah:
                 "deadline": to_utc_iso(tgl, jam),
                 "ketentuan": ketentuan_bersih or None,
                 "link_vclass": link_bersih or None,
-                "status": status,
+                "status": "Belum",
             }
             try:
                 insert_task(client, payload)
-                for k in [
-                    "tambah_judul",
-                    "tambah_link",
-                ]:
+                for k in ["tambah_judul", "tambah_link"]:
                     st.session_state.pop(k, None)
                 st.success("Tugas tersimpan.")
                 st.rerun()
@@ -140,18 +113,14 @@ with tab_tambah:
                     f"Pesan asli: `{exc}`"
                 )
 
-# ---------------------------------------------------------------------
-# Tab 2 — Kelola (filter, edit, hapus, export)
-# ---------------------------------------------------------------------
 with tab_kelola:
     if not tasks:
         st.write("Belum ada tugas.")
         st.stop()
 
-    f1, f2, f3 = st.columns(3)
+    f1, f2 = st.columns(2)
     f_matkul = f1.multiselect("Mata kuliah", MATA_KULIAH)
     f_jenis = f2.multiselect("Jenis", JENIS)
-    f_status = f3.multiselect("Status", STATUS)
     cari = st.text_input("Cari judul / ketentuan")
 
     hasil = tasks
@@ -159,8 +128,6 @@ with tab_kelola:
         hasil = [t for t in hasil if t.get("mata_kuliah") in f_matkul]
     if f_jenis:
         hasil = [t for t in hasil if t.get("jenis") in f_jenis]
-    if f_status:
-        hasil = [t for t in hasil if t.get("status") in f_status]
     if cari.strip():
         kunci = cari.strip().lower()
         hasil = [
@@ -177,7 +144,6 @@ with tab_kelola:
                     "mata_kuliah": t["mata_kuliah"],
                     "jenis": t.get("jenis"),
                     "deadline_wib": parse_deadline(t["deadline"]).strftime("%Y-%m-%d %H:%M"),
-                    "status": t.get("status"),
                     "link_vclass": t.get("link_vclass") or "",
                     "ketentuan": t.get("ketentuan") or "",
                 }
@@ -224,9 +190,6 @@ with tab_kelola:
                 key=f"edit_ketentuan_{tid}",
             )
             e_link = st.text_input("Link VClass", value=t.get("link_vclass") or "", key=f"edit_link_{tid}")
-            e_status = st.selectbox(
-                "Status", STATUS, index=STATUS.index(t.get("status", "Belum")), key=f"edit_status_{tid}"
-            )
 
             if st.button("Simpan perubahan", key=f"edit_simpan_{tid}"):
                 link_bersih = e_link.strip()
@@ -245,7 +208,6 @@ with tab_kelola:
                                 "deadline": to_utc_iso(e_tgl, e_jam),
                                 "ketentuan": ketentuan_bersih or None,
                                 "link_vclass": link_bersih or None,
-                                "status": e_status,
                             },
                         )
                         st.success("Perubahan tersimpan.")

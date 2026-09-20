@@ -1,8 +1,3 @@
-"""
-Halaman publik: kalender bulanan + daftar tugas per tanggal.
-Read-only, tidak butuh login.
-"""
-
 from datetime import date
 
 import streamlit as st
@@ -15,26 +10,21 @@ from utils.helpers import (
     deadline_terdekat,
     format_deadline,
     format_tanggal,
-    now_wib,
     parse_click_date,
-    parse_deadline,
     punya_link,
     sisa_waktu,
     tasks_pada_tanggal,
     warna_matkul,
-    warna_status,
     warna_urgensi,
 )
 from utils.styles import calendar_css, get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, fetch_tasks
 
 st.set_page_config(page_title="Kalender — Tugas Kuliah", layout="wide")
-dark = render_theme_toggle()
-inject_base_css(dark)
-tokens = get_tokens(dark)
+mode = render_theme_toggle()
+inject_base_css(mode)
+tokens = get_tokens(mode)
 
-# Auto-refresh tiap 30 detik, disamakan dengan ttl cache fetch_tasks()
-# supaya refresh tidak membanjiri database.
 st_autorefresh(interval=30_000, key="auto_refresh_kalender")
 
 st.title("Kalender Deadline")
@@ -52,13 +42,9 @@ if not semua_tasks:
     st.write("Belum ada tugas yang tercatat.")
     st.stop()
 
-# ---------------------------------------------------------------------
-# Sidebar: filter ringkas + daftar deadline terdekat sebagai list tipis.
-# ---------------------------------------------------------------------
 with st.sidebar:
     st.markdown('<p class="label-kecil">Filter</p>', unsafe_allow_html=True)
     filter_jenis = st.multiselect("Jenis", JENIS, default=JENIS, label_visibility="collapsed")
-    sembunyikan_selesai = st.checkbox("Sembunyikan yang sudah selesai", value=False)
 
     st.divider()
     st.markdown('<p class="label-kecil">Deadline terdekat</p>', unsafe_allow_html=True)
@@ -69,26 +55,19 @@ with st.sidebar:
     else:
         baris = []
         for t in terdekat:
-            dt = parse_deadline(t["deadline"])
             teks_sisa, level = sisa_waktu(t["deadline"])
             warna = warna_urgensi(tokens, level)
             baris.append(
                 f'<div class="baris-list" style="--aksen:{warna}">'
                 f'<div style="font-weight:500">{t["judul"]}</div>'
-                f'<div class="label-kecil">{t["mata_kuliah"]} · {dt:%d %b, %H:%M} WIB</div>'
+                f'<div class="label-kecil">{t["mata_kuliah"]} · {format_deadline(t["deadline"])}</div>'
                 f'<div class="label-kecil" style="color:{warna}">{teks_sisa}</div>'
                 f"</div>"
             )
         st.markdown("".join(baris), unsafe_allow_html=True)
 
 tasks = [t for t in semua_tasks if t.get("jenis") in filter_jenis]
-if sembunyikan_selesai:
-    tasks = [t for t in tasks if t.get("status") != "Selesai"]
 
-# ---------------------------------------------------------------------
-# Kalender — satu blok "N deadline" per tanggal, bukan chip per tugas,
-# supaya tetap gampang diklik walau tugasnya menumpuk di satu hari.
-# ---------------------------------------------------------------------
 opsi_kalender = {
     "initialView": "dayGridMonth",
     "locale": "id",
@@ -105,7 +84,7 @@ opsi_kalender = {
 state = calendar(
     events=build_calendar_events(tasks, tokens),
     options=opsi_kalender,
-    custom_css=calendar_css(dark),
+    custom_css=calendar_css(mode),
     key="kalender_publik",
 )
 
@@ -123,9 +102,6 @@ if isinstance(state, dict):
 
 st.caption("Setiap tanggal menampilkan jumlah deadline hari itu — klik untuk melihat detail tugasnya di bawah.")
 
-# ---------------------------------------------------------------------
-# Detail tugas pada tanggal terpilih
-# ---------------------------------------------------------------------
 st.divider()
 
 tanggal_iso = st.session_state.get("tanggal_dipilih")
@@ -148,7 +124,6 @@ if not tugas_hari_itu:
 
 for t in tugas_hari_itu:
     aksen = warna_matkul(tokens, t.get("mata_kuliah"))
-    w_status = warna_status(tokens, t.get("status"))
     teks_sisa, level = sisa_waktu(t["deadline"])
 
     st.markdown(f'<div class="kartu-tugas" style="--aksen:{aksen}">', unsafe_allow_html=True)
@@ -164,26 +139,18 @@ for t in tugas_hari_itu:
         st.caption(format_deadline(t["deadline"]))
 
     with atas_kanan:
-        st.markdown(
-            f'<span class="titik-status" style="--titik:{w_status}"></span>{t.get("status", "-")}',
-            unsafe_allow_html=True,
-        )
-        if t.get("status") != "Selesai":
-            if level == "lewat":
-                st.markdown('<span class="badge-lewat">Sudah lewat</span>', unsafe_allow_html=True)
-            else:
-                warna_sisa = warna_urgensi(tokens, level)
-                st.markdown(
-                    f'<span class="label-kecil" style="color:{warna_sisa}">{teks_sisa}</span>',
-                    unsafe_allow_html=True,
-                )
+        if level == "lewat":
+            st.markdown('<span class="badge-lewat">Sudah lewat</span>', unsafe_allow_html=True)
+        else:
+            warna_sisa = warna_urgensi(tokens, level)
+            st.markdown(
+                f'<span class="label-kecil" style="color:{warna_sisa}">{teks_sisa}</span>',
+                unsafe_allow_html=True,
+            )
 
     ketentuan_html = (t.get("ketentuan") or "").strip()
     if ketentuan_html:
         with st.expander("Ketentuan"):
-            # Ketentuan disimpan sebagai HTML dari editor rich text di halaman
-            # Admin, jadi ditampilkan apa adanya (bukan st.write / teks polos)
-            # supaya format tebal/miring/daftar dari admin tetap tampil.
             st.markdown(ketentuan_html, unsafe_allow_html=True)
 
     if punya_link(t):
