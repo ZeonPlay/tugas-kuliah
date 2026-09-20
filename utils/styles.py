@@ -169,23 +169,33 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
 
         hr, [data-testid="stDivider"] {{ border-color: var(--line) !important; }}
 
-        .stButton button, .stLinkButton a, .stDownloadButton button {{
-            border-radius: 4px;
-            border: 1px solid var(--line) !important;
-            box-shadow: none;
-            color: var(--ink) !important;
-            background-color: var(--kartu-bg) !important;
-        }}
-        .stButton button:hover, .stLinkButton a:hover, .stDownloadButton button:hover {{
-            border-color: var(--ink) !important;
+        /* DESAIN TOMBOL OUTLINE AKURAT */
+        .stButton button, .stDownloadButton button, .stLinkButton a {{
             background-color: var(--paper) !important;
+            border: 1.5px solid var(--ink) !important;
+            color: var(--ink) !important;
+            border-radius: 4px !important;
+            font-weight: 500 !important;
+            box-shadow: none !important;
         }}
-        .stButton button[kind="primary"] {{
+        .stButton button:hover, .stDownloadButton button:hover, .stLinkButton a:hover {{
             background-color: var(--ink) !important;
+            color: var(--paper) !important;
             border-color: var(--ink) !important;
+        }}
+
+        .stButton button[kind="primary"] {{
+            background-color: var(--paper) !important;
+            border: 2px solid var(--ink) !important;
+            color: var(--ink) !important;
+            font-weight: 600 !important;
+        }}
+        .stButton button[kind="primary"]:hover {{
+            background-color: var(--ink) !important;
             color: var(--paper) !important;
         }}
 
+        /* INPUT FIELD & DROPDOWN */
         [data-testid="stTextInput"] input,
         [data-testid="stTextArea"] textarea,
         [data-baseweb="select"] > div {{
@@ -195,7 +205,6 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        /* Fix Date Picker Popover & Dropdown Options */
         [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"], [data-baseweb="calendar"] {{
             background-color: var(--kartu-bg) !important;
             border: 1px solid var(--line) !important;
@@ -216,15 +225,28 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        /* File Uploader Style Fix */
+        /* FILE UPLOADER STYLING FIX */
         [data-testid="stFileUploader"] {{
             background-color: var(--kartu-bg) !important;
-            border: 1px dashed var(--line) !important;
-            border-radius: 4px;
-            padding: 0.5rem;
+            border: 1.5px dashed var(--line) !important;
+            border-radius: 6px !important;
+            padding: 0.8rem !important;
         }}
-        [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] button {{
+        [data-testid="stFileUploaderDropzone"] {{
+            background-color: var(--kartu-bg) !important;
+            border: none !important;
+        }}
+        [data-testid="stFileUploaderDropzone"] * {{
             color: var(--ink) !important;
+        }}
+        [data-testid="stFileUploaderDropzone"] button {{
+            background-color: var(--paper) !important;
+            border: 1.5px solid var(--ink) !important;
+            color: var(--ink) !important;
+        }}
+        [data-testid="stFileUploaderDropzone"] button:hover {{
+            background-color: var(--ink) !important;
+            color: var(--paper) !important;
         }}
 
         [data-testid="stExpander"] {{
@@ -354,7 +376,7 @@ def calendar_css(mode: str | bool = "Sistem") -> str:
         }}
         .fc-button {{
             background-color: transparent !important;
-            border: 1px solid var(--cal-ink) !important;
+            border: 1.5px solid var(--cal-ink) !important;
             color: var(--cal-ink) !important;
             box-shadow: none !important;
             border-radius: 3px !important;
