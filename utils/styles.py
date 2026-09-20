@@ -195,6 +195,7 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--paper) !important;
         }}
 
+        /* INPUT FIELD & DROPDOWN */
         [data-testid="stTextInput"] input,
         [data-testid="stTextArea"] textarea,
         [data-baseweb="select"] > div {{
@@ -224,7 +225,7 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        /* PERBAIKAN STYLING FILE UPLOADER */
+        /* FIX DETAIL KONTEN FILE UPLOADER (PENTING) */
         [data-testid="stFileUploader"] {{
             background-color: var(--kartu-bg) !important;
             border: 1.5px dashed var(--line) !important;
@@ -244,21 +245,32 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        /* Kartu file yang sudah diunggah */
+        /* Kotak chip file yang sudah terunggah */
         [data-testid="stFileUploaderFileData"],
-        div[data-testid="stFileUploaderFileData"] {{
-            background-color: var(--paper) !important;
+        div[data-testid="stFileUploaderFileData"],
+        small[data-testid="stFileUploaderFileName"] {{
+            background-color: var(--kartu-bg) !important;
             border: 1px solid var(--line) !important;
             border-radius: 4px !important;
+            color: var(--ink) !important;
         }}
-        [data-testid="stFileUploaderFileData"] * {{
+
+        /* Semua teks, ikon, dan tombol hapus di dalam chip file */
+        [data-testid="stFileUploaderFileData"] *,
+        [data-testid="stFileUploaderFileData"] span,
+        [data-testid="stFileUploaderFileData"] div,
+        [data-testid="stFileUploaderFileData"] small,
+        [data-testid="stFileUploaderFileName"] {{
             color: var(--ink) !important;
             fill: var(--ink) !important;
         }}
+
         [data-testid="stFileUploaderDeleteBtn"] button,
-        [data-testid="stFileUploaderDeleteBtn"] svg {{
+        [data-testid="stFileUploaderDeleteBtn"] svg,
+        [data-testid="stFileUploaderDeleteBtn"] i {{
             color: var(--ink) !important;
             fill: var(--ink) !important;
+            background-color: transparent !important;
         }}
 
         [data-testid="stExpander"] {{
