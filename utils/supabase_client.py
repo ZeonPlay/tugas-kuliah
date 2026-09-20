@@ -3,7 +3,7 @@ import uuid
 
 import streamlit as st
 from dotenv import load_dotenv
-from supabase import Client, create_client
+from supabase import Client, ClientOptions, create_client
 
 load_dotenv()
 
@@ -45,7 +45,9 @@ def get_public_client() -> Client:
 
 def build_client_with_token(access_token: str) -> Client:
     url, key = _require_credentials()
-    client = create_client(url, key)
+    # Memasang token header Authorization ke seluruh layanan (PostgREST + Storage)
+    options = ClientOptions(headers={"Authorization": f"Bearer {access_token}"})
+    client = create_client(url, key, options=options)
     client.postgrest.auth(access_token)
     return client
 
@@ -87,11 +89,9 @@ def upload_file(client: Client, uploaded_file) -> str:
     file_name = f"{uuid.uuid4().hex}.{ext}"
     file_bytes = uploaded_file.getvalue()
 
-    # Upload ke Supabase Storage
     client.storage.from_("task-files").upload(
         path=file_name, file=file_bytes, file_options={"content-type": uploaded_file.type}
     )
 
-    # Ambil public URL
     public_url = client.storage.from_("task-files").get_public_url(file_name)
     return public_url
