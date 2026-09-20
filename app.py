@@ -6,13 +6,15 @@ jadi file ini cukup jadi halaman sambutan + pengecekan konfigurasi.
 """
 
 import streamlit as st
-from utils.styles import INK_SOFT, inject_base_css
 
-from utils.helpers import MATA_KULIAH, deadline_terdekat, format_tanggal, now_wib, parse_deadline
+from utils.helpers import MATA_KULIAH, deadline_terdekat, format_tanggal, now_wib, parse_deadline, tugas_terlewat
+from utils.styles import get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, fetch_tasks
 
 st.set_page_config(page_title="Tugas Kuliah", layout="wide", initial_sidebar_state="expanded")
-inject_base_css()
+dark = render_theme_toggle()
+inject_base_css(dark)
+tokens = get_tokens(dark)
 
 st.title("Tugas Kuliah")
 st.caption(f"S1 Sistem Informasi · {format_tanggal(now_wib().date())} · waktu ditampilkan dalam WIB")
@@ -34,23 +36,37 @@ except Exception as exc:
 st.divider()
 
 # ---------------------------------------------------------------------
-# Hero: yang paling penting untuk dilihat pertama kali — bukan deretan
-# metrik generik, tapi tugas berikutnya yang deadline-nya paling dekat.
+# Peringatan tugas terlewat — muncul paling atas kalau ada, karena ini
+# yang paling butuh tindakan segera dari mahasiswa.
+# ---------------------------------------------------------------------
+terlewat = tugas_terlewat(tasks)
+if terlewat:
+    daftar = ", ".join(t["judul"] for t in terlewat[:3])
+    lebih = f" dan {len(terlewat) - 3} lainnya" if len(terlewat) > 3 else ""
+    st.markdown(
+        f'<div class="baris-list" style="--aksen:{tokens["urgent"]}">'
+        f'<span class="badge-lewat">Sudah lewat</span>&nbsp; {daftar}{lebih}'
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+    st.write("")
+
+# ---------------------------------------------------------------------
+# Hero: tugas berikutnya yang deadline-nya paling dekat.
 # ---------------------------------------------------------------------
 terdekat = deadline_terdekat(tasks, jumlah=1)
 
 kiri, kanan = st.columns([2, 1], gap="large")
 
 with kiri:
+    st.markdown('<p class="label-kecil">Deadline berikutnya</p>', unsafe_allow_html=True)
     if terdekat:
         t = terdekat[0]
         dt = parse_deadline(t["deadline"])
-        st.markdown('<p class="label-kecil">Deadline berikutnya</p>', unsafe_allow_html=True)
         st.markdown(f"### {t['judul']}")
         st.write(f"{t['mata_kuliah']} — {t.get('jenis', '-')}")
         st.caption(f"{format_tanggal(dt.date())} · {dt:%H:%M} WIB")
     else:
-        st.markdown('<p class="label-kecil">Deadline berikutnya</p>', unsafe_allow_html=True)
         st.write("Tidak ada deadline yang akan datang.")
 
     st.write("")
@@ -69,7 +85,7 @@ with kanan:
     st.markdown('<p class="label-kecil">Mata kuliah</p>', unsafe_allow_html=True)
     st.markdown(
         "".join(
-            f'<div class="baris-list" style="--aksen:{INK_SOFT}"><span class="label-kecil">{m}</span></div>'
+            f'<div class="baris-list" style="--aksen:{tokens["ink_soft"]}"><span class="label-kecil">{m}</span></div>'
             for m in MATA_KULIAH
         ),
         unsafe_allow_html=True,

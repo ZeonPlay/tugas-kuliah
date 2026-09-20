@@ -24,6 +24,13 @@ create table if not exists public.tasks (
     deadline     timestamptz not null,
     ketentuan    text,
     link_vclass  text,                       -- boleh NULL: tugas lisan tidak punya link
+    -- Kolom ini tidak lagi ditampilkan/diminta di form (semua tugas
+    -- dianggap sama pentingnya). Dibiarkan ada dengan nilai default
+    -- supaya tidak perlu migrasi kalau nanti dipakai lagi.
+    -- Kolom ini TIDAK LAGI dipakai di UI (semua tugas dianggap sama
+    -- pentingnya). Dibiarkan ada dengan default otomatis supaya baris
+    -- lama tidak error; boleh dihapus permanen lewat migrasi di bagian
+    -- paling bawah file ini kalau kamu yakin tidak butuh lagi.
     prioritas    text        not null default 'Sedang'
                  check (prioritas in ('Tinggi', 'Sedang', 'Rendah')),
     status       text        not null default 'Belum'
@@ -107,3 +114,10 @@ create policy tasks_delete_admin
 --   ('Tugas ERD Perpustakaan', 'Sistem Basis Data', 'Teori',
 --    now() + interval '5 days', 'Dikumpulkan langsung ke dosen saat kelas.',
 --    null, 'Sedang', 'Belum');
+
+-- ---------------------------------------------------------------------
+-- 5. (Opsional) Hapus kolom prioritas secara permanen.
+--    Hanya jalankan ini kalau kamu YAKIN tidak akan memakainya lagi —
+--    tidak bisa dibatalkan tanpa backup.
+-- ---------------------------------------------------------------------
+-- alter table public.tasks drop column prioritas;

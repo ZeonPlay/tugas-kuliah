@@ -1,66 +1,101 @@
 """
-Satu tempat untuk semua styling kustom, supaya ketiga halaman (app, Kalender,
-Admin) punya identitas visual yang sama persis. Dipanggil sekali di awal
-setiap halaman lewat inject_base_css().
+Satu tempat untuk semua styling kustom + dukungan tema gelap/terang.
 
-Konsep: "kartu indeks arsip akademik" — garis tipis, aksen warna di kiri
-per elemen (bukan kotak penuh warna dengan shadow), tanpa emoji.
+Semua warna diambil lewat get_tokens(dark) — bukan konstanta modul tetap —
+supaya toggle tema di sidebar otomatis mengubah SEMUA halaman sekaligus,
+termasuk warna kalender (yang dirender di iframe terpisah, jadi butuh
+custom_css sendiri lewat calendar_css()).
 """
+
+import colorsys
 
 import streamlit as st
 
 # ---------------------------------------------------------------------
-# Token warna — 6 nilai inti, dipakai konsisten di seluruh aplikasi.
+# Token warna — tema terang (dasar)
 # ---------------------------------------------------------------------
-PAPER = "#F6F4EE"       # latar
-INK = "#21252C"         # teks utama
-INK_SOFT = "#5C6270"    # teks sekunder / caption
-LINE = "#D8D3C6"        # garis pembatas
-URGENT = "#A8442C"      # deadline lewat / mendesak (<24 jam)
-NEAR = "#B9812E"        # deadline dekat (<3 hari)
-SAFE = "#3F6B52"         # aman / selesai
+_LIGHT = {
+    "paper": "#F6F4EE",
+    "ink": "#21252C",
+    "ink_soft": "#5C6270",
+    "line": "#D8D3C6",
+    "kartu_bg": "#FCFBF8",
+    "urgent": "#A8442C",
+    "near": "#B9812E",
+    "safe": "#3F6B52",
+    "course": [
+        "#5B7FA6",
+        "#5E9C8C",
+        "#C08B3E",
+        "#8073B3",
+        "#7C9A5D",
+        "#C77B5A",
+        "#4F8FA6",
+        "#A65B8C",
+        "#6B6E8C",
+    ],
+}
 
-# Warna per mata kuliah — hue berbeda-beda tapi saturasi & kecerahan
-# sepadan, supaya tidak ada satu warna yang "berteriak" dibanding lainnya.
-# Sengaja tidak memakai URGENT/NEAR/SAFE di sini supaya makna warna
-# tidak tertukar antara "identitas mata kuliah" dan "status/urgensi".
-COURSE_PALETTE = [
-    "#5B7FA6",  # denim
-    "#5E9C8C",  # teal
-    "#C08B3E",  # ochre
-    "#8073B3",  # plum
-    "#7C9A5D",  # sage
-    "#C77B5A",  # terracotta muda
-    "#4F8FA6",  # steel blue
-    "#A65B8C",  # mauve
-    "#6B6E8C",  # blue-grey
-]
-
-STATUS_WARNA = {"Belum": INK_SOFT, "Dikerjakan": NEAR, "Selesai": SAFE}
-PRIORITAS_WARNA = {"Tinggi": URGENT, "Sedang": NEAR, "Rendah": SAFE}
+_DARK = {
+    "paper": "#1B1C20",
+    "ink": "#EDEAE2",
+    "ink_soft": "#A6A9B3",
+    "line": "#3B3D44",
+    "kartu_bg": "#232428",
+    "urgent": "#D9694C",
+    "near": "#D9A354",
+    "safe": "#6FA184",
+    # course diisi di bawah, dihitung dari _LIGHT["course"] supaya konsisten
+}
 
 
-def _course_colors(nama_list: list[str]) -> dict[str, str]:
-    return {
-        nama: COURSE_PALETTE[i % len(COURSE_PALETTE)]
-        for i, nama in enumerate(nama_list)
-    }
+def _terangkan(hex_warna: str, tambahan_lightness: float) -> str:
+    """Naikkan lightness (HSL) sebuah warna hex, dipakai supaya warna
+    mata kuliah tetap terbaca di latar gelap tanpa perlu menebak-nebak
+    hex baru satu per satu."""
+    hex_warna = hex_warna.lstrip("#")
+    r, g, b = (int(hex_warna[i : i + 2], 16) / 255 for i in (0, 2, 4))
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    l = min(0.82, l + tambahan_lightness)
+    r, g, b = colorsys.hls_to_rgb(h, l, s)
+    return "#{:02X}{:02X}{:02X}".format(round(r * 255), round(g * 255), round(b * 255))
 
 
-def inject_base_css() -> None:
+_DARK["course"] = [_terangkan(c, 0.18) for c in _LIGHT["course"]]
+
+
+def get_tokens(dark: bool) -> dict:
+    return _DARK if dark else _LIGHT
+
+
+# ---------------------------------------------------------------------
+# Toggle tema — dipanggil di sidebar tiap halaman, SEBELUM inject_base_css
+# ---------------------------------------------------------------------
+def render_theme_toggle() -> bool:
+    with st.sidebar:
+        gelap = st.toggle("Tema gelap", key="tema_gelap")
+    return gelap
+
+
+# ---------------------------------------------------------------------
+# CSS halaman utama
+# ---------------------------------------------------------------------
+def inject_base_css(dark: bool) -> None:
+    t = get_tokens(dark)
     st.markdown(
         f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
         :root {{
-            --paper: {PAPER};
-            --ink: {INK};
-            --ink-soft: {INK_SOFT};
-            --line: {LINE};
-            --urgent: {URGENT};
-            --near: {NEAR};
-            --safe: {SAFE};
+            --paper: {t["paper"]};
+            --ink: {t["ink"]};
+            --ink-soft: {t["ink_soft"]};
+            --line: {t["line"]};
+            --kartu-bg: {t["kartu_bg"]};
+            --urgent: {t["urgent"]};
+            --near: {t["near"]};
+            --safe: {t["safe"]};
         }}
 
         html, body, [class*="css"] {{
@@ -76,53 +111,53 @@ def inject_base_css() -> None:
             font-family: 'IBM Plex Serif', serif;
             font-weight: 600;
             letter-spacing: -0.01em;
+            color: var(--ink);
         }}
 
         h1 {{ font-size: 1.9rem; margin-bottom: 0.1rem; }}
         h2 {{ font-size: 1.35rem; }}
         h3 {{ font-size: 1.1rem; }}
 
-        [data-testid="stCaptionContainer"] {{
-            color: var(--ink-soft);
-        }}
+        p, span, div, label {{ color: var(--ink); }}
 
-        hr, [data-testid="stDivider"] {{
-            border-color: var(--line) !important;
-        }}
+        [data-testid="stCaptionContainer"] {{ color: var(--ink-soft) !important; }}
 
-        /* Tombol: sudut tegas, tanpa shadow, garis tipis */
+        hr, [data-testid="stDivider"] {{ border-color: var(--line) !important; }}
+
         .stButton button, .stLinkButton a, .stDownloadButton button {{
             border-radius: 3px;
             border: 1px solid var(--ink);
             box-shadow: none;
+            color: var(--ink);
+            background-color: transparent;
         }}
         .stButton button[kind="primary"] {{
             background-color: var(--ink);
             border-color: var(--ink);
+            color: var(--paper);
         }}
 
-        /* Input & select: garis tipis konsisten dengan tema */
         [data-testid="stTextInput"] input,
         [data-testid="stTextArea"] textarea,
         [data-baseweb="select"] > div {{
             border-radius: 3px !important;
             border-color: var(--line) !important;
+            background-color: var(--kartu-bg) !important;
+            color: var(--ink) !important;
         }}
 
-        /* Sidebar lebih tenang, dipisah dari konten dengan garis, bukan shadow */
         [data-testid="stSidebar"] {{
-            background-color: #EFEBDD;
+            background-color: var(--kartu-bg);
             border-right: 1px solid var(--line);
         }}
 
-        /* Kartu baris tugas: garis tipis + aksen warna di kiri */
         .kartu-tugas {{
             border: 1px solid var(--line);
             border-left: 4px solid var(--aksen, var(--ink));
             border-radius: 2px;
             padding: 0.85rem 1rem;
             margin-bottom: 0.6rem;
-            background-color: #FCFBF8;
+            background-color: var(--kartu-bg);
         }}
 
         .baris-list {{
@@ -134,7 +169,6 @@ def inject_base_css() -> None:
         .label-kecil {{
             font-size: 0.78rem;
             color: var(--ink-soft);
-            text-transform: none;
         }}
 
         .titik-status {{
@@ -146,7 +180,16 @@ def inject_base_css() -> None:
             margin-right: 0.4em;
         }}
 
-        /* Mobile: rapatkan jarak & kecilkan judul supaya tidak terasa kaku */
+        .badge-lewat {{
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--urgent);
+            border: 1px solid var(--urgent);
+            border-radius: 3px;
+            padding: 0.05rem 0.45rem;
+        }}
+
         @media (max-width: 640px) {{
             h1 {{ font-size: 1.5rem; }}
             h2 {{ font-size: 1.15rem; }}
@@ -163,66 +206,75 @@ def inject_base_css() -> None:
     )
 
 
-def calendar_css() -> str:
-    """CSS untuk diteruskan ke parameter custom_css milik streamlit-calendar.
+def calendar_css(dark: bool) -> str:
+    """CSS untuk parameter custom_css milik streamlit-calendar.
 
     Komponen kalender dirender di iframe terpisah, jadi CSS di
-    inject_base_css() di atas TIDAK menjangkaunya — harus lewat sini.
+    inject_base_css() TIDAK menjangkaunya — harus lewat sini.
     """
+    t = get_tokens(dark)
+    ink, paper, ink_soft, urgent = t["ink"], t["paper"], t["ink_soft"], t["urgent"]
     return f"""
         .fc {{
             font-family: 'IBM Plex Sans', sans-serif;
-            color: {INK};
+            color: {ink};
+            background-color: {paper};
         }}
         .fc-toolbar-title {{
             font-family: 'IBM Plex Serif', serif;
             font-size: 1.15rem !important;
             font-weight: 600;
+            color: {ink};
         }}
         .fc-button {{
             background-color: transparent !important;
-            border: 1px solid {INK} !important;
-            color: {INK} !important;
+            border: 1px solid {ink} !important;
+            color: {ink} !important;
             box-shadow: none !important;
             border-radius: 3px !important;
             text-transform: none !important;
         }}
         .fc-button:hover {{
-            background-color: {INK} !important;
-            color: {PAPER} !important;
+            background-color: {ink} !important;
+            color: {paper} !important;
         }}
         .fc-button-active {{
-            background-color: {INK} !important;
-            color: {PAPER} !important;
+            background-color: {ink} !important;
+            color: {paper} !important;
         }}
         .fc-daygrid-day-number {{
-            color: {INK};
+            color: {ink};
             font-size: 0.85rem;
         }}
         .fc-col-header-cell-cushion {{
-            color: {INK_SOFT};
+            color: {ink_soft};
             font-weight: 500;
             font-size: 0.8rem;
         }}
+        .fc-scrollgrid, .fc-theme-standard td, .fc-theme-standard th {{
+            border-color: {ink_soft}33;
+        }}
+        /* Satu event ringkasan per tanggal ("2 deadline") — dibuat besar
+           dan jadi satu blok penuh supaya gampang diklik di HP, bukan
+           tumpukan chip kecil per tugas seperti sebelumnya. */
         .fc-event {{
-            border-radius: 2px;
+            border-radius: 3px;
             border: none;
-            font-size: 0.78rem;
-            padding: 1px 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 3px 5px;
+            cursor: pointer;
         }}
         .fc-daygrid-day.fc-day-today {{
-            background-color: rgba(168, 68, 44, 0.08) !important;
+            background-color: {urgent}14 !important;
         }}
         @media (max-width: 640px) {{
             .fc-toolbar {{
                 flex-direction: column;
                 gap: 0.4rem;
             }}
-            .fc-toolbar-title {{
-                font-size: 1rem !important;
-            }}
-            .fc-event {{
-                font-size: 0.68rem;
-            }}
+            .fc-toolbar-title {{ font-size: 1rem !important; }}
+            .fc-event {{ font-size: 0.72rem; padding: 4px 3px; }}
+            .fc-daygrid-day-number {{ font-size: 0.75rem; }}
         }}
     """

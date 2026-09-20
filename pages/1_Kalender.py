@@ -8,13 +8,9 @@ from datetime import date
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from streamlit_calendar import calendar
-from utils.styles import calendar_css, inject_base_css
 
 from utils.helpers import (
     JENIS,
-    PRIORITAS_WARNA,
-    STATUS_WARNA,
-    WARNA_MATKUL,
     build_calendar_events,
     deadline_terdekat,
     format_deadline,
@@ -25,12 +21,17 @@ from utils.helpers import (
     punya_link,
     sisa_waktu,
     tasks_pada_tanggal,
+    warna_matkul,
+    warna_status,
     warna_urgensi,
 )
+from utils.styles import calendar_css, get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, fetch_tasks
 
 st.set_page_config(page_title="Kalender — Tugas Kuliah", layout="wide")
-inject_base_css()
+dark = render_theme_toggle()
+inject_base_css(dark)
+tokens = get_tokens(dark)
 
 # Auto-refresh tiap 30 detik, disamakan dengan ttl cache fetch_tasks()
 # supaya refresh tidak membanjiri database.
@@ -52,8 +53,7 @@ if not semua_tasks:
     st.stop()
 
 # ---------------------------------------------------------------------
-# Sidebar: filter ringkas + daftar deadline terdekat sebagai list tipis
-# (bukan kotak alert warna-warni bertumpuk seperti versi sebelumnya).
+# Sidebar: filter ringkas + daftar deadline terdekat sebagai list tipis.
 # ---------------------------------------------------------------------
 with st.sidebar:
     st.markdown('<p class="label-kecil">Filter</p>', unsafe_allow_html=True)
@@ -71,7 +71,7 @@ with st.sidebar:
         for t in terdekat:
             dt = parse_deadline(t["deadline"])
             teks_sisa, level = sisa_waktu(t["deadline"])
-            warna = warna_urgensi(level)
+            warna = warna_urgensi(tokens, level)
             baris.append(
                 f'<div class="baris-list" style="--aksen:{warna}">'
                 f'<div style="font-weight:500">{t["judul"]}</div>'
@@ -86,12 +86,13 @@ if sembunyikan_selesai:
     tasks = [t for t in tasks if t.get("status") != "Selesai"]
 
 # ---------------------------------------------------------------------
-# Kalender
+# Kalender — satu blok "N deadline" per tanggal, bukan chip per tugas,
+# supaya tetap gampang diklik walau tugasnya menumpuk di satu hari.
 # ---------------------------------------------------------------------
 opsi_kalender = {
     "initialView": "dayGridMonth",
     "locale": "id",
-    "firstDay": 1,  # mulai hari Senin
+    "firstDay": 1,
     "headerToolbar": {
         "left": "prev,next today",
         "center": "title",
@@ -99,18 +100,15 @@ opsi_kalender = {
     },
     "buttonText": {"today": "Hari ini", "month": "Bulan", "list": "Daftar"},
     "height": 620,
-    "dayMaxEvents": 3,
 }
 
 state = calendar(
-    events=build_calendar_events(tasks),
+    events=build_calendar_events(tasks, tokens),
     options=opsi_kalender,
-    custom_css=calendar_css(),
+    custom_css=calendar_css(dark),
     key="kalender_publik",
 )
 
-# Simpan tanggal terpilih di session_state supaya tidak hilang setiap
-# kali auto-refresh menjalankan ulang skrip.
 if isinstance(state, dict):
     callback = state.get("callback")
     if callback == "dateClick":
@@ -123,10 +121,7 @@ if isinstance(state, dict):
         if klik:
             st.session_state["tanggal_dipilih"] = klik.isoformat()
 
-st.caption(
-    "Garis merah menandai tanggal dengan deadline. Klik tanggalnya untuk melihat "
-    "detail tugas — warna tiap tugas mengikuti mata kuliahnya."
-)
+st.caption("Setiap tanggal menampilkan jumlah deadline hari itu — klik untuk melihat detail tugasnya di bawah.")
 
 # ---------------------------------------------------------------------
 # Detail tugas pada tanggal terpilih
@@ -152,17 +147,17 @@ if not tugas_hari_itu:
     st.stop()
 
 for t in tugas_hari_itu:
-    warna_matkul = WARNA_MATKUL.get(t.get("mata_kuliah"), "#868E96")
-    warna_status = STATUS_WARNA.get(t.get("status"), "#868E96")
-    warna_prioritas = PRIORITAS_WARNA.get(t.get("prioritas"), "#868E96")
+    aksen = warna_matkul(tokens, t.get("mata_kuliah"))
+    w_status = warna_status(tokens, t.get("status"))
+    teks_sisa, level = sisa_waktu(t["deadline"])
 
-    st.markdown(f'<div class="kartu-tugas" style="--aksen:{warna_matkul}">', unsafe_allow_html=True)
+    st.markdown(f'<div class="kartu-tugas" style="--aksen:{aksen}">', unsafe_allow_html=True)
 
     atas_kiri, atas_kanan = st.columns([3, 1])
     with atas_kiri:
         st.markdown(f"#### {t['judul']}")
         st.markdown(
-            f'<span style="color:{warna_matkul};font-weight:500">{t["mata_kuliah"]}</span>'
+            f'<span style="color:{aksen};font-weight:500">{t["mata_kuliah"]}</span>'
             f' &nbsp;·&nbsp; <span class="label-kecil">{t.get("jenis", "-")}</span>',
             unsafe_allow_html=True,
         )
@@ -170,18 +165,26 @@ for t in tugas_hari_itu:
 
     with atas_kanan:
         st.markdown(
-            f'<span class="titik-status" style="--titik:{warna_status}"></span>{t.get("status", "-")}',
+            f'<span class="titik-status" style="--titik:{w_status}"></span>{t.get("status", "-")}',
             unsafe_allow_html=True,
         )
-        st.markdown(
-            f'<span class="titik-status" style="--titik:{warna_prioritas}"></span>Prioritas {t.get("prioritas", "-")}',
-            unsafe_allow_html=True,
-        )
+        if t.get("status") != "Selesai":
+            if level == "lewat":
+                st.markdown('<span class="badge-lewat">Sudah lewat</span>', unsafe_allow_html=True)
+            else:
+                warna_sisa = warna_urgensi(tokens, level)
+                st.markdown(
+                    f'<span class="label-kecil" style="color:{warna_sisa}">{teks_sisa}</span>',
+                    unsafe_allow_html=True,
+                )
 
-    ketentuan = (t.get("ketentuan") or "").strip()
-    if ketentuan:
+    ketentuan_html = (t.get("ketentuan") or "").strip()
+    if ketentuan_html:
         with st.expander("Ketentuan"):
-            st.write(ketentuan)
+            # Ketentuan disimpan sebagai HTML dari editor rich text di halaman
+            # Admin, jadi ditampilkan apa adanya (bukan st.write / teks polos)
+            # supaya format tebal/miring/daftar dari admin tetap tampil.
+            st.markdown(ketentuan_html, unsafe_allow_html=True)
 
     if punya_link(t):
         st.link_button("Buka di VClass", t["link_vclass"])

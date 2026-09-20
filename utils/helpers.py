@@ -1,11 +1,13 @@
 """
 Konstanta + fungsi bantu: timezone, format tanggal, warna, event kalender.
+
+Fungsi pewarnaan menerima `tokens` (dari utils.styles.get_tokens(dark))
+sebagai parameter, bukan konstanta tetap — supaya toggle tema gelap/terang
+di sidebar otomatis konsisten di seluruh halaman.
 """
 
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
-
-from utils.styles import COURSE_PALETTE, PRIORITAS_WARNA, STATUS_WARNA, URGENT
 
 # ---------------------------------------------------------------------
 # Timezone
@@ -31,15 +33,13 @@ MATA_KULIAH = [
 ]
 
 JENIS = ["Praktikum", "Teori", "Quiz", "Ujian"]
-PRIORITAS = ["Tinggi", "Sedang", "Rendah"]
 STATUS = ["Belum", "Dikerjakan", "Selesai"]
 
-# Warna chip event di kalender, dibedakan per mata kuliah.
-# Urutannya mengikuti MATA_KULIAH di atas. Diambil dari token desain
-# di utils/styles.py supaya konsisten dengan warna di seluruh halaman.
-WARNA_MATKUL = {nama: COURSE_PALETTE[i % len(COURSE_PALETTE)] for i, nama in enumerate(MATA_KULIAH)}
-
-WARNA_DEADLINE = URGENT  # aksen penanda tanggal berdeadline di kalender
+# Catatan: field prioritas sengaja dihapus dari UI (semua tugas dianggap
+# penting; urgensi dilihat dari deadline, bukan dari label buatan admin).
+# Kolom `prioritas` di database TETAP ada untuk kompatibilitas — nilainya
+# otomatis terisi default 'Sedang' dari sql/setup.sql dan tidak lagi
+# ditampilkan atau diminta di form.
 
 
 # ---------------------------------------------------------------------
@@ -84,7 +84,6 @@ def parse_click_date(raw: str) -> date | None:
         except ValueError:
             return None
     if dt.tzinfo is None:
-        # Tanpa info zona, anggap sudah tanggal lokal
         return dt.date()
     return dt.astimezone(WIB).date()
 
@@ -120,18 +119,15 @@ def format_deadline(value: str | datetime) -> str:
 
 def sisa_waktu(value: str | datetime) -> tuple[str, str]:
     """
-    Return (teks, level). Level dipakai untuk memilih warna:
-    'lewat' | 'mendesak' (<24 jam) | 'dekat' (<3 hari) | 'aman'
+    Return (teks, level). Level: 'lewat' | 'mendesak' (<24 jam) |
+    'dekat' (<3 hari) | 'aman'.
     """
     dt = parse_deadline(value)
     selisih = dt - now_wib()
     detik = selisih.total_seconds()
 
     if detik < 0:
-        lewat = abs(selisih)
-        if lewat.days >= 1:
-            return f"Lewat {lewat.days} hari", "lewat"
-        return f"Lewat {int(lewat.seconds // 3600)} jam", "lewat"
+        return "Sudah lewat", "lewat"
 
     if detik < 3600:
         return f"{int(detik // 60)} menit lagi", "mendesak"
@@ -143,11 +139,28 @@ def sisa_waktu(value: str | datetime) -> tuple[str, str]:
     return f"{hari} hari lagi", level
 
 
-def warna_urgensi(level: str) -> str:
-    """Warna titik status berdasarkan level dari sisa_waktu()."""
-    return {"lewat": URGENT, "mendesak": URGENT, "dekat": PRIORITAS_WARNA["Sedang"]}.get(
-        level, PRIORITAS_WARNA["Rendah"]
-    )
+def warna_urgensi(tokens: dict, level: str) -> str:
+    return {
+        "lewat": tokens["urgent"],
+        "mendesak": tokens["urgent"],
+        "dekat": tokens["near"],
+        "aman": tokens["ink_soft"],
+    }.get(level, tokens["ink_soft"])
+
+
+def warna_matkul(tokens: dict, nama: str) -> str:
+    palet = tokens["course"]
+    if nama not in MATA_KULIAH:
+        return tokens["ink_soft"]
+    return palet[MATA_KULIAH.index(nama) % len(palet)]
+
+
+def warna_status(tokens: dict, status: str) -> str:
+    return {
+        "Belum": tokens["ink_soft"],
+        "Dikerjakan": tokens["near"],
+        "Selesai": tokens["safe"],
+    }.get(status, tokens["ink_soft"])
 
 
 def punya_link(task: dict) -> bool:
@@ -155,41 +168,41 @@ def punya_link(task: dict) -> bool:
     return link.lower().startswith(("http://", "https://"))
 
 
+def sudah_lewat(task: dict) -> bool:
+    return parse_deadline(task["deadline"]) < now_wib()
+
+
 # ---------------------------------------------------------------------
 # Kalender
 # ---------------------------------------------------------------------
-def build_calendar_events(tasks: list[dict]) -> list[dict]:
+def build_calendar_events(tasks: list[dict], tokens: dict) -> list[dict]:
     """
-    Dua lapis event:
-    1. Background event merah — satu per TANGGAL unik yang punya deadline,
-       jadi beberapa tugas di hari yang sama tetap satu blok merah.
-    2. Event biasa — satu per tugas, warnanya mengikuti mata kuliah.
+    Satu event RINGKASAN per tanggal ("1 deadline" / "2 deadline"), bukan
+    satu event per tugas. Ini sengaja: kalau ada banyak tugas menumpuk di
+    satu tanggal, chip individual jadi kecil-kecil dan susah diklik —
+    dengan satu blok ringkasan, seluruh sel tanggal jadi target klik yang
+    besar, lalu detailnya dibaca di daftar di bawah kalender.
     """
-    events: list[dict] = []
-    tanggal_unik: set[date] = set()
-
+    per_tanggal: dict[date, list[dict]] = {}
     for t in tasks:
-        dt = parse_deadline(t["deadline"])
-        tanggal_unik.add(dt.date())
-        events.append(
-            {
-                "id": t["id"],
-                "title": t["judul"],
-                "start": dt.isoformat(),
-                "end": dt.isoformat(),
-                "backgroundColor": WARNA_MATKUL.get(t.get("mata_kuliah"), "#868E96"),
-                "borderColor": WARNA_MATKUL.get(t.get("mata_kuliah"), "#868E96"),
-            }
-        )
+        d = parse_deadline(t["deadline"]).date()
+        per_tanggal.setdefault(d, []).append(t)
 
-    for d in sorted(tanggal_unik):
+    hari_ini = now_wib().date()
+    events: list[dict] = []
+
+    for d, daftar in sorted(per_tanggal.items()):
+        jumlah = len(daftar)
+        warna = tokens["ink_soft"] if d < hari_ini else tokens["urgent"]
         events.append(
             {
                 "start": d.isoformat(),
                 "end": (d + timedelta(days=1)).isoformat(),
-                "display": "background",
-                "backgroundColor": WARNA_DEADLINE,
                 "allDay": True,
+                "title": f"{jumlah} deadline",
+                "backgroundColor": warna,
+                "borderColor": warna,
+                "textColor": "#FFFFFF",
             }
         )
 
@@ -197,7 +210,9 @@ def build_calendar_events(tasks: list[dict]) -> list[dict]:
 
 
 def tasks_pada_tanggal(tasks: list[dict], target: date) -> list[dict]:
-    return [t for t in tasks if parse_deadline(t["deadline"]).date() == target]
+    hasil = [t for t in tasks if parse_deadline(t["deadline"]).date() == target]
+    hasil.sort(key=lambda t: parse_deadline(t["deadline"]))
+    return hasil
 
 
 def deadline_terdekat(tasks: list[dict], jumlah: int = 5) -> list[dict]:
@@ -206,3 +221,9 @@ def deadline_terdekat(tasks: list[dict], jumlah: int = 5) -> list[dict]:
     kandidat = [t for t in tasks if t.get("status") != "Selesai" and parse_deadline(t["deadline"]) >= sekarang]
     kandidat.sort(key=lambda t: parse_deadline(t["deadline"]))
     return kandidat[:jumlah]
+
+
+def tugas_terlewat(tasks: list[dict]) -> list[dict]:
+    """Tugas yang deadline-nya sudah lewat tapi belum ditandai selesai —
+    dipakai untuk pengingat di halaman utama."""
+    return [t for t in tasks if t.get("status") != "Selesai" and sudah_lewat(t)]

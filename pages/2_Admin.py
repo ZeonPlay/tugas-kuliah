@@ -4,21 +4,40 @@ Halaman admin: login Supabase Auth + CRUD tugas.
 Pengecekan is_admin() di sini hanya mengatur tampilan. Perlindungan
 sebenarnya ada di policy RLS (sql/setup.sql): tanpa token admin,
 database menolak INSERT/UPDATE/DELETE apa pun.
+
+Catatan desain: bagian ini SENGAJA tidak memakai st.form(). Editor
+"Ketentuan" pakai streamlit-quill (rich text, seperti Word/Google Docs),
+dan komponen custom seperti itu punya beberapa laporan bermasalah kalau
+diletakkan di dalam st.form (nilainya kadang tidak ikut ter-submit).
+Makanya di sini validasi & simpan dipicu lewat st.button biasa.
 """
 
 from datetime import time as dtime
 
 import pandas as pd
 import streamlit as st
-from utils.styles import inject_base_css
+from streamlit_quill import st_quill
 
 from utils.auth import current_email, get_authed_client, is_admin, login, logout
-from utils.helpers import JENIS, MATA_KULIAH, PRIORITAS, STATUS, format_deadline, now_wib, parse_deadline, to_utc_iso
+from utils.helpers import JENIS, MATA_KULIAH, STATUS, format_deadline, now_wib, parse_deadline, to_utc_iso
+from utils.styles import get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, delete_task, fetch_tasks, insert_task, update_task
 
 st.set_page_config(page_title="Admin — Tugas Kuliah", layout="wide")
-inject_base_css()
+dark = render_theme_toggle()
+inject_base_css(dark)
+tokens = get_tokens(dark)
 st.title("Admin")
+
+
+def _ambil_html(hasil_quill) -> str:
+    """streamlit-quill pernah mengembalikan string HTML langsung, dan di
+    beberapa versi/contoh berupa dict berisi 'html'. Ditangani dua-duanya
+    di sini supaya tidak diam-diam gagal simpan kalau versinya beda."""
+    if isinstance(hasil_quill, dict):
+        return (hasil_quill.get("html") or "").strip()
+    return (hasil_quill or "").strip()
+
 
 # ---------------------------------------------------------------------
 # Login
@@ -64,40 +83,33 @@ tab_tambah, tab_kelola = st.tabs(["Tambah tugas", "Kelola tugas"])
 # Tab 1 — Tambah
 # ---------------------------------------------------------------------
 with tab_tambah:
-    with st.form("form_tambah", clear_on_submit=True):
-        judul = st.text_input("Judul tugas")
+    judul = st.text_input("Judul tugas", key="tambah_judul")
 
-        c1, c2 = st.columns(2)
-        mata_kuliah = c1.selectbox("Mata kuliah", MATA_KULIAH)
-        jenis = c2.selectbox("Jenis", JENIS, index=JENIS.index("Teori"))
+    c1, c2 = st.columns(2)
+    mata_kuliah = c1.selectbox("Mata kuliah", MATA_KULIAH, key="tambah_matkul")
+    jenis = c2.selectbox("Jenis", JENIS, index=JENIS.index("Teori"), key="tambah_jenis")
 
-        c3, c4 = st.columns(2)
-        tgl = c3.date_input("Tanggal deadline", value=now_wib().date())
-        jam = c4.time_input("Jam deadline (WIB)", value=dtime(23, 59))
+    c3, c4 = st.columns(2)
+    tgl = c3.date_input("Tanggal deadline", value=now_wib().date(), key="tambah_tgl")
+    jam = c4.time_input("Jam deadline (WIB)", value=dtime(23, 59), key="tambah_jam")
 
-        ketentuan = st.text_area(
-            "Ketentuan",
-            placeholder=(
-                "Contoh: Format PDF, maksimal 10 halaman.\n"
-                "Untuk tugas tanpa link, tulis cara pengumpulannya di sini "
-                "(mis. 'Dikumpulkan langsung ke dosen saat kelas berikutnya')."
-            ),
-            height=110,
-        )
+    st.markdown('<p class="label-kecil">Ketentuan</p>', unsafe_allow_html=True)
+    st.caption(
+        "Tulis seperti di Word/Google Docs — bisa tebal, miring, dan daftar berpoin/nomor. "
+        "Untuk tugas tanpa link VClass, tulis cara pengumpulannya di sini."
+    )
+    ketentuan_raw = st_quill(placeholder="Contoh: Format PDF, maksimal 10 halaman.", key="tambah_ketentuan")
 
-        link_vclass = st.text_input(
-            "Link VClass (boleh kosong)",
-            placeholder="https://vclass.unila.ac.id/mod/assign/view.php?id=...",
-        )
+    link_vclass = st.text_input(
+        "Link VClass (boleh kosong)",
+        placeholder="https://vclass.unila.ac.id/mod/assign/view.php?id=...",
+        key="tambah_link",
+    )
+    status = st.selectbox("Status", STATUS, index=STATUS.index("Belum"), key="tambah_status")
 
-        c5, c6 = st.columns(2)
-        prioritas = c5.selectbox("Prioritas", PRIORITAS, index=PRIORITAS.index("Sedang"))
-        status = c6.selectbox("Status", STATUS, index=STATUS.index("Belum"))
-
-        simpan = st.form_submit_button("Simpan tugas", type="primary")
-
-    if simpan:
+    if st.button("Simpan tugas", type="primary", key="tambah_simpan"):
         link_bersih = link_vclass.strip()
+        ketentuan_bersih = _ambil_html(ketentuan_raw)
         if not judul.strip():
             st.error("Judul tugas wajib diisi.")
         elif link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
@@ -108,13 +120,17 @@ with tab_tambah:
                 "mata_kuliah": mata_kuliah,
                 "jenis": jenis,
                 "deadline": to_utc_iso(tgl, jam),
-                "ketentuan": ketentuan.strip() or None,
+                "ketentuan": ketentuan_bersih or None,
                 "link_vclass": link_bersih or None,
-                "prioritas": prioritas,
                 "status": status,
             }
             try:
                 insert_task(client, payload)
+                for k in [
+                    "tambah_judul",
+                    "tambah_link",
+                ]:
+                    st.session_state.pop(k, None)
                 st.success("Tugas tersimpan.")
                 st.rerun()
             except Exception as exc:
@@ -161,7 +177,6 @@ with tab_kelola:
                     "mata_kuliah": t["mata_kuliah"],
                     "jenis": t.get("jenis"),
                     "deadline_wib": parse_deadline(t["deadline"]).strftime("%Y-%m-%d %H:%M"),
-                    "prioritas": t.get("prioritas"),
                     "status": t.get("status"),
                     "link_vclass": t.get("link_vclass") or "",
                     "ketentuan": t.get("ketentuan") or "",
@@ -182,52 +197,54 @@ with tab_kelola:
         label = f"{t['judul']} — {t['mata_kuliah']} ({format_deadline(t['deadline'])})"
         with st.expander(label):
             dt_lokal = parse_deadline(t["deadline"])
+            tid = t["id"]
 
-            with st.form(f"form_edit_{t['id']}"):
-                e_judul = st.text_input("Judul", value=t["judul"])
+            e_judul = st.text_input("Judul", value=t["judul"], key=f"edit_judul_{tid}")
 
-                c1, c2 = st.columns(2)
-                matkul_saat_ini = t.get("mata_kuliah")
-                opsi_matkul = MATA_KULIAH.copy()
-                if matkul_saat_ini and matkul_saat_ini not in opsi_matkul:
-                    opsi_matkul.append(matkul_saat_ini)
-                e_matkul = c1.selectbox(
-                    "Mata kuliah",
-                    opsi_matkul,
-                    index=opsi_matkul.index(matkul_saat_ini) if matkul_saat_ini in opsi_matkul else 0,
-                )
-                e_jenis = c2.selectbox("Jenis", JENIS, index=JENIS.index(t.get("jenis", "Teori")))
+            c1, c2 = st.columns(2)
+            matkul_saat_ini = t.get("mata_kuliah")
+            opsi_matkul = MATA_KULIAH.copy()
+            if matkul_saat_ini and matkul_saat_ini not in opsi_matkul:
+                opsi_matkul.append(matkul_saat_ini)
+            e_matkul = c1.selectbox(
+                "Mata kuliah",
+                opsi_matkul,
+                index=opsi_matkul.index(matkul_saat_ini) if matkul_saat_ini in opsi_matkul else 0,
+                key=f"edit_matkul_{tid}",
+            )
+            e_jenis = c2.selectbox("Jenis", JENIS, index=JENIS.index(t.get("jenis", "Teori")), key=f"edit_jenis_{tid}")
 
-                c3, c4 = st.columns(2)
-                e_tgl = c3.date_input("Tanggal deadline", value=dt_lokal.date())
-                e_jam = c4.time_input("Jam deadline (WIB)", value=dt_lokal.time())
+            c3, c4 = st.columns(2)
+            e_tgl = c3.date_input("Tanggal deadline", value=dt_lokal.date(), key=f"edit_tgl_{tid}")
+            e_jam = c4.time_input("Jam deadline (WIB)", value=dt_lokal.time(), key=f"edit_jam_{tid}")
 
-                e_ketentuan = st.text_area("Ketentuan", value=t.get("ketentuan") or "", height=110)
-                e_link = st.text_input("Link VClass", value=t.get("link_vclass") or "")
+            st.markdown('<p class="label-kecil">Ketentuan</p>', unsafe_allow_html=True)
+            e_ketentuan_raw = st_quill(
+                value=t.get("ketentuan") or "",
+                key=f"edit_ketentuan_{tid}",
+            )
+            e_link = st.text_input("Link VClass", value=t.get("link_vclass") or "", key=f"edit_link_{tid}")
+            e_status = st.selectbox(
+                "Status", STATUS, index=STATUS.index(t.get("status", "Belum")), key=f"edit_status_{tid}"
+            )
 
-                c5, c6 = st.columns(2)
-                e_prioritas = c5.selectbox("Prioritas", PRIORITAS, index=PRIORITAS.index(t.get("prioritas", "Sedang")))
-                e_status = c6.selectbox("Status", STATUS, index=STATUS.index(t.get("status", "Belum")))
-
-                simpan_edit = st.form_submit_button("Simpan perubahan")
-
-            if simpan_edit:
+            if st.button("Simpan perubahan", key=f"edit_simpan_{tid}"):
                 link_bersih = e_link.strip()
+                ketentuan_bersih = _ambil_html(e_ketentuan_raw)
                 if link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
                     st.error("Link VClass harus diawali http:// atau https://.")
                 else:
                     try:
                         update_task(
                             client,
-                            t["id"],
+                            tid,
                             {
                                 "judul": e_judul.strip(),
                                 "mata_kuliah": e_matkul,
                                 "jenis": e_jenis,
                                 "deadline": to_utc_iso(e_tgl, e_jam),
-                                "ketentuan": e_ketentuan.strip() or None,
+                                "ketentuan": ketentuan_bersih or None,
                                 "link_vclass": link_bersih or None,
-                                "prioritas": e_prioritas,
                                 "status": e_status,
                             },
                         )
@@ -237,14 +254,10 @@ with tab_kelola:
                         st.error(f"Gagal menyimpan perubahan.\n\nPesan asli: `{exc}`")
 
             st.divider()
-            konfirmasi = st.checkbox("Saya yakin ingin menghapus tugas ini", key=f"konfirmasi_{t['id']}")
-            if st.button(
-                "Hapus tugas",
-                key=f"hapus_{t['id']}",
-                disabled=not konfirmasi,
-            ):
+            konfirmasi = st.checkbox("Saya yakin ingin menghapus tugas ini", key=f"konfirmasi_{tid}")
+            if st.button("Hapus tugas", key=f"hapus_{tid}", disabled=not konfirmasi):
                 try:
-                    delete_task(client, t["id"])
+                    delete_task(client, tid)
                     st.success("Tugas dihapus.")
                     st.rerun()
                 except Exception as exc:

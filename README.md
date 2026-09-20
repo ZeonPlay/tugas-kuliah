@@ -13,7 +13,7 @@ Streamlit berperan sebagai frontend sekaligus backend, tanpa server terpisah.
 Semua data ada di satu tabel `tasks` di Supabase (PostgreSQL).
 
 Pembeda akses bukan kode Streamlit, melainkan Row Level Security di database:
-pengunjung anonim memakai *anon key* yang hanya diizinkan `SELECT`, sedangkan
+pengunjung anonim memakai _anon key_ yang hanya diizinkan `SELECT`, sedangkan
 setelah login token admin dilampirkan ke request sehingga policy
 `INSERT/UPDATE/DELETE` aktif. Konsekuensinya, membuka halaman Admin lewat URL
 langsung tidak memberi akses apa pun — database tetap menolak.
@@ -49,7 +49,7 @@ tugas-kuliah/
 
 Yang perlu kamu ubah sendiri:
 
-- `sql/setup.sql` — ganti `EMAIL_ADMIN@gmail.com` (4 tempat)
+- `sql/setup.sql` — ganti `zeonplaychannel@gmail.com` (4 tempat)
 - `.env` — isi URL, anon key, dan `ADMIN_EMAIL`
 - `utils/helpers.py` — daftar `MATA_KULIAH` kalau semester berganti
 
@@ -58,25 +58,25 @@ Yang perlu kamu ubah sendiri:
 ## Setup Supabase
 
 **1. Buat project.** Masuk ke supabase.com, Sign in dengan GitHub, klik
-*New project*. Isi nama project, buat *Database Password* (simpan, walau
+_New project_. Isi nama project, buat _Database Password_ (simpan, walau
 aplikasi ini tidak memakainya langsung), pilih region terdekat — Singapore
 paling dekat dari Indonesia. Tunggu beberapa menit sampai project aktif.
 
-**2. Jalankan skema.** Buka menu *SQL Editor* di sidebar kiri, klik
-*New query*. Salin seluruh isi `sql/setup.sql`, ganti dulu semua
-`EMAIL_ADMIN@gmail.com` dengan email yang akan kamu pakai sebagai admin,
-lalu klik *Run*. Kalau berhasil akan muncul "Success. No rows returned".
+**2. Jalankan skema.** Buka menu _SQL Editor_ di sidebar kiri, klik
+_New query_. Salin seluruh isi `sql/setup.sql`, ganti dulu semua
+`zeonplaychannel@gmail.com` dengan email yang akan kamu pakai sebagai admin,
+lalu klik _Run_. Kalau berhasil akan muncul "Success. No rows returned".
 
-**3. Cek tabelnya.** Buka menu *Table Editor*, tabel `tasks` seharusnya
+**3. Cek tabelnya.** Buka menu _Table Editor_, tabel `tasks` seharusnya
 sudah ada. Di sampingnya ada label yang menandakan RLS aktif.
 
-**4. Buat akun admin.** Buka *Authentication* > *Users* > *Add user* >
-*Create new user*. Isi email (harus sama persis dengan yang kamu tulis di
-`setup.sql`) dan password. Centang *Auto Confirm User* supaya tidak perlu
+**4. Buat akun admin.** Buka _Authentication_ > _Users_ > _Add user_ >
+_Create new user_. Isi email (harus sama persis dengan yang kamu tulis di
+`setup.sql`) dan password. Centang _Auto Confirm User_ supaya tidak perlu
 verifikasi email.
 
-**5. Ambil kredensial.** Buka *Project Settings* > *Data API* untuk
-mendapatkan *Project URL*, dan *Project Settings* > *API Keys* untuk
+**5. Ambil kredensial.** Buka _Project Settings_ > _Data API_ untuk
+mendapatkan _Project URL_, dan _Project Settings_ > _API Keys_ untuk
 mendapatkan kunci `anon` / `public`.
 
 Anon key memang dirancang untuk dipublikasikan selama RLS aktif — itu sebabnya
@@ -112,10 +112,10 @@ ikut ter-commit karena `.env` sudah masuk `.gitignore`). Pastikan
 menginstal dependensi.
 
 **2. Buat app.** Masuk ke share.streamlit.io dengan akun GitHub, klik
-*Create app* > *Deploy a public app from GitHub*. Pilih repository dan branch,
-isi *Main file path* dengan `app.py`, lalu atur URL aplikasinya.
+_Create app_ > _Deploy a public app from GitHub_. Pilih repository dan branch,
+isi _Main file path_ dengan `app.py`, lalu atur URL aplikasinya.
 
-**3. Isi secrets.** Sebelum klik Deploy, buka *Advanced settings* > *Secrets*
+**3. Isi secrets.** Sebelum klik Deploy, buka _Advanced settings_ > _Secrets_
 dan tempelkan ini (format TOML, bukan format `.env`):
 
 ```toml
@@ -125,7 +125,7 @@ ADMIN_EMAIL = "email-kamu@gmail.com"
 ```
 
 Kalau app sudah terlanjur di-deploy, secrets bisa diisi belakangan lewat
-menu titik tiga > *Settings* > *Secrets*. App akan restart otomatis.
+menu titik tiga > _Settings_ > _Secrets_. App akan restart otomatis.
 
 **4. Deploy.** Proses build berjalan beberapa menit. Setelah selesai, bagikan
 URL-nya ke teman sekelas — mereka langsung melihat kalender tanpa perlu login.
@@ -141,7 +141,7 @@ dan harus di-restore manual dari dashboard.
 
 **Kalender tidak muncul sama sekali (area kosong).**
 Biasanya `streamlit-calendar` gagal terpasang. Cek log build di Streamlit Cloud
-(menu *Manage app* di pojok kanan bawah). Di lokal, jalankan
+(menu _Manage app_ di pojok kanan bawah). Di lokal, jalankan
 `pip install streamlit-calendar` lalu restart Streamlit sepenuhnya — bukan
 sekadar refresh browser. Komponen Streamlit memuat file statis sendiri, jadi
 ad-blocker yang agresif juga bisa memblokirnya; coba mode penyamaran.
@@ -150,7 +150,7 @@ ad-blocker yang agresif juga bisa memblokirnya; coba mode penyamaran.
 Pastikan yang diklik adalah area kosong di dalam kotak tanggal, bukan chip
 tugasnya. Kalau tetap tidak bereaksi, kemungkinan versi `streamlit-calendar`
 yang terpasang tidak mengirim callback `dateClick`. Sebagai alternatif, ganti
-tampilan ke *Daftar* lewat tombol di kanan atas kalender.
+tampilan ke _Daftar_ lewat tombol di kanan atas kalender.
 
 **Tanggal yang muncul meleset satu hari.**
 Ini gejala timezone. Kalender berjalan di browser, jadi kalau perangkat kamu
@@ -162,7 +162,7 @@ dikonversi di sisi Python.
 Email di policy RLS tidak cocok dengan email akun yang login. Buka Supabase >
 SQL Editor dan jalankan `select auth.jwt() ->> 'email';` — atau lebih mudah,
 cek ulang bahwa email di `setup.sql`, di `ADMIN_EMAIL`, dan di
-*Authentication > Users* ketiganya persis sama, termasuk huruf besar/kecil.
+_Authentication > Users_ ketiganya persis sama, termasuk huruf besar/kecil.
 
 **Error koneksi / "Invalid API key".**
 Cek anon key tersalin utuh (kuncinya panjang dan gampang terpotong), dan URL
