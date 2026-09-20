@@ -126,27 +126,22 @@ for t in tugas_hari_itu:
     aksen = warna_matkul(tokens, t.get("mata_kuliah"))
     teks_sisa, level = sisa_waktu(t["deadline"])
 
-    st.markdown(f'<div class="kartu-tugas" style="--aksen:{aksen}">', unsafe_allow_html=True)
-
-    atas_kiri, atas_kanan = st.columns([3, 1])
-    with atas_kiri:
-        st.markdown(f"#### {t['judul']}")
-        st.markdown(
-            f'<span style="color:{aksen};font-weight:500">{t["mata_kuliah"]}</span>'
-            f' &nbsp;·&nbsp; <span class="label-kecil">{t.get("jenis", "-")}</span>',
-            unsafe_allow_html=True,
-        )
-        st.caption(format_deadline(t["deadline"]))
-
-    with atas_kanan:
-        if level == "lewat":
-            st.markdown('<span class="badge-lewat">Sudah lewat</span>', unsafe_allow_html=True)
-        else:
-            warna_sisa = warna_urgensi(tokens, level)
-            st.markdown(
-                f'<span class="label-kecil" style="color:{warna_sisa}">{teks_sisa}</span>',
-                unsafe_allow_html=True,
-            )
+    # Header tugas versi garis sederhana
+    st.markdown(
+        f'<div style="border-left: 3px solid {aksen}; padding-left: 10px; margin-top: 10px; margin-bottom: 8px;">'
+        f'<div style="display:flex; justify-content:space-between; align-items:flex-start;">'
+        f"<div>"
+        f'<div style="font-size:1.1rem; font-weight:600;">{t["judul"]}</div>'
+        f'<div style="font-size:0.88rem; color:{aksen}; font-weight:500;">{t["mata_kuliah"]} · <span class="label-kecil">{t.get("jenis", "-")}</span></div>'
+        f'<div class="label-kecil">{format_deadline(t["deadline"])}</div>'
+        f"</div>"
+        f'<div style="text-align:right;">'
+        f"{"<span class='badge-lewat'>Sudah lewat</span>" if level == 'lewat' else f"<span class='label-kecil' style='color:{warna_urgensi(tokens, level)}; font-weight:600'>{teks_sisa}</span>"}"
+        f"</div>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 
     ketentuan_html = (t.get("ketentuan") or "").strip()
     if ketentuan_html:
@@ -157,11 +152,8 @@ for t in tugas_hari_itu:
     with btn_c1:
         if punya_link(t):
             st.link_button("Buka di VClass", t["link_vclass"], use_container_width=True)
-        else:
-            st.caption("Tanpa link — lihat bagian Ketentuan untuk cara pengumpulan.")
-
     with btn_c2:
         if t.get("file_soal"):
             st.link_button("Lihat / Download File Soal", t["file_soal"], use_container_width=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.divider()
