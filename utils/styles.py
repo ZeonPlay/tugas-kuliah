@@ -225,7 +225,7 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        /* FIX DETAIL KONTEN FILE UPLOADER (PENTING) */
+        /* FIX FILE UPLOADER */
         [data-testid="stFileUploader"] {{
             background-color: var(--kartu-bg) !important;
             border: 1.5px dashed var(--line) !important;
@@ -245,7 +245,6 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        /* Kotak chip file yang sudah terunggah */
         [data-testid="stFileUploaderFileData"],
         div[data-testid="stFileUploaderFileData"],
         small[data-testid="stFileUploaderFileName"] {{
@@ -255,7 +254,6 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
         }}
 
-        /* Semua teks, ikon, dan tombol hapus di dalam chip file */
         [data-testid="stFileUploaderFileData"] *,
         [data-testid="stFileUploaderFileData"] span,
         [data-testid="stFileUploaderFileData"] div,
@@ -271,6 +269,41 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
             fill: var(--ink) !important;
             background-color: transparent !important;
+        }}
+
+        /* STYLING FORMAT HASIL KETENTUAN (QUILL) */
+        .ketentuan-body {{
+            color: var(--ink) !important;
+            line-height: 1.6 !important;
+            font-size: 0.92rem !important;
+        }}
+        .ketentuan-body p {{
+            display: block !important;
+            margin-top: 0 !important;
+            margin-bottom: 0.6rem !important;
+            color: var(--ink) !important;
+        }}
+        .ketentuan-body ul {{
+            display: block !important;
+            list-style-type: disc !important;
+            padding-left: 1.4rem !important;
+            margin-bottom: 0.6rem !important;
+        }}
+        .ketentuan-body ol {{
+            display: block !important;
+            list-style-type: decimal !important;
+            padding-left: 1.4rem !important;
+            margin-bottom: 0.6rem !important;
+        }}
+        .ketentuan-body li {{
+            display: list-item !important;
+            margin-bottom: 0.3rem !important;
+            color: var(--ink) !important;
+        }}
+        .ketentuan-body a {{
+            color: var(--ink) !important;
+            text-decoration: underline !important;
+            word-break: break-all !important;
         }}
 
         [data-testid="stExpander"] {{

@@ -146,7 +146,7 @@ for t in tugas_hari_itu:
     ketentuan_html = (t.get("ketentuan") or "").strip()
     if ketentuan_html:
         with st.expander("Ketentuan"):
-            st.markdown(ketentuan_html, unsafe_allow_html=True)
+            st.markdown(f'<div class="ketentuan-body">{ketentuan_html}</div>', unsafe_allow_html=True)
 
     btn_c1, btn_c2 = st.columns(2)
     with btn_c1:

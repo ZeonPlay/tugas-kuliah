@@ -118,7 +118,7 @@ with kiri:
             ketentuan_html = (t.get("ketentuan") or "").strip()
             if ketentuan_html:
                 with st.expander("Ketentuan & Instruksi"):
-                    st.markdown(ketentuan_html, unsafe_allow_html=True)
+                    st.markdown(f'<div class="ketentuan-body">{ketentuan_html}</div>', unsafe_allow_html=True)
 
             b1, b2 = st.columns(2)
             with b1:
