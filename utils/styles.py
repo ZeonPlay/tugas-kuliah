@@ -198,11 +198,21 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
         /* INPUT FIELD & DROPDOWN */
         [data-testid="stTextInput"] input,
         [data-testid="stTextArea"] textarea,
+        [data-testid="stDateInput"] input,
+        [data-testid="stTimeInput"] input,
         [data-baseweb="select"] > div {{
             border-radius: 4px !important;
             border: 1px solid var(--line) !important;
             background-color: var(--kartu-bg) !important;
             color: var(--ink) !important;
+        }}
+        [data-testid="stDateInput"] input::placeholder,
+        [data-testid="stTimeInput"] input::placeholder {{
+            color: var(--ink-soft) !important;
+        }}
+        [data-testid="stDateInput"] svg,
+        [data-testid="stTimeInput"] svg {{
+            fill: var(--ink-soft) !important;
         }}
 
         [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"], [data-baseweb="calendar"] {{
