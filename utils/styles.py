@@ -276,6 +276,7 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             color: var(--ink) !important;
             line-height: 1.6 !important;
             font-size: 0.92rem !important;
+            white-space: pre-line !important;
         }}
         .ketentuan-body p {{
             display: block !important;
