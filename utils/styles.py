@@ -89,23 +89,61 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         {root_css}
         
-        /* Hanya target container utama, hindari override class bawaan Streamlit agar icon tidak rusak */
+        /* Font dan Background Global */
         .stApp {{
             font-family: 'Inter', sans-serif !important;
             background-color: var(--paper) !important;
         }}
         
-        /* Perbaikan warna teks yang aman */
-        .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
-        .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li, .stMarkdown span {{ 
+        /* 1. PAKSA SEMUA TEKS MENJADI KONTRAST (Putih saat Gelap, Hitam saat Terang) */
+        .stApp p, .stApp label, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp li, div[data-testid="stText"] {{ 
             color: var(--ink) !important; 
         }}
-        [data-testid="stCaptionContainer"] p {{ 
+        
+        /* 2. Warna khusus Teks Redup (Caption & Counter Info) */
+        [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p, [data-testid="stCaptionContainer"] span {{ 
             color: var(--ink-soft) !important; 
             font-size: 0.85rem !important; 
         }}
+        
         hr, [data-testid="stDivider"] {{ border-color: var(--line) !important; }}
         
+        /* 3. Perbaikan Warna Teks pada Kolom Input Base */
+        [data-testid="stTextInput"] input, [data-testid="stTextArea"] textarea, 
+        [data-testid="stDateInput"] input, [data-testid="stTimeInput"] input {{
+            color: var(--ink) !important;
+            background-color: var(--kartu-bg) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: 8px !important;
+        }}
+        
+        /* 4. Paksa warna Placeholder Teks Input beradaptasi */
+        ::placeholder {{
+            color: var(--ink-soft) !important;
+            opacity: 0.8 !important;
+        }}
+        
+        /* 5. Perbaikan BaseWeb (Dropdown Selectbox Streamlit) */
+        [data-baseweb="select"] > div {{
+            background-color: var(--kartu-bg) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: 8px !important;
+        }}
+        
+        /* Paksa seluruh Teks di dalam Selectbox (termasuk "Choose options") mengikuti tema */
+        [data-baseweb="select"] *, [data-baseweb="menu"] *, [role="listbox"] * {{
+            color: var(--ink) !important;
+        }}
+        
+        [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {{
+            background-color: var(--kartu-bg) !important;
+            border: 1px solid var(--line) !important;
+        }}
+        
+        [role="option"] {{ color: var(--ink) !important; background-color: transparent !important; }}
+        [role="option"]:hover, [role="option"][aria-selected="true"] {{ background-color: var(--paper) !important; }}
+
+        /* Metric Cards */
         .metric-card {{
             background-color: var(--kartu-bg);
             padding: 1.25rem;
@@ -118,6 +156,7 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
         .metric-title {{ color: var(--ink-soft); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }}
         .metric-value {{ color: var(--ink); font-size: 2rem; font-weight: 700; margin-top: 0.5rem; }}
 
+        /* Task Cards */
         .kartu-tugas {{
             background-color: var(--kartu-bg);
             border: 1px solid var(--line);
@@ -129,7 +168,7 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
         }}
         .kartu-tugas:hover {{ transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.06); }}
         
-        /* Perbaikan Button (Text Color Inheritance) */
+        /* Buttons */
         .stButton button, .stDownloadButton button, .stLinkButton a {{
             background-color: var(--kartu-bg) !important;
             border: 1px solid var(--line) !important;
@@ -145,24 +184,11 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
             background-color: var(--paper) !important;
         }}
         
-        [data-testid="stTextInput"] input, [data-testid="stTextArea"] textarea, 
-        [data-testid="stDateInput"] input, [data-testid="stTimeInput"] input, 
-        [data-baseweb="select"] > div {{
-            border-radius: 8px !important;
-            border: 1px solid var(--line) !important;
-            background-color: var(--kartu-bg) !important;
-            color: var(--ink) !important;
-        }}
-        [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {{
-            background-color: var(--kartu-bg) !important;
-            border: 1px solid var(--line) !important;
-        }}
-        [role="option"] {{ color: var(--ink) !important; background-color: transparent !important; }}
-        [role="option"]:hover, [role="option"][aria-selected="true"] {{ background-color: var(--paper) !important; }}
-        
+        /* Expander & Uploader */
         [data-testid="stExpander"] {{ background-color: var(--kartu-bg) !important; border: 1px solid var(--line) !important; border-radius: 8px !important; }}
         [data-testid="stFileUploader"] {{ background-color: var(--kartu-bg) !important; border: 1.5px dashed var(--ink-soft) !important; border-radius: 8px !important; }}
         
+        /* Badges */
         .badge-lewat {{
             background-color: rgba(239, 68, 68, 0.1);
             color: var(--urgent) !important;
