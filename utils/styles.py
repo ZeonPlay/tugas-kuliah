@@ -89,14 +89,21 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         {root_css}
         
-        html, body, [class*="st-"], .stApp {{
+        /* Hanya target container utama, hindari override class bawaan Streamlit agar icon tidak rusak */
+        .stApp {{
             font-family: 'Inter', sans-serif !important;
             background-color: var(--paper) !important;
-            color: var(--ink) !important;
         }}
         
-        p, span, div, h1, h2, h3, h4, h5, h6, label, li {{ color: var(--ink) !important; }}
-        [data-testid="stCaptionContainer"] p {{ color: var(--ink-soft) !important; font-size: 0.85rem !important; }}
+        /* Perbaikan warna teks yang aman */
+        .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
+        .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li, .stMarkdown span {{ 
+            color: var(--ink) !important; 
+        }}
+        [data-testid="stCaptionContainer"] p {{ 
+            color: var(--ink-soft) !important; 
+            font-size: 0.85rem !important; 
+        }}
         hr, [data-testid="stDivider"] {{ border-color: var(--line) !important; }}
         
         .metric-card {{
@@ -122,13 +129,16 @@ def inject_base_css(mode: str | bool = "Sistem") -> None:
         }}
         .kartu-tugas:hover {{ transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.06); }}
         
+        /* Perbaikan Button (Text Color Inheritance) */
         .stButton button, .stDownloadButton button, .stLinkButton a {{
             background-color: var(--kartu-bg) !important;
             border: 1px solid var(--line) !important;
-            color: var(--ink) !important;
             border-radius: 8px !important;
-            font-weight: 600 !important;
             transition: all 0.2s;
+        }}
+        .stButton button p, .stDownloadButton button p, .stLinkButton a p {{
+            color: var(--ink) !important;
+            font-weight: 600 !important;
         }}
         .stButton button:hover, .stLinkButton a:hover {{
             border-color: var(--ink) !important;
