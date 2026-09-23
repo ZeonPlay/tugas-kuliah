@@ -7,12 +7,13 @@ from streamlit_quill import st_quill
 from utils.auth import current_email, get_authed_client, is_admin, login, logout, signup
 from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import ConfigError, delete_task, fetch_tasks, insert_task, update_task, upload_file
+from utils.supabase_client import delete_task, fetch_tasks, insert_task, update_task, upload_file
 
 st.set_page_config(page_title="Admin Tugas Kuliah", layout="wide")
 mode = render_theme_toggle()
 inject_base_css(mode)
 tokens = get_tokens(mode)
+
 st.title("Panel Admin")
 
 
@@ -52,11 +53,8 @@ if not is_admin():
     st.stop()
 
 with st.sidebar:
-    st.markdown(
-        '<p style="color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 0;">Masuk sebagai:</p>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(f'<p style="font-weight: 600; font-size: 0.95rem;">{current_email()}</p>', unsafe_allow_html=True)
+    st.write("Masuk sebagai:")
+    st.write(f"**{current_email()}**")
     if st.button("Keluar", use_container_width=True):
         logout()
         st.toast("Berhasil keluar.")
@@ -76,7 +74,6 @@ except Exception as exc:
 tab_tambah, tab_kelola, tab_admin_users = st.tabs(["Tambah Tugas", "Kelola Tugas", "Kelola Admin"])
 
 with tab_tambah:
-    st.markdown("<br>", unsafe_allow_html=True)
     judul = st.text_input("Judul tugas", key="tambah_judul")
     c1, c2 = st.columns(2)
     mata_kuliah = c1.selectbox("Mata kuliah", MATA_KULIAH, key="tambah_matkul")
@@ -86,10 +83,7 @@ with tab_tambah:
     tgl = c3.date_input("Tanggal deadline", value=now_wib().date(), key="tambah_tgl")
     jam = c4.time_input("Jam deadline (WIB)", value=dtime(23, 59), key="tambah_jam")
 
-    st.markdown(
-        '<p style="font-size: 0.9rem; font-weight: 600; margin-top: 15px;">Ketentuan & Instruksi</p>',
-        unsafe_allow_html=True,
-    )
+    st.write("**Ketentuan & Instruksi**")
     ketentuan_raw = st_quill(placeholder="Contoh: Format PDF, maksimal 10 halaman.", key="tambah_ketentuan")
 
     link_vclass = st.text_input(
@@ -99,7 +93,6 @@ with tab_tambah:
         "Upload File Soal/Ketentuan (Opsional)", type=["pdf", "png", "jpg", "jpeg", "docx", "zip"], key="tambah_file"
     )
 
-    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Simpan Tugas Baru", type="primary", key="tambah_simpan"):
         link_bersih = link_vclass.strip()
         ketentuan_bersih = _ambil_html(ketentuan_raw)
@@ -131,7 +124,6 @@ with tab_tambah:
                 st.error(f"Gagal menyimpan data: {exc}")
 
 with tab_kelola:
-    st.markdown("<br>", unsafe_allow_html=True)
     if not tasks:
         st.info("Belum ada tugas.")
     else:
@@ -157,7 +149,7 @@ with tab_kelola:
         st.divider()
 
         for t in hasil:
-            label = f"{t['judul']} — {t['mata_kuliah']} ({format_deadline(t['deadline'])})"
+            label = f"{t['judul']} - {t['mata_kuliah']} ({format_deadline(t['deadline'])})"
             with st.expander(label):
                 dt_lokal = parse_deadline(t["deadline"])
                 tid = t["id"]
@@ -182,6 +174,7 @@ with tab_kelola:
                 e_tgl = c3.date_input("Tanggal deadline", value=dt_lokal.date(), key=f"edit_tgl_{tid}")
                 e_jam = c4.time_input("Jam deadline (WIB)", value=dt_lokal.time(), key=f"edit_jam_{tid}")
 
+                st.write("**Ketentuan**")
                 e_ketentuan_raw = st_quill(value=t.get("ketentuan") or "", key=f"edit_ketentuan_{tid}")
                 e_link = st.text_input("Link VClass", value=t.get("link_vclass") or "", key=f"edit_link_{tid}")
 
@@ -195,7 +188,6 @@ with tab_kelola:
                     key=f"edit_file_{tid}",
                 )
 
-                st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("Simpan Perubahan", type="primary", key=f"edit_simpan_{tid}"):
                     link_bersih = e_link.strip()
                     if link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
@@ -233,7 +225,6 @@ with tab_kelola:
                         st.error(f"Gagal menghapus: {exc}")
 
 with tab_admin_users:
-    st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Daftar Email Admin")
     st.caption("Masukkan email teman yang ingin diberi akses admin.")
     new_admin_email = st.text_input("Tambah Email Admin Baru", placeholder="contoh: teman@gmail.com")

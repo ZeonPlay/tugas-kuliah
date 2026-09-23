@@ -18,7 +18,7 @@ from utils.helpers import (
     warna_urgensi,
 )
 from utils.styles import calendar_css, get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import ConfigError, fetch_tasks
+from utils.supabase_client import fetch_tasks
 
 st.set_page_config(page_title="Kalender Tugas Kuliah", layout="wide")
 mode = render_theme_toggle()
@@ -48,16 +48,14 @@ with st.sidebar:
         for t in terdekat:
             teks_sisa, level = sisa_waktu(t["deadline"])
             warna = warna_urgensi(tokens, level)
-            st.markdown(
-                f"""
-                <div style="border-left: 3px solid {warna}; padding-left: 10px; margin-bottom: 12px;">
-                    <div style="font-weight:600; font-size: 0.9rem;">{t["judul"]}</div>
-                    <div style="font-size: 0.8rem; color: var(--ink-soft) !important;">{t["mata_kuliah"]}</div>
-                    <div style="font-size: 0.75rem; color: {warna}; font-weight: 600;">{teks_sisa}</div>
-                </div>
-            """,
-                unsafe_allow_html=True,
-            )
+            html_side = f"""
+<div style="border-left: 3px solid {warna}; padding-left: 10px; margin-bottom: 12px;">
+    <div style="font-weight:600; font-size: 0.9rem; color: var(--text-color);">{t["judul"]}</div>
+    <div style="font-size: 0.8rem; opacity: 0.8; color: var(--text-color);">{t["mata_kuliah"]}</div>
+    <div style="font-size: 0.75rem; color: {warna}; font-weight: 600;">{teks_sisa}</div>
+</div>
+"""
+            st.markdown(html_side, unsafe_allow_html=True)
 
 tasks = [t for t in semua_tasks if t.get("jenis") in filter_jenis]
 opsi_kalender = {
@@ -111,26 +109,25 @@ if not tugas_hari_itu:
 for t in tugas_hari_itu:
     aksen = warna_matkul(tokens, t.get("mata_kuliah"))
     teks_sisa, level = sisa_waktu(t["deadline"])
-    badge_class = "badge-lewat" if level == "lewat" else "badge-aman"
+    badge_bg = "rgba(239, 68, 68, 0.2)" if level == "lewat" else "rgba(16, 185, 129, 0.2)"
+    badge_color = "#ef4444" if level == "lewat" else "#10b981"
 
-    st.markdown(
-        f"""
-        <div class="kartu-tugas" style="border-left: 5px solid {aksen};">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                <span style="color: {aksen}; font-weight: 600; font-size: 0.9rem;">{t["mata_kuliah"]} | {t.get("jenis", "-")}</span>
-                <span class="{badge_class}">{teks_sisa}</span>
-            </div>
-            <h3 style="margin: 0 0 6px 0; color: var(--ink) !important;">{t["judul"]}</h3>
-            <div style="color: var(--ink-soft) !important; font-size: 0.9rem;">Waktu: {format_deadline(t["deadline"])}</div>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
+    html_card_cal = f"""
+<div style="background-color: var(--secondary-background-color); border: 1px solid rgba(150, 150, 150, 0.2); border-left: 5px solid {aksen}; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="color: {aksen}; font-weight: 600; font-size: 0.9rem;">{t["mata_kuliah"]} | {t.get("jenis", "-")}</span>
+        <span style="background-color: {badge_bg}; color: {badge_color}; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">{teks_sisa}</span>
+    </div>
+    <h3 style="margin: 0 0 5px 0; padding: 0; color: var(--text-color);">{t["judul"]}</h3>
+    <div style="font-size: 0.85rem; opacity: 0.8; color: var(--text-color);">Waktu: {format_deadline(t["deadline"])}</div>
+</div>
+"""
+    st.markdown(html_card_cal, unsafe_allow_html=True)
 
     ketentuan_html = (t.get("ketentuan") or "").strip()
     if ketentuan_html:
         with st.expander("Ketentuan"):
-            st.markdown(f'<div class="ketentuan-body">{ketentuan_html}</div>', unsafe_allow_html=True)
+            st.markdown(ketentuan_html, unsafe_allow_html=True)
 
     btn_c1, btn_c2 = st.columns(2)
     if punya_link(t):
