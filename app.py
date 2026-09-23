@@ -15,13 +15,13 @@ from utils.helpers import (
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, fetch_tasks
 
-st.set_page_config(page_title="Dashboard — Tugas Kuliah", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Dashboard Tugas Kuliah", layout="wide", initial_sidebar_state="expanded")
 mode = render_theme_toggle()
 inject_base_css(mode)
 tokens = get_tokens(mode)
 
 st.title("Dashboard Tugas Kuliah")
-st.caption(f"S1 Sistem Informasi · {format_tanggal(now_wib().date())} · Waktu dalam WIB")
+st.caption(f"S1 Sistem Informasi | {format_tanggal(now_wib().date())} | WIB")
 
 try:
     tasks = fetch_tasks()
@@ -34,9 +34,6 @@ except Exception as exc:
 
 st.divider()
 
-# ---------------------------------------------------------------------
-# 1. Ringkasan Atas (Metrics)
-# ---------------------------------------------------------------------
 terlewat = tugas_terlewat(tasks)
 terdekat_all = deadline_terdekat(tasks, jumlah=100)
 mendesak_count = sum(1 for t in terdekat_all if sisa_waktu(t["deadline"])[1] in ["mendesak", "dekat"])
@@ -44,114 +41,102 @@ mendesak_count = sum(1 for t in terdekat_all if sisa_waktu(t["deadline"])[1] in 
 m1, m2, m3 = st.columns(3)
 with m1:
     st.markdown(
-        f'<div style="border-left:3px solid {tokens["ink"]}; padding-left:12px;">'
-        f'<div class="label-kecil">Total Tugas Aktif</div>'
-        f'<h2 style="margin:0; font-size:1.8rem;">{len(tasks)}</h2>'
-        f"</div>",
+        f"""
+        <div class="metric-card" style="--aksen: {tokens["ink"]};">
+            <div class="metric-title">Total Tugas Aktif</div>
+            <div class="metric-value">{len(tasks)}</div>
+        </div>
+    """,
         unsafe_allow_html=True,
     )
 with m2:
     st.markdown(
-        f'<div style="border-left:3px solid {tokens["near"]}; padding-left:12px;">'
-        f'<div class="label-kecil">Mendesak (&lt; 3 Hari)</div>'
-        f'<h2 style="margin:0; font-size:1.8rem; color:{tokens["near"]};">{mendesak_count}</h2>'
-        f"</div>",
+        f"""
+        <div class="metric-card" style="--aksen: {tokens["near"]};">
+            <div class="metric-title">Mendesak (&lt; 3 Hari)</div>
+            <div class="metric-value" style="color: {tokens["near"]};">{mendesak_count}</div>
+        </div>
+    """,
         unsafe_allow_html=True,
     )
 with m3:
     st.markdown(
-        f'<div style="border-left:3px solid {tokens["urgent"]}; padding-left:12px;">'
-        f'<div class="label-kecil">Sudah Lewat</div>'
-        f'<h2 style="margin:0; font-size:1.8rem; color:{tokens["urgent"]};">{len(terlewat)}</h2>'
-        f"</div>",
+        f"""
+        <div class="metric-card" style="--aksen: {tokens["urgent"]};">
+            <div class="metric-title">Sudah Lewat</div>
+            <div class="metric-value" style="color: {tokens["urgent"]};">{len(terlewat)}</div>
+        </div>
+    """,
         unsafe_allow_html=True,
     )
 
-st.write("")
-
-# Peringatan jika ada tugas terlewat
 if terlewat:
     daftar = ", ".join(t["judul"] for t in terlewat[:3])
     lebih = f" dan {len(terlewat) - 3} lainnya" if len(terlewat) - 3 > 0 else ""
-    st.markdown(
-        f'<div class="baris-list" style="--aksen:{tokens["urgent"]}">'
-        f'<span class="badge-lewat">Sudah lewat</span>&nbsp; <strong>{daftar}</strong>{lebih}'
-        f"</div>",
-        unsafe_allow_html=True,
-    )
-    st.write("")
+    st.warning(f"Tugas Terlewat: {daftar}{lebih}")
 
-# ---------------------------------------------------------------------
-# 2. Konten Utama (Maksimal 3 Tugas Terdekat)
-# ---------------------------------------------------------------------
-kiri, kanan = st.columns([2.2, 1], gap="large")
+st.write("")
 
+kiri, kanan = st.columns([2, 1], gap="large")
 with kiri:
-    st.markdown("### Deadline Terdekat")
-
+    st.subheader("Deadline Terdekat")
     terdekat_list = deadline_terdekat(tasks, jumlah=3)
 
     if not terdekat_list:
-        st.write("Tidak ada deadline mendatang.")
+        st.info("Tidak ada deadline mendatang. Saatnya bersantai.")
     else:
         for t in terdekat_list:
             aksen = warna_matkul(tokens, t.get("mata_kuliah"))
             teks_sisa, level = sisa_waktu(t["deadline"])
+            badge_class = "badge-lewat" if level == "lewat" else "badge-aman"
+            badge_color = tokens["urgent"] if level == "lewat" else tokens["safe"]
 
-            # Header tugas dengan indikator garis vertikal di kiri
             st.markdown(
-                f'<div style="border-left: 3px solid {aksen}; padding-left: 10px; margin-top: 10px; margin-bottom: 8px;">'
-                f'<div style="display:flex; justify-content:space-between; align-items:flex-start;">'
-                f"<div>"
-                f'<div style="font-size:1.1rem; font-weight:600;">{t["judul"]}</div>'
-                f'<div style="font-size:0.88rem; color:{aksen}; font-weight:500;">{t["mata_kuliah"]} · <span class="label-kecil">{t.get("jenis", "-")}</span></div>'
-                f'<div class="label-kecil">{format_deadline(t["deadline"])}</div>'
-                f"</div>"
-                f'<div style="text-align:right;">'
-                f"{"<span class='badge-lewat'>Sudah lewat</span>" if level == 'lewat' else f"<span class='label-kecil' style='color:{warna_urgensi(tokens, level)}; font-weight:600'>{teks_sisa}</span>"}"
-                f"</div>"
-                f"</div>"
-                f"</div>",
+                f"""
+                <div class="kartu-tugas" style="border-left: 5px solid {aksen};">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                        <span style="color: {aksen}; font-weight: 600; font-size: 0.85rem;">{t["mata_kuliah"]} | {t.get("jenis", "-")}</span>
+                        <span class="{badge_class}" style="color: {badge_color} !important;">{teks_sisa}</span>
+                    </div>
+                    <h3 style="margin: 0 0 4px 0; font-size: 1.15rem; color: var(--ink) !important;">{t["judul"]}</h3>
+                    <div style="color: var(--ink-soft) !important; font-size: 0.85rem;">Batas Waktu: {format_deadline(t["deadline"])}</div>
+                </div>
+            """,
                 unsafe_allow_html=True,
             )
 
             ketentuan_html = (t.get("ketentuan") or "").strip()
             if ketentuan_html:
-                with st.expander("Ketentuan & Instruksi"):
+                with st.expander("Detail & Instruksi"):
                     st.markdown(f'<div class="ketentuan-body">{ketentuan_html}</div>', unsafe_allow_html=True)
 
             b1, b2 = st.columns(2)
-            with b1:
-                if punya_link(t):
-                    st.link_button("Buka VClass", t["link_vclass"], use_container_width=True)
-            with b2:
-                if t.get("file_soal"):
-                    st.link_button("Download/Lihat File Soal", t["file_soal"], use_container_width=True)
-
-            st.divider()
+            if punya_link(t):
+                b1.link_button("Buka VClass", t["link_vclass"], use_container_width=True)
+            if t.get("file_soal"):
+                b2.link_button("Download File Soal", t["file_soal"], use_container_width=True)
+            st.write("")
 
 with kanan:
-    st.markdown("### Ringkasan Mata Kuliah")
-
+    st.subheader("Ringkasan Mata Kuliah")
     count_per_matkul = {}
     for t in tasks:
         mk = t.get("mata_kuliah")
         count_per_matkul[mk] = count_per_matkul.get(mk, 0) + 1
 
-    baris_matkul = []
     for m in MATA_KULIAH:
         jumlah = count_per_matkul.get(m, 0)
         aksen_mk = warna_matkul(tokens, m)
-        badge_html = (
-            f'<span style="float:right; font-weight:600; opacity:0.8;">{jumlah} tugas</span>'
-            if jumlah > 0
-            else '<span style="float:right; opacity:0.4;">0</span>'
-        )
-
-        baris_matkul.append(
-            f'<div class="baris-list" style="--aksen:{aksen_mk}; margin-bottom:0.6rem;">'
-            f'<div style="font-weight:500;">{m} {badge_html}</div>'
-            f"</div>"
-        )
-
-    st.markdown("".join(baris_matkul), unsafe_allow_html=True)
+        if jumlah > 0:
+            st.markdown(
+                f"""
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--kartu-bg); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background-color: {aksen_mk};"></div>
+                        <span style="font-weight: 500; color: var(--ink) !important; font-size: 0.9rem;">{m}</span>
+                    </div>
+                    <span style="font-weight: 700; color: var(--ink) !important;">{jumlah}</span>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )

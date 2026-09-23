@@ -20,63 +20,51 @@ from utils.helpers import (
 from utils.styles import calendar_css, get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, fetch_tasks
 
-st.set_page_config(page_title="Kalender — Tugas Kuliah", layout="wide")
+st.set_page_config(page_title="Kalender Tugas Kuliah", layout="wide")
 mode = render_theme_toggle()
 inject_base_css(mode)
 tokens = get_tokens(mode)
-
 st_autorefresh(interval=30_000, key="auto_refresh_kalender")
 
 st.title("Kalender Deadline")
 
 try:
     semua_tasks = fetch_tasks()
-except ConfigError as exc:
-    st.error(f"Konfigurasi belum lengkap.\n\n{exc}")
-    st.stop()
 except Exception as exc:
-    st.error(f"Gagal mengambil data dari Supabase.\n\nPesan asli: `{exc}`")
+    st.error(f"Gagal mengambil data: `{exc}`")
     st.stop()
 
 if not semua_tasks:
-    st.write("Belum ada tugas yang tercatat.")
+    st.info("Belum ada tugas yang tercatat.")
     st.stop()
 
 with st.sidebar:
-    st.markdown('<p class="label-kecil">Filter</p>', unsafe_allow_html=True)
+    st.markdown("### Filter Jenis")
     filter_jenis = st.multiselect("Jenis", JENIS, default=JENIS, label_visibility="collapsed")
-
     st.divider()
-    st.markdown('<p class="label-kecil">Deadline terdekat</p>', unsafe_allow_html=True)
-
+    st.markdown("### Deadline Terdekat")
     terdekat = deadline_terdekat(semua_tasks, jumlah=5)
-    if not terdekat:
-        st.caption("Tidak ada deadline yang akan datang.")
-    else:
-        baris = []
+    if terdekat:
         for t in terdekat:
             teks_sisa, level = sisa_waktu(t["deadline"])
             warna = warna_urgensi(tokens, level)
-            baris.append(
-                f'<div class="baris-list" style="--aksen:{warna}">'
-                f'<div style="font-weight:500">{t["judul"]}</div>'
-                f'<div class="label-kecil">{t["mata_kuliah"]} · {format_deadline(t["deadline"])}</div>'
-                f'<div class="label-kecil" style="color:{warna}">{teks_sisa}</div>'
-                f"</div>"
+            st.markdown(
+                f"""
+                <div style="border-left: 3px solid {warna}; padding-left: 10px; margin-bottom: 12px;">
+                    <div style="font-weight:600; font-size: 0.9rem;">{t["judul"]}</div>
+                    <div style="font-size: 0.8rem; color: var(--ink-soft) !important;">{t["mata_kuliah"]}</div>
+                    <div style="font-size: 0.75rem; color: {warna}; font-weight: 600;">{teks_sisa}</div>
+                </div>
+            """,
+                unsafe_allow_html=True,
             )
-        st.markdown("".join(baris), unsafe_allow_html=True)
 
 tasks = [t for t in semua_tasks if t.get("jenis") in filter_jenis]
-
 opsi_kalender = {
     "initialView": "dayGridMonth",
     "locale": "id",
     "firstDay": 1,
-    "headerToolbar": {
-        "left": "prev,next today",
-        "center": "title",
-        "right": "dayGridMonth,listMonth",
-    },
+    "headerToolbar": {"left": "prev,next today", "center": "title", "right": "dayGridMonth,listMonth"},
     "buttonText": {"today": "Hari ini", "month": "Bulan", "list": "Daftar"},
     "height": 620,
 }
@@ -89,57 +77,53 @@ state = calendar(
 )
 
 if isinstance(state, dict):
-    callback = state.get("callback")
-    if callback == "dateClick":
+    cb = state.get("callback")
+    if cb == "dateClick":
         klik = parse_click_date(state.get("dateClick", {}).get("date", ""))
         if klik:
             st.session_state["tanggal_dipilih"] = klik.isoformat()
-    elif callback == "eventClick":
-        mulai = state.get("eventClick", {}).get("event", {}).get("start", "")
-        klik = parse_click_date(mulai)
+    elif cb == "eventClick":
+        klik = parse_click_date(state.get("eventClick", {}).get("event", {}).get("start", ""))
         if klik:
             st.session_state["tanggal_dipilih"] = klik.isoformat()
 
-st.caption("Setiap tanggal menampilkan jumlah deadline hari itu — klik untuk melihat detail tugasnya di bawah.")
-
+st.caption("Klik tanggal kalender untuk melihat detail tugas di bawah.")
 st.divider()
 
 tanggal_iso = st.session_state.get("tanggal_dipilih")
 if not tanggal_iso:
-    st.write("Klik salah satu tanggal di kalender untuk melihat tugasnya.")
+    st.info("Klik salah satu tanggal di kalender untuk melihat daftar tugasnya.")
     st.stop()
 
 tanggal = date.fromisoformat(tanggal_iso)
 tugas_hari_itu = tasks_pada_tanggal(tasks, tanggal)
 
-judul_kolom, tombol_kolom = st.columns([4, 1])
-judul_kolom.markdown(f"### {format_tanggal(tanggal)}")
-if tombol_kolom.button("Tutup", use_container_width=True):
+col1, col2 = st.columns([4, 1])
+col1.subheader(f"Tugas pada: {format_tanggal(tanggal)}")
+if col2.button("Tutup Detail", use_container_width=True):
     st.session_state.pop("tanggal_dipilih", None)
     st.rerun()
 
 if not tugas_hari_itu:
-    st.write("Tidak ada tugas pada tanggal ini (atau tersaring oleh filter di sidebar).")
+    st.write("Tidak ada tugas pada tanggal ini.")
     st.stop()
 
 for t in tugas_hari_itu:
     aksen = warna_matkul(tokens, t.get("mata_kuliah"))
     teks_sisa, level = sisa_waktu(t["deadline"])
+    badge_class = "badge-lewat" if level == "lewat" else "badge-aman"
 
-    # Header tugas versi garis sederhana
     st.markdown(
-        f'<div style="border-left: 3px solid {aksen}; padding-left: 10px; margin-top: 10px; margin-bottom: 8px;">'
-        f'<div style="display:flex; justify-content:space-between; align-items:flex-start;">'
-        f"<div>"
-        f'<div style="font-size:1.1rem; font-weight:600;">{t["judul"]}</div>'
-        f'<div style="font-size:0.88rem; color:{aksen}; font-weight:500;">{t["mata_kuliah"]} · <span class="label-kecil">{t.get("jenis", "-")}</span></div>'
-        f'<div class="label-kecil">{format_deadline(t["deadline"])}</div>'
-        f"</div>"
-        f'<div style="text-align:right;">'
-        f"{"<span class='badge-lewat'>Sudah lewat</span>" if level == 'lewat' else f"<span class='label-kecil' style='color:{warna_urgensi(tokens, level)}; font-weight:600'>{teks_sisa}</span>"}"
-        f"</div>"
-        f"</div>"
-        f"</div>",
+        f"""
+        <div class="kartu-tugas" style="border-left: 5px solid {aksen};">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                <span style="color: {aksen}; font-weight: 600; font-size: 0.9rem;">{t["mata_kuliah"]} | {t.get("jenis", "-")}</span>
+                <span class="{badge_class}">{teks_sisa}</span>
+            </div>
+            <h3 style="margin: 0 0 6px 0; color: var(--ink) !important;">{t["judul"]}</h3>
+            <div style="color: var(--ink-soft) !important; font-size: 0.9rem;">Waktu: {format_deadline(t["deadline"])}</div>
+        </div>
+    """,
         unsafe_allow_html=True,
     )
 
@@ -149,11 +133,8 @@ for t in tugas_hari_itu:
             st.markdown(f'<div class="ketentuan-body">{ketentuan_html}</div>', unsafe_allow_html=True)
 
     btn_c1, btn_c2 = st.columns(2)
-    with btn_c1:
-        if punya_link(t):
-            st.link_button("Buka di VClass", t["link_vclass"], use_container_width=True)
-    with btn_c2:
-        if t.get("file_soal"):
-            st.link_button("Lihat / Download File Soal", t["file_soal"], use_container_width=True)
-
-    st.divider()
+    if punya_link(t):
+        btn_c1.link_button("Buka di VClass", t["link_vclass"], use_container_width=True)
+    if t.get("file_soal"):
+        btn_c2.link_button("Download File Soal", t["file_soal"], use_container_width=True)
+    st.write("")

@@ -1,11 +1,10 @@
-# Tema warna dasar Streamlit. Sebagian besar styling detail ada di
-# utils/styles.py (CSS kustom) — file ini hanya mengatur warna dasar
-# widget bawaan Streamlit (tombol, slider, dsb) supaya tidak bentrok.
-
 [theme]
 base = "light"
-primaryColor = "#A8442C"
-backgroundColor = "#F6F4EE"
-secondaryBackgroundColor = "#EFEBDD"
-textColor = "#21252C"
+primaryColor = "#3b82f6"
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#0F172A"
 font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
