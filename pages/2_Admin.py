@@ -25,7 +25,7 @@ def _ambil_html(hasil_quill) -> str:
 
 if not is_admin():
     st.warning("Halaman ini hanya untuk admin. Silakan masuk atau daftar akun baru.")
-    tab_login, tab_signup, tab_reset = st.tabs(["Masuk", "Daftar Akun Baru", "Lupa Password"])
+    tab_login, tab_signup = st.tabs(["Masuk", "Daftar Akun Baru"])
     with tab_login:
         with st.form("form_login"):
             email = st.text_input("Email")
@@ -50,21 +50,6 @@ if not is_admin():
                 st.toast("Pendaftaran akun berhasil! Silakan login.")
             else:
                 st.error(pesan)
-    with tab_reset:
-        st.caption("Masukkan email admin yang terdaftar untuk menerima link pembuatan password baru.")
-        with st.form("form_reset"):
-            reset_email = st.text_input("Email Admin")
-            reset_submit = st.form_submit_button("Kirim Link Reset", type="primary", use_container_width=True)
-
-        if reset_submit:
-            if not reset_email:
-                st.error("Email wajib diisi.")
-            else:
-                berhasil, pesan = reset_password(reset_email)
-                if berhasil:
-                    st.success(pesan)
-                else:
-                    st.error(pesan)
     st.stop()
 
 with st.sidebar:
