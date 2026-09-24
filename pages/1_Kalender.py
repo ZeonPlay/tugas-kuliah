@@ -6,6 +6,7 @@ from streamlit_calendar import calendar
 
 from utils.helpers import (
     JENIS,
+    MATA_KULIAH,
     build_calendar_events,
     deadline_terdekat,
     format_deadline,
@@ -41,6 +42,10 @@ if not semua_tasks:
 with st.sidebar:
     st.markdown("### Filter Jenis")
     filter_jenis = st.multiselect("Jenis", JENIS, default=JENIS, label_visibility="collapsed")
+
+    st.markdown("### Filter Mata Kuliah")
+    filter_matkul = st.multiselect("Mata Kuliah", MATA_KULIAH, default=MATA_KULIAH, label_visibility="collapsed")
+
     st.divider()
     st.markdown("### Deadline Terdekat")
     terdekat = deadline_terdekat(semua_tasks, jumlah=5)
@@ -57,7 +62,7 @@ with st.sidebar:
 """
             st.markdown(html_side, unsafe_allow_html=True)
 
-tasks = [t for t in semua_tasks if t.get("jenis") in filter_jenis]
+tasks = [t for t in semua_tasks if t.get("jenis") in filter_jenis and t.get("mata_kuliah") in filter_matkul]
 opsi_kalender = {
     "initialView": "dayGridMonth",
     "locale": "id",
