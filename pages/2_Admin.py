@@ -4,10 +4,10 @@ import pandas as pd
 import streamlit as st
 from streamlit_quill import st_quill
 
-from utils.auth import current_email, get_authed_client, is_admin, login, logout, signup
+from utils.auth import current_email, get_authed_client, is_admin, login, logout, reset_password, signup
 from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import delete_task, fetch_tasks, insert_task, update_task, upload_file
+from utils.supabase_client import ADMIN_EMAIL, delete_task, fetch_tasks, insert_task, update_task, upload_file
 
 st.set_page_config(page_title="Admin Tugas Kuliah", layout="wide")
 mode = render_theme_toggle()
@@ -25,7 +25,7 @@ def _ambil_html(hasil_quill) -> str:
 
 if not is_admin():
     st.warning("Halaman ini hanya untuk admin. Silakan masuk atau daftar akun baru.")
-    tab_login, tab_signup = st.tabs(["Masuk", "Daftar Akun Baru"])
+    tab_login, tab_signup, tab_reset = st.tabs(["Masuk", "Daftar Akun Baru", "Lupa Password"])
     with tab_login:
         with st.form("form_login"):
             email = st.text_input("Email")
@@ -50,6 +50,21 @@ if not is_admin():
                 st.toast("Pendaftaran akun berhasil! Silakan login.")
             else:
                 st.error(pesan)
+    with tab_reset:
+        st.caption("Masukkan email admin yang terdaftar untuk menerima link pembuatan password baru.")
+        with st.form("form_reset"):
+            reset_email = st.text_input("Email Admin")
+            reset_submit = st.form_submit_button("Kirim Link Reset", type="primary", use_container_width=True)
+
+        if reset_submit:
+            if not reset_email:
+                st.error("Email wajib diisi.")
+            else:
+                berhasil, pesan = reset_password(reset_email)
+                if berhasil:
+                    st.success(pesan)
+                else:
+                    st.error(pesan)
     st.stop()
 
 with st.sidebar:
@@ -243,7 +258,23 @@ with tab_admin_users:
     try:
         admins = client.table("admin_users").select("*").execute().data or []
         st.write("**Daftar Admin Aktif:**")
+
+        # Deteksi apakah yang sedang membuka halaman ini adalah Super Admin (Anda)
+        is_super_admin = current_email() == ADMIN_EMAIL
+
         for a in admins:
-            st.markdown(f"- `{a['email']}`")
+            c1, c2 = st.columns([4, 1])
+            c1.markdown(f"- `{a['email']}`")
+
+            # Tampilkan tombol Hapus HANYA untuk Super Admin dan cegah penghapusan diri sendiri
+            if is_super_admin and a["email"] != ADMIN_EMAIL:
+                if c2.button("Hapus", key=f"hapus_admin_{a['email']}"):
+                    try:
+                        client.table("admin_users").delete().eq("email", a["email"]).execute()
+                        st.toast(f"Akses admin untuk {a['email']} berhasil dicabut.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Gagal menghapus admin: {exc}")
+
     except Exception as exc:
         st.error(f"Gagal memuat daftar: {exc}")

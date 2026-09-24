@@ -78,3 +78,20 @@ def get_authed_client():
         return build_client_with_token(token)
     except ConfigError:
         return None
+
+
+def reset_password(email: str) -> tuple[bool, str]:
+    email_clean = email.strip().lower()
+    if not is_email_whitelisted(email_clean):
+        return False, "Email tidak terdaftar sebagai admin."
+
+    try:
+        url, key = _require_credentials()
+        client = create_client(url, key)
+        # Mengirim instruksi pemulihan ke email
+        client.auth.reset_password_for_email(
+            email_clean, options={"redirect_to": "https://sisfor-tugas.streamlit.app/Admin"}
+        )
+        return True, "Link reset password telah dikirim. Silakan cek kotak masuk atau folder spam email Anda."
+    except Exception as exc:
+        return False, f"Gagal mengirim link reset: {exc}"
