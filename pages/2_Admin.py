@@ -112,7 +112,6 @@ with tab_tambah:
                         "ketentuan": ketentuan_bersih or None,
                         "link_vclass": link_bersih or None,
                         "file_soal": file_url,
-                        "status": "Belum",
                     },
                 )
                 for k in ["tambah_judul", "tambah_link"]:
