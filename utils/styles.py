@@ -48,52 +48,6 @@ def inject_base_css(mode="Sistem") -> None:
             min-width: 10px;
             border-radius: 50%;
         }
-
-        .rich-text-content {
-            line-height: 1.7;
-        }
-
-        .rich-text-content p {
-            margin: 0 0 .65rem;
-        }
-
-        .rich-text-content h1,
-        .rich-text-content h2,
-        .rich-text-content h3 {
-            margin: 1rem 0 .5rem;
-            line-height: 1.3;
-        }
-
-        .rich-text-content ul,
-        .rich-text-content ol {
-            margin: .35rem 0 .75rem 1.5rem;
-            padding-left: 1rem;
-        }
-
-        .rich-text-content li {
-            margin: .2rem 0;
-            padding-left: .2rem;
-        }
-
-        .rich-text-content blockquote {
-            margin: .75rem 0;
-            padding: .65rem 1rem;
-            border-left: 3px solid var(--primary-color);
-            background: rgba(150,150,150,.08);
-            border-radius: 0 8px 8px 0;
-        }
-
-        .rich-text-content a {
-            text-decoration: underline;
-        }
-
-        .editor-note {
-            margin: .35rem 0 .6rem;
-            color: var(--text-color);
-            opacity: .62;
-            font-size: .82rem;
-        }
-
         @media (max-width: 640px) {
             .block-container {
                 padding: .75rem .75rem 1.5rem !important;
