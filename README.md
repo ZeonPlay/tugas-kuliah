@@ -5,7 +5,7 @@ Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas
 **Stack**
 - Python
 - Streamlit
-- Lexical rich-text editor (Markdown)
+- Toast UI rich-text editor (WYSIWYG) (Markdown)
 - Supabase (PostgreSQL + Auth + Storage)
 - FullCalendar melalui `streamlit-calendar`
 
