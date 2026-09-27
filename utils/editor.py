@@ -5,6 +5,13 @@ from markdownify import markdownify
 from st_tui_editor import st_tui_editor
 
 
+EDITOR_TOOLBAR = [
+    ["heading", "bold", "italic", "strike", "hr", "quote"],
+    ["ul", "ol", "task"],
+    ["table", "link"],
+]
+
+
 def rich_text_to_markdown(value: str | None) -> str:
     """Convert legacy Quill HTML to Markdown while keeping Markdown unchanged."""
     text = (value or "").strip()
@@ -39,6 +46,7 @@ def rich_text_editor(*, value: str = "", placeholder: str = "", key: str) -> str
         placeholder=placeholder or "Tulis ketentuan tugas di sini...",
         usage_statistics=False,
         theme=theme,
+        toolbar_items=EDITOR_TOOLBAR,
         key=key,
     )
 
