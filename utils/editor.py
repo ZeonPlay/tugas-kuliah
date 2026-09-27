@@ -53,7 +53,7 @@ ALPHA_EDITOR_CSS = r"""
 }
 """
 
-ALPHA_EDITOR_JS = String.raw\`
+ALPHA_EDITOR_JS = r'''
 const SCRIPT_ID = "tugas-kuliah-toast-ui-script";
 const SCRIPT_SRC = "https://uicdn.toast.com/editor/3.2.3/toastui-editor-all.min.js";
 
@@ -224,7 +224,7 @@ export default async function(component) {
 
     return () => editor.destroy();
 };
-\`
+'''
 
 rich_text_editor_component = st.components.v2.component(
     name="tugas_kuliah_rich_text_editor",
