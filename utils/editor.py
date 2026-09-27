@@ -319,6 +319,7 @@ def render_rich_text_editor(*, value: str = "", placeholder: str = "", key: str)
             "toolbarItems": EDITOR_TOOLBAR_ITEMS,
         },
         default={"content": {"markdown": value}},
+        on_content_change=lambda: None,
     )
 
     if not result:
