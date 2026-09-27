@@ -1,7 +1,7 @@
 from datetime import time as dtime
 
 import streamlit as st
-from utils.editor import rich_text_editor
+from utils.editor import rich_text_editor, rich_text_to_markdown, reset_rich_text_editor
 
 from utils.auth import current_email, get_authed_client, is_admin, login, logout, signup
 from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
@@ -16,10 +16,8 @@ tokens = get_tokens(mode)
 st.title("Panel Admin")
 
 
-def _ambil_html(hasil_quill) -> str:
-    if isinstance(hasil_quill, dict):
-        return (hasil_quill.get("html") or "").strip()
-    return (hasil_quill or "").strip()
+def _ambil_markdown(hasil_editor) -> str:
+    return (hasil_editor or "").strip()
 
 
 if not is_admin():
@@ -98,7 +96,7 @@ with tab_tambah:
 
     if st.button("Simpan Tugas Baru", type="primary", key="tambah_simpan"):
         link_bersih = link_vclass.strip()
-        ketentuan_bersih = _ambil_html(ketentuan_raw)
+        ketentuan_bersih = _ambil_markdown(ketentuan_raw)
         if not judul.strip():
             st.error("Judul tugas wajib diisi.")
         elif link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
@@ -120,6 +118,7 @@ with tab_tambah:
                 )
                 for k in ["tambah_judul", "tambah_link"]:
                     st.session_state.pop(k, None)
+                reset_rich_text_editor("tambah_ketentuan")
                 st.toast("Tugas berhasil disimpan.")
                 st.rerun()
             except Exception as exc:
@@ -178,10 +177,11 @@ with tab_kelola:
 
                 st.write("**Ketentuan**")
                 with st.container(border=True):
+                    editor_key = f"edit_ketentuan_{tid}"
                     e_ketentuan_raw = rich_text_editor(
-                        value=t.get("ketentuan") or "",
+                        value=rich_text_to_markdown(t.get("ketentuan")),
                         placeholder="Tulis ketentuan tugas di sini...",
-                        key=f"edit_ketentuan_{tid}",
+                        key=editor_key,
                     )
                 e_link = st.text_input("Link VClass", value=t.get("link_vclass") or "", key=f"edit_link_{tid}")
 
@@ -210,12 +210,13 @@ with tab_kelola:
                                     "mata_kuliah": e_matkul,
                                     "jenis": e_jenis,
                                     "deadline": to_utc_iso(e_tgl, e_jam),
-                                    "ketentuan": _ambil_html(e_ketentuan_raw) or None,
+                                    "ketentuan": _ambil_markdown(e_ketentuan_raw) or None,
                                     "link_vclass": link_bersih or None,
                                     "file_soal": file_url,
                                 },
                                 old_file_url=t.get("file_soal") if e_file else None,
                             )
+                            reset_rich_text_editor(editor_key)
                             st.toast("Perubahan tersimpan.")
                             st.rerun()
                         except Exception as exc:
