@@ -10,9 +10,7 @@ from st_tui_editor import st_tui_editor
 # cannot fit; using only the controls needed for task instructions avoids
 # that overflow path on phones.
 EDITOR_TOOLBAR = [
-    ["bold", "italic"],
-    ["ul", "ol"],
-    ["link"],
+    ["heading", "bold", "italic", "ul", "ol", "task", "link"],
 ]
 
 
