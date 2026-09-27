@@ -26,7 +26,7 @@ def rich_text_to_markdown(value: str | None) -> str:
         return ""
 
     looks_like_html = re.search(
-        r"<(?:p|div|ol|ul|li|h[1-6]|strong|em|u|s|blockquote|a|br)\\b",
+        r"<(?:p|div|ol|ul|li|h[1-6]|strong|em|u|s|blockquote|a|br)(?:\\s|>)",
         text,
         flags=re.IGNORECASE,
     )
