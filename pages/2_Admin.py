@@ -1,7 +1,7 @@
 from datetime import time as dtime
 
 import streamlit as st
-from streamlit_quill import st_quill
+from utils.editor import rich_text_editor
 
 from utils.auth import current_email, get_authed_client, is_admin, login, logout, signup
 from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
@@ -83,7 +83,11 @@ with tab_tambah:
     jam = c4.time_input("Jam deadline (WIB)", value=dtime(23, 59), key="tambah_jam")
 
     st.write("**Ketentuan & Instruksi**")
-    ketentuan_raw = st_quill(placeholder="Contoh: Format PDF, maksimal 10 halaman.", key="tambah_ketentuan")
+    with st.container(border=True):
+        ketentuan_raw = rich_text_editor(
+            placeholder="Tulis ketentuan tugas di sini...",
+            key="tambah_ketentuan",
+        )
 
     link_vclass = st.text_input(
         "Link VClass (Opsional)", placeholder="https://vclass.unila.ac.id/...", key="tambah_link"
@@ -173,7 +177,12 @@ with tab_kelola:
                 e_jam = c4.time_input("Jam deadline (WIB)", value=dt_lokal.time(), key=f"edit_jam_{tid}")
 
                 st.write("**Ketentuan**")
-                e_ketentuan_raw = st_quill(value=t.get("ketentuan") or "", key=f"edit_ketentuan_{tid}")
+                with st.container(border=True):
+                    e_ketentuan_raw = rich_text_editor(
+                        value=t.get("ketentuan") or "",
+                        placeholder="Tulis ketentuan tugas di sini...",
+                        key=f"edit_ketentuan_{tid}",
+                    )
                 e_link = st.text_input("Link VClass", value=t.get("link_vclass") or "", key=f"edit_link_{tid}")
 
                 if t.get("file_soal"):
