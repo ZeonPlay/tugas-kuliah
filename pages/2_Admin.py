@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_quill import st_quill
 
-from utils.auth import current_email, get_authed_client, is_admin, login, logout, reset_password, signup
+from utils.auth import current_email, get_authed_client, is_admin, login, logout, signup
 from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ADMIN_EMAIL, delete_task, fetch_tasks, insert_task, update_task, upload_file
