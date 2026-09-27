@@ -251,7 +251,7 @@ def editor_initial_value(value: str | None) -> str:
     if not text:
         return ""
 
-    if re.search(r"<ol\b[^>]*type=['"]a['"][^>]*>", text, flags=re.IGNORECASE):
+    if re.search(r'<ol\b[^>]*type=["\']a["\'][^>]*>', text, flags=re.IGNORECASE):
         return text
 
     if _has_html(text):
@@ -267,7 +267,7 @@ def rich_text_to_markdown(value: str | None) -> str:
 
 def _alpha_html_to_markdown(text: str) -> str:
     pattern = re.compile(
-        r"<ol\b[^>]*type=['"]a['"][^>]*>(.*?)</ol>",
+        r'<ol\b[^>]*type=["\']a["\'][^>]*>(.*?)</ol>',
         flags=re.IGNORECASE | re.DOTALL,
     )
 
