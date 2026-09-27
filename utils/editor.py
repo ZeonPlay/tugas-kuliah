@@ -294,7 +294,7 @@ def display_rich_text(value: str | None) -> str:
     if not text:
         return ""
 
-    if re.search(r"<ol\b[^>]*type=["']a["'][^>]*>", text, flags=re.IGNORECASE):
+    if re.search(r'<ol\b[^>]*type=["\']a["\'][^>]*>', text, flags=re.IGNORECASE):
         text = _alpha_html_to_markdown(text)
         return markdownify(text, heading_style="ATX", bullets="-").strip()
 
