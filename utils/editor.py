@@ -326,3 +326,7 @@ def render_rich_text_editor(*, value: str = "", placeholder: str = "", key: str)
 
     content = result.get("content", {}) if isinstance(result, dict) else {}
     return (content.get("markdown") or value or "").strip()
+
+
+# Backwards-compatible name used by the admin page.
+rich_text_editor = render_rich_text_editor
