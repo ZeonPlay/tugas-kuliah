@@ -1,6 +1,5 @@
 from datetime import time as dtime
 
-import pandas as pd
 import streamlit as st
 from streamlit_quill import st_quill
 
@@ -225,27 +224,33 @@ with tab_kelola:
                         st.error(f"Gagal menghapus: {exc}")
 
 with tab_admin_users:
+    is_super_admin = current_email() == ADMIN_EMAIL
+
     st.subheader("Daftar Email Admin")
-    st.caption("Masukkan email teman yang ingin diberi akses admin.")
-    new_admin_email = st.text_input("Tambah Email Admin Baru", placeholder="contoh: teman@gmail.com")
-    if st.button("Tambah Admin", type="primary"):
-        if not new_admin_email.strip() or "@" not in new_admin_email:
-            st.error("Email tidak valid.")
-        else:
-            try:
-                client.table("admin_users").insert({"email": new_admin_email.strip().lower()}).execute()
-                st.toast(f"Berhasil menambahkan {new_admin_email}!")
-                st.rerun()
-            except Exception as exc:
-                st.error(f"Gagal menambahkan: {exc}")
+    if is_super_admin:
+        st.caption("Hanya Super Admin yang dapat menambah atau mencabut akses admin.")
+        new_admin_email = st.text_input(
+            "Tambah Email Admin Baru",
+            placeholder="contoh: teman@gmail.com",
+        )
+        if st.button("Tambah Admin", type="primary", use_container_width=True):
+            email_baru = new_admin_email.strip().lower()
+            if not email_baru or "@" not in email_baru:
+                st.error("Email tidak valid.")
+            else:
+                try:
+                    client.table("admin_users").insert({"email": email_baru}).execute()
+                    st.toast(f"Berhasil menambahkan {email_baru}!")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Gagal menambahkan: {exc}")
+    else:
+        st.info("Daftar admin hanya dapat dikelola oleh Super Admin.")
 
     st.divider()
     try:
         admins = client.table("admin_users").select("*").execute().data or []
         st.write("**Daftar Admin Aktif:**")
-
-        # Deteksi apakah yang sedang membuka halaman ini adalah Super Admin (Anda)
-        is_super_admin = current_email() == ADMIN_EMAIL
 
         for a in admins:
             c1, c2 = st.columns([4, 1])

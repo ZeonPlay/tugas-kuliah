@@ -4,4 +4,3 @@ streamlit-calendar>=1.0.0
 streamlit-autorefresh>=1.0.1
 streamlit-quill>=0.0.3
 python-dotenv>=1.0.0
-pandas>=2.0.0
