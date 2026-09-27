@@ -61,15 +61,21 @@ state = calendar(
 )
 
 if isinstance(state, dict):
-    callback = state.get("callback")
-    if callback == "dateClick":
-        clicked = parse_click_date(state.get("dateClick", {}).get("date", ""))
-        if clicked:
-            st.session_state["tanggal_dipilih"] = clicked.isoformat()
-    elif callback == "eventClick":
-        clicked = parse_click_date(state.get("eventClick", {}).get("event", {}).get("start", ""))
-        if clicked:
-            st.session_state["tanggal_dipilih"] = clicked.isoformat()
+    # Tombol "Tutup" melakukan rerun. Calendar component dapat mengembalikan
+    # callback terakhir pada rerun tersebut, sehingga tanggal bisa langsung
+    # terpilih lagi. Abaikan satu callback setelah penutupan.
+    abaikan_callback = st.session_state.pop("_kalender_abaikan_callback", False)
+
+    if not abaikan_callback:
+        callback = state.get("callback")
+        if callback == "dateClick":
+            clicked = parse_click_date(state.get("dateClick", {}).get("date", ""))
+            if clicked:
+                st.session_state["tanggal_dipilih"] = clicked.isoformat()
+        elif callback == "eventClick":
+            clicked = parse_click_date(state.get("eventClick", {}).get("event", {}).get("start", ""))
+            if clicked:
+                st.session_state["tanggal_dipilih"] = clicked.isoformat()
 
 selected = st.session_state.get("tanggal_dipilih")
 if not selected:
@@ -88,6 +94,7 @@ left, right = st.columns([4, 1])
 left.subheader(f"Tugas pada {format_tanggal(selected_date)}")
 if right.button("Tutup", use_container_width=True):
     st.session_state.pop("tanggal_dipilih", None)
+    st.session_state["_kalender_abaikan_callback"] = True
     st.rerun()
 
 if not tasks_on_day:

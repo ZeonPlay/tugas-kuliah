@@ -5,6 +5,7 @@ Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas
 **Stack**
 - Python
 - Streamlit
+- Toast UI rich-text editor (WYSIWYG) (Markdown)
 - Supabase (PostgreSQL + Auth + Storage)
 - FullCalendar melalui `streamlit-calendar`
 
@@ -13,7 +14,7 @@ Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas
 - Dashboard deadline terdekat
 - Kalender deadline
 - Pencarian dan filter tugas
-- Detail/instruksi tugas
+- Detail/instruksi tugas dengan rich-text editor
 - Link VClass
 - File soal/ketentuan
 - Login admin
@@ -21,6 +22,7 @@ Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas
 - Manajemen daftar admin oleh Super Admin
 - Waktu deadline disimpan sebagai UTC dan ditampilkan dalam WIB
 - Tampilan yang disesuaikan untuk laptop dan layar Android
+- Instruksi tugas disimpan sebagai Markdown; data lama dari editor Quill dikonversi saat digunakan
 
 ## Struktur
 

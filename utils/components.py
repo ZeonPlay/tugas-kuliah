@@ -1,6 +1,7 @@
 import html
 import streamlit as st
 
+from utils.editor import rich_text_to_markdown
 from utils.helpers import format_deadline, punya_link, sisa_waktu, warna_matkul
 
 
@@ -41,10 +42,10 @@ def render_task_card(task: dict, tokens: dict, *, detail_label: str = "Detail & 
         st.markdown(f"### {_safe(task.get('judul'))}")
         st.caption(f"Deadline · {format_deadline(task['deadline'])}")
 
-        details = (task.get("ketentuan") or "").strip()
+        details = rich_text_to_markdown(task.get("ketentuan"))
         if details:
             with st.expander(detail_label):
-                st.markdown(details, unsafe_allow_html=True)
+                st.markdown(details)
 
         actions = []
         if punya_link(task):

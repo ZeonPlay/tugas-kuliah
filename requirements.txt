@@ -1,6 +1,7 @@
-streamlit>=1.36.0
+streamlit>=1.51.0
 supabase>=2.4.0
 streamlit-calendar>=1.0.0
 streamlit-autorefresh>=1.0.1
-streamlit-quill>=0.0.3
+st_tui_editor==0.0.4
+markdownify>=1.2.3
 python-dotenv>=1.0.0
