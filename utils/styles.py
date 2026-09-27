@@ -49,6 +49,174 @@ def inject_base_css(mode="Sistem") -> None:
             border-radius: 50%;
         }
 
+
+        /* Mograph test: subtle spring-like motion for interactive UI. */
+        :root {
+            --mograph-ease: cubic-bezier(.22, 1, .36, 1);
+            --mograph-fast: 160ms;
+            --mograph-slow: 320ms;
+        }
+
+        @keyframes mograph-enter {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(.985);
+                filter: blur(2px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .stButton > button,
+        .stLinkButton a,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button {
+            transition:
+                transform var(--mograph-fast) var(--mograph-ease),
+                box-shadow var(--mograph-slow) var(--mograph-ease),
+                filter var(--mograph-fast) var(--mograph-ease);
+            transform-origin: center;
+            will-change: transform;
+        }
+
+        .stButton > button:hover,
+        .stLinkButton a:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover {
+            transform: translateY(-2px) scale(1.015);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+            filter: brightness(1.04);
+        }
+
+        .stButton > button:active,
+        .stLinkButton a:active,
+        .stDownloadButton > button:active,
+        [data-testid="stFormSubmitButton"] > button:active {
+            transform: translateY(1px) scale(.975);
+            transition-duration: 70ms;
+        }
+
+        [data-baseweb="tab"] {
+            transition:
+                transform var(--mograph-fast) var(--mograph-ease),
+                color var(--mograph-fast) ease,
+                opacity var(--mograph-fast) ease;
+        }
+
+        [data-baseweb="tab"]:hover {
+            transform: translateY(-1px);
+        }
+
+        [data-testid="stExpander"] details > summary {
+            transition:
+                background-color var(--mograph-fast) ease,
+                color var(--mograph-fast) ease,
+                padding-left var(--mograph-fast) var(--mograph-ease);
+        }
+
+        [data-testid="stExpander"] details > summary:hover {
+            padding-left: 4px;
+        }
+
+        input,
+        textarea,
+        [data-baseweb="select"] > div,
+        [data-baseweb="input"] > div {
+            transition:
+                transform var(--mograph-fast) var(--mograph-ease),
+                box-shadow var(--mograph-slow) var(--mograph-ease),
+                border-color var(--mograph-fast) ease;
+        }
+
+        input:hover,
+        textarea:hover,
+        [data-baseweb="select"] > div:hover,
+        [data-baseweb="input"] > div:hover {
+            transform: translateY(-1px);
+        }
+
+        input:focus,
+        textarea:focus,
+        [data-baseweb="select"] > div:focus-within,
+        [data-baseweb="input"] > div:focus-within {
+            transform: translateY(-1px);
+            box-shadow: 0 0 0 1px var(--primary-color), 0 8px 20px rgba(0, 0, 0, .10);
+        }
+
+        .course-row {
+            transition:
+                transform var(--mograph-slow) var(--mograph-ease),
+                box-shadow var(--mograph-slow) var(--mograph-ease),
+                border-color var(--mograph-fast) ease;
+        }
+
+        .course-row:hover {
+            transform: translateX(4px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
+            border-color: rgba(150, 150, 150, .35);
+        }
+
+        .course-dot {
+            transition: transform var(--mograph-slow) var(--mograph-ease);
+        }
+
+        .course-row:hover .course-dot {
+            transform: scale(1.35);
+        }
+
+        .fc-button {
+            transition:
+                transform var(--mograph-fast) var(--mograph-ease),
+                box-shadow var(--mograph-slow) var(--mograph-ease),
+                background-color var(--mograph-fast) ease !important;
+        }
+
+        .fc-button:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 7px 18px rgba(0, 0, 0, .14);
+        }
+
+        .fc-button:active {
+            transform: translateY(1px) scale(.97);
+        }
+
+        .fc-event {
+            transition:
+                transform var(--mograph-fast) var(--mograph-ease),
+                filter var(--mograph-fast) ease;
+        }
+
+        .fc-event:hover {
+            transform: translateY(-2px) scale(1.025);
+            filter: brightness(1.08);
+        }
+
+        .stButton > button,
+        .stLinkButton a,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        [data-baseweb="tab"],
+        [data-testid="stExpander"] details > summary,
+        .course-row,
+        .fc-button,
+        .fc-event {
+            animation: mograph-enter 420ms var(--mograph-ease) both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 1ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 1ms !important;
+            }
+        }
+
         @media (max-width: 640px) {
             .block-container {
                 padding: .75rem .75rem 1.5rem !important;
