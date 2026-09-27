@@ -5,10 +5,12 @@ from markdownify import markdownify
 from st_tui_editor import st_tui_editor
 
 
+# Keep the toolbar compact enough for narrow screens.
+# Toast UI can add its own overflow/"More" control when the toolbar
+# cannot fit; using only the controls needed for task instructions avoids
+# that overflow path on phones.
 EDITOR_TOOLBAR = [
-    ["heading", "bold", "italic", "strike", "hr", "quote"],
-    ["ul", "ol", "task"],
-    ["table", "link"],
+    ["heading", "bold", "italic", "ul", "ol", "task", "link"],
 ]
 
 
