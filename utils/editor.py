@@ -9,8 +9,8 @@ EDITOR_TOOLBAR_ITEMS = [
 ]
 
 ALPHA_EDITOR_CSS = r"""
-@import url("https://uicdn.toast.com/editor/3.2.3/toastui-editor.min.css");
-@import url("https://uicdn.toast.com/editor/3.2.3/theme/toastui-editor-dark.css");
+@import url("https://uicdn.toast.com/editor/3.2.2/toastui-editor.min.css");
+@import url("https://uicdn.toast.com/editor/3.2.2/theme/toastui-editor-dark.css");
 
 .toastui-editor-ww-container .toastui-editor-contents ol[type="a"] {
     list-style: none !important;
@@ -55,7 +55,7 @@ ALPHA_EDITOR_CSS = r"""
 
 ALPHA_EDITOR_JS = r'''
 const SCRIPT_ID = "tugas-kuliah-toast-ui-script";
-const SCRIPT_SRC = "https://uicdn.toast.com/editor/3.2.3/toastui-editor-all.min.js";
+const SCRIPT_SRC = "https://uicdn.toast.com/editor/3.2.2/toastui-editor-all.min.js";
 
 function loadScript() {
     if (window.toastui?.Editor) return Promise.resolve();
