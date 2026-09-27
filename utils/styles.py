@@ -114,7 +114,8 @@ def inject_base_css(mode="Sistem") -> None:
             transition:
                 background-color var(--mograph-fast) ease,
                 color var(--mograph-fast) ease,
-                padding-left var(--mograph-fast) var(--mograph-ease);
+                padding-left var(--mograph-fast) var(--mograph-ease),
+                transform var(--mograph-fast) var(--mograph-ease);
         }
 
         [data-testid="stExpander"] details > summary:hover {
