@@ -44,7 +44,10 @@ def render_task_card(task: dict, tokens: dict, *, detail_label: str = "Detail & 
         details = (task.get("ketentuan") or "").strip()
         if details:
             with st.expander(detail_label):
-                st.markdown(details, unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="rich-text-content">{details}</div>',
+                    unsafe_allow_html=True,
+                )
 
         actions = []
         if punya_link(task):
