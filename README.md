@@ -5,7 +5,7 @@ Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas
 **Stack**
 - Python
 - Streamlit
-- Toast UI rich-text editor (WYSIWYG) (Markdown)
+- Toast UI rich-text editor (WYSIWYG) dengan daftar alfabet `A. B. C.` (Markdown)
 - Supabase (PostgreSQL + Auth + Storage)
 - FullCalendar melalui `streamlit-calendar`
 
@@ -22,7 +22,7 @@ Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas
 - Manajemen daftar admin oleh Super Admin
 - Waktu deadline disimpan sebagai UTC dan ditampilkan dalam WIB
 - Tampilan yang disesuaikan untuk laptop dan layar Android
-- Instruksi tugas disimpan sebagai Markdown; data lama dari editor Quill dikonversi saat digunakan
+- Instruksi tugas disimpan sebagai Markdown/HTML; data lama dari editor Quill dikonversi saat digunakan, dan daftar alfabet dipertahankan
 
 ## Struktur
 
