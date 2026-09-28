@@ -41,7 +41,7 @@ if not all_tasks:
 with st.expander("🔎 Filter kalender", expanded=False):
     filter_jenis = st.multiselect("Jenis", JENIS, default=JENIS)
     course_names = [course["nama"] for course in all_courses]
-    visible_course_names = active_krs or course_names
+    visible_course_names = list(dict.fromkeys(active_krs + course_names)) if active_krs else course_names
     filter_matkul = st.multiselect("Mata kuliah", visible_course_names, default=visible_course_names)
 
 tasks = [
