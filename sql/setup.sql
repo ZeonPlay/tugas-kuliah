@@ -4,10 +4,8 @@
 --             paste seluruh isi file ini > Run.
 --
 -- >>> UBAH SEBELUM RUN <<<
--- Ganti SEMUA 'zeonplaychannel@gmail.com' di bawah dengan email admin kamu
--- (ada 4 tempat; pakai Find & Replace di editor).
--- Email ini HARUS sama persis dengan email user yang kamu buat di
--- Supabase > Authentication > Users.
+-- Ganti 'zeonplaychannel@gmail.com' hanya bila email itu memang Super Admin.
+-- Akun admin lain diambil dari tabel public.admin_users.
 -- =====================================================================
 
 create extension if not exists pgcrypto;
@@ -169,27 +167,51 @@ create policy tasks_select_public
     to anon, authenticated
     using (true);
 
--- INSERT: hanya admin
+-- INSERT: hanya email yang terdaftar di admin_users
 create policy tasks_insert_admin
     on public.tasks
     for insert
     to authenticated
-    with check ((auth.jwt() ->> 'email') = 'zeonplaychannel@gmail.com');  -- <<< GANTI
+    with check (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
 
--- UPDATE: hanya admin
+-- UPDATE: hanya email yang terdaftar di admin_users
 create policy tasks_update_admin
     on public.tasks
     for update
     to authenticated
-    using      ((auth.jwt() ->> 'email') = 'zeonplaychannel@gmail.com')   -- <<< GANTI
-    with check ((auth.jwt() ->> 'email') = 'zeonplaychannel@gmail.com');  -- <<< GANTI
+    using (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    )
+    with check (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
 
--- DELETE: hanya admin
+-- DELETE: hanya email yang terdaftar di admin_users
 create policy tasks_delete_admin
     on public.tasks
     for delete
     to authenticated
-    using ((auth.jwt() ->> 'email') = 'zeonplaychannel@gmail.com');       -- <<< GANTI
+    using (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
 
 -- ---------------------------------------------------------------------
 -- 5. (Opsional) Data contoh untuk mengetes tampilan kalender.
