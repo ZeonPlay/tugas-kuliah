@@ -21,7 +21,7 @@ st.caption("Klik tanggal yang memiliki deadline untuk melihat detail tugas.")
 
 try:
     all_tasks = fetch_tasks()
-    fetch_courses()
+    all_courses = fetch_courses()
 except ConfigError as exc:
     st.error(f"Konfigurasi belum lengkap.\\n\\n{exc}")
     st.stop()
@@ -29,11 +29,10 @@ except Exception as exc:
     st.error(f"Gagal mengambil data: {exc}")
     st.stop()
 
-if is_krs_configured():
-    active_krs = get_active_krs()
-    if active_krs:
-        all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
-        st.caption(f"📚 KRS aktif · Semester {get_active_semester()} · {len(active_krs)} mata kuliah")
+active_krs = get_active_krs() if is_krs_configured() else []
+if active_krs:
+    all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
+    st.caption(f"📚 KRS aktif · Semester {get_active_semester()} · {len(active_krs)} mata kuliah")
 
 if not all_tasks:
     st.info("Belum ada tugas yang tercatat.")
@@ -41,8 +40,9 @@ if not all_tasks:
 
 with st.expander("🔎 Filter kalender", expanded=False):
     filter_jenis = st.multiselect("Jenis", JENIS, default=JENIS)
-    course_names = [course["nama"] for course in fetch_courses()]
-    filter_matkul = st.multiselect("Mata kuliah", course_names, default=course_names)
+    course_names = [course["nama"] for course in all_courses]
+    visible_course_names = active_krs or course_names
+    filter_matkul = st.multiselect("Mata kuliah", visible_course_names, default=visible_course_names)
 
 tasks = [
     task for task in all_tasks
