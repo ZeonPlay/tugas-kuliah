@@ -32,6 +32,8 @@ create table if not exists public.tasks (
 
 create index if not exists tasks_deadline_idx on public.tasks (deadline);
 
+alter table public.tasks add column if not exists file_soal text;
+
 -- ---------------------------------------------------------------------
 -- 2. KATALOG MATA KULIAH
 --    Mata kuliah tidak lagi hardcoded di Python. Semester/kategori dapat
@@ -137,9 +139,14 @@ end;
 $$;
 
 drop trigger if exists tasks_set_updated_at on public.tasks;
-
 create trigger tasks_set_updated_at
     before update on public.tasks
+    for each row
+    execute function public.set_updated_at();
+
+drop trigger if exists courses_set_updated_at on public.courses;
+create trigger courses_set_updated_at
+    before update on public.courses
     for each row
     execute function public.set_updated_at();
 
@@ -192,7 +199,7 @@ create policy tasks_delete_admin
 -- values
 --   ('Laporan Praktikum Modul 1', 'Sistem Basis Data', 'Praktikum',
 --    now() + interval '2 days', 'Format PDF, maksimal 10 halaman.',
---    'https://vclass.unila.ac.id/mod/assign/view.php?id=12345', 'Tinggi', 'Belum'),
+--    'https://vclass.unila.ac.id/mod/assign/view.php?id=12345'),
 --   ('Tugas ERD Perpustakaan', 'Sistem Basis Data', 'Teori',
 --    now() + interval '5 days', 'Dikumpulkan langsung ke dosen saat kelas.',
 --    null);
