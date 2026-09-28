@@ -3,7 +3,6 @@ import streamlit as st
 from utils.components import render_task_card
 from utils.helpers import (
     JENIS,
-    MATA_KULIAH,
     deadline_terdekat,
     format_tanggal,
     now_wib,
@@ -11,8 +10,9 @@ from utils.helpers import (
     tugas_terlewat,
     warna_matkul,
 )
+from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import ConfigError, fetch_tasks
+from utils.supabase_client import ConfigError, fetch_courses, fetch_tasks
 
 st.set_page_config(
     page_title="Tugas Kuliah",
@@ -30,6 +30,7 @@ st.caption(f"S1 Sistem Informasi · {format_tanggal(now_wib().date())} · WIB")
 
 try:
     all_tasks = fetch_tasks()
+    all_courses = fetch_courses()
 except ConfigError as exc:
     st.error(f"Konfigurasi belum lengkap.\\n\\n{exc}")
     st.stop()
@@ -37,13 +38,35 @@ except Exception as exc:
     st.error(f"Gagal terhubung ke Supabase.\\n\\nPesan asli: {exc}")
     st.stop()
 
+course_names = [course["nama"] for course in all_courses]
+legacy_courses = sorted(
+    {
+        task.get("mata_kuliah")
+        for task in all_tasks
+        if task.get("mata_kuliah") and task.get("mata_kuliah") not in course_names
+    }
+)
+course_options = course_names + legacy_courses
+
+if is_krs_configured():
+    active_krs = get_active_krs()
+    if active_krs:
+        all_tasks_for_krs = all_tasks
+        all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
+        semester = get_active_semester()
+        st.caption(f"📚 KRS aktif · Semester {semester} · {len(active_krs)} mata kuliah")
+    else:
+        st.caption("📚 KRS aktif, tetapi belum ada mata kuliah yang dipilih.")
+
+st.page_link("pages/3_KRS.py", label="Atur KRS Saya", icon="📚")
+
 with st.expander("🔎 Cari & filter tugas", expanded=False):
     search = st.text_input(
         "Cari tugas",
         placeholder="Contoh: laporan basis data",
         label_visibility="collapsed",
     )
-    f_matkul = st.multiselect("Mata kuliah", MATA_KULIAH)
+    f_matkul = st.multiselect("Mata kuliah", course_options)
     f_jenis = st.multiselect("Jenis", JENIS)
 
 tasks = all_tasks
@@ -100,7 +123,7 @@ with kanan:
         count_per_matkul[course] = count_per_matkul.get(course, 0) + 1
 
     visible_courses = [
-        course for course in MATA_KULIAH
+        course for course in course_options
         if count_per_matkul.get(course, 0) > 0
     ]
 
