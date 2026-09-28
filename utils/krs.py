@@ -38,3 +38,7 @@ def is_krs_configured() -> bool:
 def reset_krs() -> None:
     st.session_state.pop(_KRS_KEY, None)
     st.session_state.pop(_ACTIVE_SEMESTER_KEY, None)
+
+    for key in list(st.session_state):
+        if str(key).startswith("krs_courses_"):
+            st.session_state.pop(key, None)
