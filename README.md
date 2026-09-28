@@ -98,7 +98,7 @@ Database aplikasi menggunakan beberapa bagian Supabase:
 5. Storage bucket `task-files` — lampiran tugas.
 6. RLS — membatasi operasi database.
 
-`sql/setup.sql` berisi schema dan RLS dasar untuk tabel `tasks`. Pada project yang sedang dipakai, tabel `admin_users` dan konfigurasi Storage dapat dikelola langsung dari Supabase Dashboard sesuai setup project.
+`sql/setup.sql` berisi schema dan RLS untuk tabel `tasks` dan `courses`. Pada project yang sedang dipakai, tabel `admin_users` dan konfigurasi Storage dapat dikelola langsung dari Supabase Dashboard sesuai setup project.
 
 ### Penting tentang authorization
 
@@ -116,7 +116,7 @@ Mata kuliah tidak lagi disimpan sebagai daftar hardcoded di Python. Admin dapat 
 
 Pada halaman **KRS Saya**, pengguna dapat memilih mata kuliah yang sedang diambil untuk setiap semester. Mata kuliah Wajib otomatis masuk, sedangkan mata kuliah Pilihan dipilih secara manual. Dashboard dan Kalender kemudian hanya menampilkan tugas dari KRS aktif.
 
-Pengaturan KRS saat ini disimpan di session browser/server Streamlit, sehingga belum memerlukan akun mahasiswa. Setelah browser/session berakhir, pengguna dapat mengatur KRS kembali.
+Pengaturan KRS saat ini disimpan di session Streamlit, sehingga belum memerlukan akun mahasiswa. Setelah session berakhir, pengguna dapat mengatur KRS kembali.
 
 Setelah perubahan ini, jalankan kembali `sql/setup.sql` di Supabase. File tersebut juga menambahkan tabel `courses` dan kolom `file_soal` bila belum ada. Data awal katalog berisi mata kuliah semester 3 saat ini; kategori/semester dapat disesuaikan oleh admin.
 
