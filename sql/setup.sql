@@ -3,9 +3,9 @@
 -- Cara pakai: Supabase Dashboard > SQL Editor > New query >
 --             paste seluruh isi file ini > Run.
 --
--- >>> UBAH SEBELUM RUN <<<
--- Ganti 'zeonplaychannel@gmail.com' hanya bila email itu memang Super Admin.
--- Akun admin lain diambil dari tabel public.admin_users.
+-- Tidak ada email admin yang perlu di-hardcode di SQL ini.
+-- ADMIN_EMAIL digunakan oleh aplikasi sebagai identitas Super Admin,
+-- sedangkan hak tulis database memeriksa tabel public.admin_users.
 -- =====================================================================
 
 create extension if not exists pgcrypto;
