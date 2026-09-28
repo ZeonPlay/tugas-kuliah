@@ -5,17 +5,6 @@ from zoneinfo import ZoneInfo
 WIB = ZoneInfo("Asia/Jakarta")
 UTC = ZoneInfo("UTC")
 
-MATA_KULIAH = [
-    "Analisis Kota Cerdas",
-    "Jaringan Komputer dan Komunikasi Data",
-    "Manajemen Proses Bisnis",
-    "Pemrograman Berorientasi Objek",
-    "Pemrograman Terstruktur",
-    "Rekayasa Perangkat Lunak",
-    "Sistem Basis Data",
-    "Sistem Operasi",
-    "UI/UX Design",
-]
 
 JENIS = ["Praktikum", "Teori", "Quiz", "Ujian"]
 
