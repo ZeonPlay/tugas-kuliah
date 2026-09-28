@@ -159,8 +159,17 @@ with tab_kelola:
     if not tasks:
         st.info("Belum ada tugas.")
     else:
+        legacy_courses = sorted(
+            {
+                task.get("mata_kuliah")
+                for task in tasks
+                if task.get("mata_kuliah") and task.get("mata_kuliah") not in course_names
+            }
+        )
+        filter_course_options = course_names + legacy_courses
+
         f1, f2 = st.columns(2)
-        f_matkul = f1.multiselect("Filter Mata Kuliah", MATA_KULIAH)
+        f_matkul = f1.multiselect("Filter Mata Kuliah", filter_course_options)
         f_jenis = f2.multiselect("Filter Jenis", JENIS)
         cari = st.text_input("Cari judul / ketentuan", placeholder="Ketik kata kunci...")
 
