@@ -4,9 +4,10 @@ from streamlit_autorefresh import st_autorefresh
 from streamlit_calendar import calendar
 
 from utils.components import render_task_card
-from utils.helpers import JENIS, MATA_KULIAH, build_calendar_events, format_tanggal, parse_click_date, tasks_pada_tanggal
+from utils.helpers import JENIS, build_calendar_events, format_tanggal, parse_click_date, tasks_pada_tanggal
+from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import calendar_css, get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import ConfigError, fetch_tasks
+from utils.supabase_client import ConfigError, fetch_courses, fetch_tasks
 
 st.set_page_config(page_title="Kalender Tugas", page_icon="🗓️", layout="wide", initial_sidebar_state="collapsed")
 
@@ -20,6 +21,7 @@ st.caption("Klik tanggal yang memiliki deadline untuk melihat detail tugas.")
 
 try:
     all_tasks = fetch_tasks()
+    fetch_courses()
 except ConfigError as exc:
     st.error(f"Konfigurasi belum lengkap.\\n\\n{exc}")
     st.stop()
@@ -27,13 +29,20 @@ except Exception as exc:
     st.error(f"Gagal mengambil data: {exc}")
     st.stop()
 
+if is_krs_configured():
+    active_krs = get_active_krs()
+    if active_krs:
+        all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
+        st.caption(f"📚 KRS aktif · Semester {get_active_semester()} · {len(active_krs)} mata kuliah")
+
 if not all_tasks:
     st.info("Belum ada tugas yang tercatat.")
     st.stop()
 
 with st.expander("🔎 Filter kalender", expanded=False):
     filter_jenis = st.multiselect("Jenis", JENIS, default=JENIS)
-    filter_matkul = st.multiselect("Mata kuliah", MATA_KULIAH, default=MATA_KULIAH)
+    course_names = [course["nama"] for course in fetch_courses()]
+    filter_matkul = st.multiselect("Mata kuliah", course_names, default=course_names)
 
 tasks = [
     task for task in all_tasks
