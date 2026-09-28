@@ -51,7 +51,6 @@ course_options = course_names + legacy_courses
 if is_krs_configured():
     active_krs = get_active_krs()
     if active_krs:
-        all_tasks_for_krs = all_tasks
         all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
         semester = get_active_semester()
         st.caption(f"📚 KRS aktif · Semester {semester} · {len(active_krs)} mata kuliah")
