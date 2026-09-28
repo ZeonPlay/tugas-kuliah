@@ -48,14 +48,15 @@ legacy_courses = sorted(
 )
 course_options = course_names + legacy_courses
 
-if is_krs_configured():
-    active_krs = get_active_krs()
-    if active_krs:
-        all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
-        semester = get_active_semester()
-        st.caption(f"📚 KRS aktif · Semester {semester} · {len(active_krs)} mata kuliah")
-    else:
-        st.caption("📚 KRS aktif, tetapi belum ada mata kuliah yang dipilih.")
+active_krs = get_active_krs() if is_krs_configured() else []
+if active_krs:
+    all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
+    semester = get_active_semester()
+    st.caption(f"📚 KRS aktif · Semester {semester} · {len(active_krs)} mata kuliah")
+elif is_krs_configured():
+    st.caption("📚 KRS aktif, tetapi belum ada mata kuliah yang dipilih.")
+
+visible_course_options = active_krs or course_options
 
 st.page_link("pages/3_KRS.py", label="Atur KRS Saya", icon="📚")
 
@@ -65,7 +66,7 @@ with st.expander("🔎 Cari & filter tugas", expanded=False):
         placeholder="Contoh: laporan basis data",
         label_visibility="collapsed",
     )
-    f_matkul = st.multiselect("Mata kuliah", course_options)
+    f_matkul = st.multiselect("Mata kuliah", visible_course_options)
     f_jenis = st.multiselect("Jenis", JENIS)
 
 tasks = all_tasks
