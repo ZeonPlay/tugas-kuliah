@@ -4,9 +4,19 @@ import streamlit as st
 from utils.editor import rich_text_editor, rich_text_to_markdown, reset_rich_text_editor
 
 from utils.auth import current_email, get_authed_client, is_admin, login, logout, signup
-from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
+from utils.helpers import JENIS, format_deadline, now_wib, parse_deadline, to_utc_iso
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import ADMIN_EMAIL, delete_task, fetch_tasks, insert_task, update_task, upload_file
+from utils.supabase_client import (
+    ADMIN_EMAIL,
+    delete_task,
+    fetch_courses,
+    fetch_tasks,
+    insert_course,
+    insert_task,
+    update_course,
+    update_task,
+    upload_file,
+)
 
 st.set_page_config(page_title="Admin Tugas Kuliah", layout="wide")
 mode = render_theme_toggle()
@@ -64,16 +74,35 @@ if client is None:
 
 try:
     tasks = fetch_tasks()
+    courses = fetch_courses(only_active=False)
 except Exception as exc:
-    st.error(f"Gagal mengambil data: `{exc}`")
+    st.error(f"Gagal mengambil data: {exc}")
     st.stop()
 
-tab_tambah, tab_kelola, tab_admin_users = st.tabs(["Tambah Tugas", "Kelola Tugas", "Kelola Admin"])
+active_courses = [course for course in courses if course.get("aktif", True)]
+course_names = [course["nama"] for course in active_courses]
+course_labels = {
+    course["nama"]: (course.get("kode") or "-") + " · " + course["nama"]
+    for course in active_courses
+}
+
+tab_tambah, tab_kelola, tab_kuliah, tab_admin_users = st.tabs(
+    ["Tambah Tugas", "Kelola Tugas", "Mata Kuliah", "Kelola Admin"]
+)
 
 with tab_tambah:
     judul = st.text_input("Judul tugas", key="tambah_judul")
     c1, c2 = st.columns(2)
-    mata_kuliah = c1.selectbox("Mata kuliah", MATA_KULIAH, key="tambah_matkul")
+    if not course_names:
+        st.warning("Belum ada mata kuliah. Tambahkan mata kuliah terlebih dahulu di tab Mata Kuliah.")
+        mata_kuliah = None
+    else:
+        mata_kuliah = c1.selectbox(
+            "Mata kuliah",
+            course_names,
+            format_func=lambda name: course_labels.get(name, name),
+            key="tambah_matkul",
+        )
     jenis = c2.selectbox("Jenis", JENIS, index=JENIS.index("Teori"), key="tambah_jenis")
 
     c3, c4 = st.columns(2)
@@ -99,6 +128,8 @@ with tab_tambah:
         ketentuan_bersih = _ambil_markdown(ketentuan_raw)
         if not judul.strip():
             st.error("Judul tugas wajib diisi.")
+        elif not mata_kuliah:
+            st.error("Mata kuliah wajib dipilih.")
         elif link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
             st.error("Link VClass harus diawali http:// atau https://")
         else:
@@ -158,12 +189,13 @@ with tab_kelola:
 
                 c1, c2 = st.columns(2)
                 matkul_saat_ini = t.get("mata_kuliah")
-                opsi_matkul = MATA_KULIAH.copy()
+                opsi_matkul = course_names.copy()
                 if matkul_saat_ini and matkul_saat_ini not in opsi_matkul:
                     opsi_matkul.append(matkul_saat_ini)
                 e_matkul = c1.selectbox(
                     "Mata kuliah",
                     opsi_matkul,
+                    format_func=lambda name: course_labels.get(name, name),
                     index=opsi_matkul.index(matkul_saat_ini) if matkul_saat_ini in opsi_matkul else 0,
                     key=f"edit_matkul_{tid}",
                 )
@@ -231,6 +263,86 @@ with tab_kelola:
                         st.rerun()
                     except Exception as exc:
                         st.error(f"Gagal menghapus: {exc}")
+
+with tab_kuliah:
+    st.subheader("Katalog Mata Kuliah")
+    st.caption("Daftar ini menjadi sumber mata kuliah untuk tugas dan pengaturan KRS. Semester dan kategori bisa diperbarui tanpa mengubah tugas lama.")
+
+    with st.form("form_tambah_mata_kuliah"):
+        c1, c2 = st.columns(2)
+        kode_baru = c1.text_input("Kode mata kuliah", placeholder="Contoh: SI401")
+        nama_baru = c2.text_input("Nama mata kuliah", placeholder="Contoh: Data Mining")
+
+        c3, c4 = st.columns(2)
+        semester_baru = c3.number_input("Semester", min_value=1, max_value=8, value=4, step=1)
+        kategori_baru = c4.selectbox("Kategori", ["Wajib", "Pilihan", "Belum dikategorikan"])
+
+        if st.form_submit_button("Tambah Mata Kuliah", type="primary", use_container_width=True):
+            kode_bersih = kode_baru.strip().upper()
+            nama_bersih = nama_baru.strip()
+            try:
+                if not nama_bersih:
+                    raise ValueError("Nama mata kuliah wajib diisi.")
+                insert_course(
+                    client,
+                    {
+                        "kode": kode_bersih or None,
+                        "nama": nama_bersih,
+                        "semester": int(semester_baru),
+                        "kategori": kategori_baru,
+                        "aktif": True,
+                    },
+                )
+                st.toast("Mata kuliah berhasil ditambahkan.")
+                st.rerun()
+            except Exception as exc:
+                st.error(f"Gagal menambahkan mata kuliah: {exc}")
+
+    st.divider()
+
+    if not courses:
+        st.info("Belum ada mata kuliah.")
+    else:
+        for course in courses:
+            cid = course["id"]
+            label = f'{course.get("kode") or "-"} · {course["nama"]} · Semester {course["semester"]}'
+            with st.expander(label):
+                c1, c2, c3 = st.columns([2, 1, 1])
+                e_kode = c1.text_input("Kode", value=course.get("kode") or "", key=f"course_kode_{cid}")
+                e_semester = c2.number_input(
+                    "Semester",
+                    min_value=1,
+                    max_value=8,
+                    value=int(course.get("semester") or 1),
+                    step=1,
+                    key=f"course_semester_{cid}",
+                )
+                kategori_opsi = ["Wajib", "Pilihan", "Belum dikategorikan"]
+                current_kategori = course.get("kategori") or "Belum dikategorikan"
+                e_kategori = c3.selectbox(
+                    "Kategori",
+                    kategori_opsi,
+                    index=kategori_opsi.index(current_kategori) if current_kategori in kategori_opsi else 2,
+                    key=f"course_kategori_{cid}",
+                )
+
+                st.text_input("Nama mata kuliah", value=course["nama"], disabled=True, key=f"course_nama_{cid}")
+
+                if st.button("Simpan perubahan", type="primary", key=f"course_simpan_{cid}"):
+                    try:
+                        update_course(
+                            client,
+                            cid,
+                            {
+                                "kode": e_kode.strip().upper() or None,
+                                "semester": int(e_semester),
+                                "kategori": e_kategori,
+                            },
+                        )
+                        st.toast("Data mata kuliah diperbarui.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Gagal memperbarui mata kuliah: {exc}")
 
 with tab_admin_users:
     is_super_admin = current_email() == ADMIN_EMAIL
