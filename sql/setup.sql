@@ -112,15 +112,15 @@ create policy courses_delete_admin
 -- Data awal dari katalog semester 3 saat ini.
 insert into public.courses (kode, nama, semester, kategori)
 values
-    ('', 'Analisis Kota Cerdas', 3, 'Wajib'),
-    ('', 'Jaringan Komputer dan Komunikasi Data', 3, 'Wajib'),
-    ('', 'Manajemen Proses Bisnis', 3, 'Wajib'),
-    ('', 'Pemrograman Berorientasi Objek', 3, 'Wajib'),
-    ('', 'Pemrograman Terstruktur', 3, 'Wajib'),
-    ('', 'Rekayasa Perangkat Lunak', 3, 'Wajib'),
-    ('', 'Sistem Basis Data', 3, 'Wajib'),
-    ('', 'Sistem Operasi', 3, 'Wajib'),
-    ('', 'UI/UX Design', 3, 'Wajib')
+    (null, 'Analisis Kota Cerdas', 3, 'Wajib'),
+    (null, 'Jaringan Komputer dan Komunikasi Data', 3, 'Wajib'),
+    (null, 'Manajemen Proses Bisnis', 3, 'Wajib'),
+    (null, 'Pemrograman Berorientasi Objek', 3, 'Wajib'),
+    (null, 'Pemrograman Terstruktur', 3, 'Wajib'),
+    (null, 'Rekayasa Perangkat Lunak', 3, 'Wajib'),
+    (null, 'Sistem Basis Data', 3, 'Wajib'),
+    (null, 'Sistem Operasi', 3, 'Wajib'),
+    (null, 'UI/UX Design', 3, 'Wajib')
 on conflict (nama) do nothing;
 
 -- ---------------------------------------------------------------------
