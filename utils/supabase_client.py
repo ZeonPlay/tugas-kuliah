@@ -71,7 +71,7 @@ def fetch_courses(only_active: bool = True) -> list[dict]:
 def clear_cache() -> None:
     fetch_tasks.clear()
     fetch_courses.clear()
-    fetch_modules.clear()
+    fetch_module_folders.clear()
 
 
 def delete_file_from_storage(client: Client, file_url: str | None) -> None:
@@ -87,10 +87,10 @@ def delete_file_from_storage(client: Client, file_url: str | None) -> None:
 
 
 @st.cache_data(ttl=300, show_spinner=False)
-def fetch_modules(only_active: bool = True) -> list[dict]:
+def fetch_module_folders(only_active: bool = True) -> list[dict]:
     client = get_public_client()
     query = (
-        client.table("modules")
+        client.table("module_folders")
         .select("id,course_id,judul,urutan,url,keterangan,aktif")
         .order("urutan")
         .order("judul")
@@ -101,21 +101,21 @@ def fetch_modules(only_active: bool = True) -> list[dict]:
     return response.data or []
 
 
-def insert_module(client: Client, payload: dict) -> dict:
-    response = client.table("modules").insert(payload).execute()
-    fetch_modules.clear()
+def insert_module_folder(client: Client, payload: dict) -> dict:
+    response = client.table("module_folders").insert(payload).execute()
+    fetch_module_folders.clear()
     return (response.data or [{}])[0]
 
 
-def update_module(client: Client, module_id: str, payload: dict) -> dict:
-    response = client.table("modules").update(payload).eq("id", module_id).execute()
-    fetch_modules.clear()
+def update_module_folder(client: Client, module_id: str, payload: dict) -> dict:
+    response = client.table("module_folders").update(payload).eq("id", module_id).execute()
+    fetch_module_folders.clear()
     return (response.data or [{}])[0]
 
 
-def delete_module(client: Client, module_id: str) -> None:
-    client.table("modules").delete().eq("id", module_id).execute()
-    fetch_modules.clear()
+def delete_module_folder(client: Client, module_id: str) -> None:
+    client.table("module_folders").delete().eq("id", module_id).execute()
+    fetch_module_folders.clear()
 
 
 def insert_course(client: Client, payload: dict) -> dict:
