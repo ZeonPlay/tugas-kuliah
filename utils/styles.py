@@ -303,6 +303,43 @@ def calendar_css(mode="Sistem") -> str:
         color: var(--text-color) !important;
     }
 
+    /* View switcher (Bulan / Daftar): dibuat seperti segmented control
+       agar jelas bahwa keduanya adalah tombol yang bisa ditekan. */
+    .fc-toolbar-chunk:last-child .fc-button-group {
+        display: inline-flex;
+        gap: 0 !important;
+        padding: 3px;
+        border: 1px solid rgba(150, 150, 150, 0.24);
+        border-radius: 10px;
+        background: var(--secondary-background-color);
+    }
+
+    .fc-toolbar-chunk:last-child .fc-button {
+        min-width: 82px;
+        min-height: 38px;
+        padding: 7px 13px !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 7px !important;
+        color: var(--text-color) !important;
+        font-weight: 700 !important;
+        box-shadow: none !important;
+    }
+
+    .fc-toolbar-chunk:last-child .fc-button:hover {
+        background: rgba(127, 127, 127, 0.10) !important;
+    }
+
+    .fc-toolbar-chunk:last-child .fc-button-active {
+        background: var(--primary-color) !important;
+        color: white !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .14) !important;
+    }
+
+    .fc-toolbar-chunk:last-child .fc-button:active {
+        transform: translateY(1px) scale(.98);
+    }
+
     .fc-button {
         background-color: var(--background-color) !important;
         border: 1px solid rgba(150, 150, 150, 0.2) !important;
@@ -347,6 +384,19 @@ def calendar_css(mode="Sistem") -> str:
     @media (max-width: 640px) {
         .fc-toolbar-title { font-size: 1rem !important; }
         .fc-button { padding: 4px 7px !important; font-size: .78rem !important; }
+
+        .fc-toolbar-chunk:last-child .fc-button-group {
+            width: 100%;
+        }
+
+        .fc-toolbar-chunk:last-child .fc-button {
+            min-width: 0;
+            min-height: 40px;
+            flex: 1 1 0;
+            padding: 8px 12px !important;
+            font-size: .82rem !important;
+        }
+
         .fc-daygrid-day-number { font-size: .8rem; }
     }
     """
