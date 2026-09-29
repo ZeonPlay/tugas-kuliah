@@ -365,7 +365,7 @@ with tab_modul:
     if not course_names:
         st.warning("Belum ada mata kuliah. Tambahkan mata kuliah terlebih dahulu di tab Mata Kuliah.")
     else:
-        with st.form("form_tambah_modul"):
+        with st.form("form_tambah_module_folder"):
             c1, c2 = st.columns([2, 1])
             modul_judul = c1.text_input("Nama folder", placeholder="Contoh: Modul Praktikum")
             modul_urutan = c2.number_input("Urutan", min_value=1, max_value=99, value=1, step=1)
@@ -387,9 +387,9 @@ with tab_modul:
             if st.form_submit_button("Tambah Folder", type="primary", width="stretch"):
                 url_bersih = modul_url.strip()
                 if not modul_judul.strip():
-                    st.error("Judul modul wajib diisi.")
+                    st.error("Nama folder wajib diisi.")
                 elif not url_bersih.lower().startswith(("http://", "https://")):
-                    st.error("Link modul harus diawali http:// atau https://")
+                    st.error("Link folder harus diawali http:// atau https://")
                 else:
                     try:
                         course_id = next(
@@ -409,20 +409,20 @@ with tab_modul:
                         st.toast("Folder arsip berhasil ditambahkan.")
                         st.rerun()
                     except Exception as exc:
-                        st.error(f"Gagal menambahkan modul: {exc}")
+                        st.error(f"Gagal menambahkan folder: {exc}")
 
     st.divider()
 
-    visible_modules = [
+    visible_folders = [
         module for module in modules
         if module.get("course_id") in {course["id"] for course in active_courses}
     ]
 
-    if not visible_modules:
+    if not visible_folders:
         st.info("Belum ada modul.")
     else:
         course_by_id = {course["id"]: course for course in courses}
-        for module in visible_modules:
+        for module in visible_folders:
             module_id = module["id"]
             course = course_by_id.get(module["course_id"], {})
             order_label = f"Modul {module['urutan']}" if module.get("urutan") is not None else "Materi"
@@ -470,9 +470,9 @@ with tab_modul:
                 if st.button("Simpan perubahan", type="primary", key=f"module_simpan_{module_id}"):
                     url_bersih = e_modul_url.strip()
                     if not e_modul_judul.strip():
-                        st.error("Judul modul wajib diisi.")
+                        st.error("Nama folder wajib diisi.")
                     elif not url_bersih.lower().startswith(("http://", "https://")):
-                        st.error("Link modul harus diawali http:// atau https://")
+                        st.error("Link folder harus diawali http:// atau https://")
                     else:
                         try:
                             new_course_id = next(
@@ -492,9 +492,9 @@ with tab_modul:
                             st.toast("Perubahan folder tersimpan.")
                             st.rerun()
                         except Exception as exc:
-                            st.error(f"Gagal menyimpan modul: {exc}")
+                            st.error(f"Gagal menyimpan folder: {exc}")
 
-                if st.button("Hapus modul", key=f"module_hapus_{module_id}"):
+                if st.button("Hapus folder", key=f"module_hapus_{module_id}"):
                     try:
                         delete_module_folder(client, module_id)
                         st.toast("Folder arsip terhapus.")
