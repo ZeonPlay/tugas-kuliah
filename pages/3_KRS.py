@@ -67,7 +67,7 @@ if wajib:
     st.dataframe(
         [{"Mata kuliah": name} for name in wajib],
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
     )
 
 pilihan_terpilih = st.multiselect(
