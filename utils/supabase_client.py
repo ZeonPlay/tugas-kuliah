@@ -71,6 +71,7 @@ def fetch_courses(only_active: bool = True) -> list[dict]:
 def clear_cache() -> None:
     fetch_tasks.clear()
     fetch_courses.clear()
+    fetch_modules.clear()
 
 
 def delete_file_from_storage(client: Client, file_url: str | None) -> None:
@@ -83,6 +84,38 @@ def delete_file_from_storage(client: Client, file_url: str | None) -> None:
             client.storage.from_("task-files").remove([file_name])
     except Exception:
         pass
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_modules(only_active: bool = True) -> list[dict]:
+    client = get_public_client()
+    query = (
+        client.table("modules")
+        .select("id,course_id,judul,urutan,url,keterangan,aktif")
+        .order("urutan")
+        .order("judul")
+    )
+    if only_active:
+        query = query.eq("aktif", True)
+    response = query.execute()
+    return response.data or []
+
+
+def insert_module(client: Client, payload: dict) -> dict:
+    response = client.table("modules").insert(payload).execute()
+    fetch_modules.clear()
+    return (response.data or [{}])[0]
+
+
+def update_module(client: Client, module_id: str, payload: dict) -> dict:
+    response = client.table("modules").update(payload).eq("id", module_id).execute()
+    fetch_modules.clear()
+    return (response.data or [{}])[0]
+
+
+def delete_module(client: Client, module_id: str) -> None:
+    client.table("modules").delete().eq("id", module_id).execute()
+    fetch_modules.clear()
 
 
 def insert_course(client: Client, payload: dict) -> dict:
