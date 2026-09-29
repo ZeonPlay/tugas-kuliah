@@ -141,6 +141,7 @@ def build_calendar_events(tasks: list[dict], tokens: dict) -> list[dict]:
                 "backgroundColor": warna,
                 "borderColor": warna,
                 "textColor": "#FFFFFF",
+                "classNames": ["calendar-summary-event"],
             }
         )
 
@@ -161,6 +162,7 @@ def build_calendar_events(tasks: list[dict], tokens: dict) -> list[dict]:
                 "backgroundColor": warna,
                 "borderColor": warna,
                 "textColor": "#FFFFFF",
+                "classNames": ["calendar-task-event"],
                 "extendedProps": {
                     "task_id": task.get("id"),
                     "mata_kuliah": course,
