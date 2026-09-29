@@ -191,178 +191,183 @@ with tab_kelola:
 
         if not hasil:
             st.info("Tidak ada tugas yang cocok dengan filter.")
-            st.stop()
+        else:
 
-        # Kelompokkan tugas secara dinamis berdasarkan mata kuliah.
-        grouped_tasks = {}
-        for task in hasil:
-            course_name = task.get("mata_kuliah") or "Tanpa Mata Kuliah"
-            grouped_tasks.setdefault(course_name, []).append(task)
+            # Kelompokkan tugas secara dinamis berdasarkan mata kuliah.
+            grouped_tasks = {}
+            for task in hasil:
+                course_name = task.get("mata_kuliah") or "Tanpa Mata Kuliah"
+                grouped_tasks.setdefault(course_name, []).append(task)
 
-        selected_id = st.session_state.get("admin_selected_task_id")
+            selected_id = st.session_state.get("admin_selected_task_id")
 
-        st.divider()
-        st.subheader("Daftar Tugas")
-
-        for course_name, course_tasks in grouped_tasks.items():
-            with st.expander(f"📚 {course_name}  ·  {len(course_tasks)} tugas", expanded=True):
-                for task in sorted(course_tasks, key=lambda item: item.get("deadline") or ""):
-                    tid = task["id"]
-                    c1, c2, c3 = st.columns([5, 2, 1])
-
-                    c1.markdown(f"**{task['judul']}**")
-                    c1.caption(
-                        f"{task.get('jenis', 'Teori')} · Deadline {format_deadline(task['deadline'])}"
-                    )
-                    c2.caption(
-                        "Sedang diedit" if selected_id == tid else ""
-                    )
-                    if c3.button(
-                        "Edit",
-                        key=f"pilih_edit_{tid}",
-                        type="primary" if selected_id == tid else "secondary",
-                        width="stretch",
-                    ):
-                        st.session_state["admin_selected_task_id"] = tid
-                        st.rerun()
-
-        selected_task = next(
-            (task for task in hasil if task["id"] == st.session_state.get("admin_selected_task_id")),
-            None,
-        )
-
-        if selected_task is not None:
-            tid = selected_task["id"]
             st.divider()
-            st.subheader(f"Edit Tugas: {selected_task['judul']}")
+            st.subheader("Daftar Tugas")
 
-            dt_lokal = parse_deadline(selected_task["deadline"])
-            e_judul = st.text_input(
-                "Judul",
-                value=selected_task["judul"],
-                key=f"edit_judul_{tid}",
-            )
+            for course_name, course_tasks in grouped_tasks.items():
+                course_task_ids = {task["id"] for task in course_tasks}
+                is_selected_course = selected_id in course_task_ids
+                with st.expander(
+                    f"📚 {course_name}  ·  {len(course_tasks)} tugas",
+                    expanded=is_selected_course,
+                ):
+                    for task in sorted(course_tasks, key=lambda item: item.get("deadline") or ""):
+                        tid = task["id"]
+                        c1, c2, c3 = st.columns([5, 2, 1])
 
-            c1, c2 = st.columns(2)
-            matkul_saat_ini = selected_task.get("mata_kuliah")
-            opsi_matkul = course_names.copy()
-            if matkul_saat_ini and matkul_saat_ini not in opsi_matkul:
-                opsi_matkul.append(matkul_saat_ini)
-
-            e_matkul = c1.selectbox(
-                "Mata kuliah",
-                opsi_matkul,
-                index=opsi_matkul.index(matkul_saat_ini) if matkul_saat_ini in opsi_matkul else 0,
-                key=f"edit_matkul_{tid}",
-            )
-            e_jenis = c2.selectbox(
-                "Jenis",
-                JENIS,
-                index=JENIS.index(selected_task.get("jenis", "Teori")),
-                key=f"edit_jenis_{tid}",
-            )
-
-            c3, c4 = st.columns(2)
-            e_tgl = c3.date_input(
-                "Tanggal deadline",
-                value=dt_lokal.date(),
-                key=f"edit_tgl_{tid}",
-            )
-            e_jam = c4.time_input(
-                "Jam deadline (WIB)",
-                value=dt_lokal.time(),
-                key=f"edit_jam_{tid}",
-            )
-
-            st.write("**Ketentuan**")
-            with st.container(border=True):
-                editor_key = f"edit_ketentuan_{tid}"
-                e_ketentuan_raw = rich_text_editor(
-                    value=rich_text_to_markdown(selected_task.get("ketentuan")),
-                    placeholder="Tulis ketentuan tugas di sini...",
-                    key=editor_key,
-                )
-
-            e_link = st.text_input(
-                "Link VClass",
-                value=selected_task.get("link_vclass") or "",
-                key=f"edit_link_{tid}",
-            )
-
-            if selected_task.get("file_soal"):
-                st.markdown(
-                    f'<a href="{selected_task["file_soal"]}" target="_blank">Lihat file saat ini</a>',
-                    unsafe_allow_html=True,
-                )
-
-            e_file = st.file_uploader(
-                "Ganti File Soal/Ketentuan",
-                type=["pdf", "png", "jpg", "jpeg", "docx", "zip"],
-                key=f"edit_file_{tid}",
-            )
-
-            c_simpan, c_batal = st.columns(2)
-
-            if c_simpan.button(
-                "Simpan Perubahan",
-                type="primary",
-                key=f"edit_simpan_{tid}",
-                width="stretch",
-            ):
-                link_bersih = e_link.strip()
-                if link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
-                    st.error("Link VClass harus valid.")
-                else:
-                    try:
-                        file_url = upload_file(client, e_file) if e_file else selected_task.get("file_soal")
-                        update_task(
-                            client,
-                            tid,
-                            {
-                                "judul": e_judul.strip(),
-                                "mata_kuliah": e_matkul,
-                                "jenis": e_jenis,
-                                "deadline": to_utc_iso(e_tgl, e_jam),
-                                "ketentuan": _ambil_markdown(e_ketentuan_raw) or None,
-                                "link_vclass": link_bersih or None,
-                                "file_soal": file_url,
-                            },
-                            old_file_url=selected_task.get("file_soal") if e_file else None,
+                        c1.markdown(f"**{task['judul']}**")
+                        c1.caption(
+                            f"{task.get('jenis', 'Teori')} · Deadline {format_deadline(task['deadline'])}"
                         )
-                        reset_rich_text_editor(editor_key)
+                        c2.caption(
+                            "Sedang diedit" if selected_id == tid else ""
+                        )
+                        if c3.button(
+                            "Edit",
+                            key=f"pilih_edit_{tid}",
+                            type="primary" if selected_id == tid else "secondary",
+                            width="stretch",
+                        ):
+                            st.session_state["admin_selected_task_id"] = tid
+                            st.rerun()
+
+            selected_task = next(
+                (task for task in hasil if task["id"] == st.session_state.get("admin_selected_task_id")),
+                None,
+            )
+
+            if selected_task is not None:
+                tid = selected_task["id"]
+                st.divider()
+                st.subheader(f"Edit Tugas: {selected_task['judul']}")
+
+                dt_lokal = parse_deadline(selected_task["deadline"])
+                e_judul = st.text_input(
+                    "Judul",
+                    value=selected_task["judul"],
+                    key=f"edit_judul_{tid}",
+                )
+
+                c1, c2 = st.columns(2)
+                matkul_saat_ini = selected_task.get("mata_kuliah")
+                opsi_matkul = course_names.copy()
+                if matkul_saat_ini and matkul_saat_ini not in opsi_matkul:
+                    opsi_matkul.append(matkul_saat_ini)
+
+                e_matkul = c1.selectbox(
+                    "Mata kuliah",
+                    opsi_matkul,
+                    index=opsi_matkul.index(matkul_saat_ini) if matkul_saat_ini in opsi_matkul else 0,
+                    key=f"edit_matkul_{tid}",
+                )
+                e_jenis = c2.selectbox(
+                    "Jenis",
+                    JENIS,
+                    index=JENIS.index(selected_task.get("jenis", "Teori")),
+                    key=f"edit_jenis_{tid}",
+                )
+
+                c3, c4 = st.columns(2)
+                e_tgl = c3.date_input(
+                    "Tanggal deadline",
+                    value=dt_lokal.date(),
+                    key=f"edit_tgl_{tid}",
+                )
+                e_jam = c4.time_input(
+                    "Jam deadline (WIB)",
+                    value=dt_lokal.time(),
+                    key=f"edit_jam_{tid}",
+                )
+
+                st.write("**Ketentuan**")
+                with st.container(border=True):
+                    editor_key = f"edit_ketentuan_{tid}"
+                    e_ketentuan_raw = rich_text_editor(
+                        value=rich_text_to_markdown(selected_task.get("ketentuan")),
+                        placeholder="Tulis ketentuan tugas di sini...",
+                        key=editor_key,
+                    )
+
+                e_link = st.text_input(
+                    "Link VClass",
+                    value=selected_task.get("link_vclass") or "",
+                    key=f"edit_link_{tid}",
+                )
+
+                if selected_task.get("file_soal"):
+                    st.markdown(
+                        f'<a href="{selected_task["file_soal"]}" target="_blank">Lihat file saat ini</a>',
+                        unsafe_allow_html=True,
+                    )
+
+                e_file = st.file_uploader(
+                    "Ganti File Soal/Ketentuan",
+                    type=["pdf", "png", "jpg", "jpeg", "docx", "zip"],
+                    key=f"edit_file_{tid}",
+                )
+
+                c_simpan, c_batal = st.columns(2)
+
+                if c_simpan.button(
+                    "Simpan Perubahan",
+                    type="primary",
+                    key=f"edit_simpan_{tid}",
+                    width="stretch",
+                ):
+                    link_bersih = e_link.strip()
+                    if link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
+                        st.error("Link VClass harus valid.")
+                    else:
+                        try:
+                            file_url = upload_file(client, e_file) if e_file else selected_task.get("file_soal")
+                            update_task(
+                                client,
+                                tid,
+                                {
+                                    "judul": e_judul.strip(),
+                                    "mata_kuliah": e_matkul,
+                                    "jenis": e_jenis,
+                                    "deadline": to_utc_iso(e_tgl, e_jam),
+                                    "ketentuan": _ambil_markdown(e_ketentuan_raw) or None,
+                                    "link_vclass": link_bersih or None,
+                                    "file_soal": file_url,
+                                },
+                                old_file_url=selected_task.get("file_soal") if e_file else None,
+                            )
+                            reset_rich_text_editor(editor_key)
+                            st.session_state.pop("admin_selected_task_id", None)
+                            st.toast("Perubahan tersimpan.")
+                            st.rerun()
+                        except Exception as exc:
+                            st.error(f"Gagal menyimpan: {exc}")
+
+                if c_batal.button(
+                    "Tutup Editor",
+                    key=f"edit_batal_{tid}",
+                    width="stretch",
+                ):
+                    reset_rich_text_editor(editor_key)
+                    st.session_state.pop("admin_selected_task_id", None)
+                    st.rerun()
+
+                st.divider()
+                konfirmasi = st.checkbox(
+                    "Saya yakin ingin menghapus tugas ini",
+                    key=f"konfirmasi_{tid}",
+                )
+                if st.button(
+                    "Hapus Tugas (Permanen)",
+                    key=f"hapus_{tid}",
+                    disabled=not konfirmasi,
+                    width="stretch",
+                ):
+                    try:
+                        delete_task(client, tid)
                         st.session_state.pop("admin_selected_task_id", None)
-                        st.toast("Perubahan tersimpan.")
+                        st.toast("Tugas terhapus.")
                         st.rerun()
                     except Exception as exc:
-                        st.error(f"Gagal menyimpan: {exc}")
-
-            if c_batal.button(
-                "Tutup Editor",
-                key=f"edit_batal_{tid}",
-                width="stretch",
-            ):
-                reset_rich_text_editor(editor_key)
-                st.session_state.pop("admin_selected_task_id", None)
-                st.rerun()
-
-            st.divider()
-            konfirmasi = st.checkbox(
-                "Saya yakin ingin menghapus tugas ini",
-                key=f"konfirmasi_{tid}",
-            )
-            if st.button(
-                "Hapus Tugas (Permanen)",
-                key=f"hapus_{tid}",
-                disabled=not konfirmasi,
-                width="stretch",
-            ):
-                try:
-                    delete_task(client, tid)
-                    st.session_state.pop("admin_selected_task_id", None)
-                    st.toast("Tugas terhapus.")
-                    st.rerun()
-                except Exception as exc:
-                    st.error(f"Gagal menghapus: {exc}")
+                        st.error(f"Gagal menghapus: {exc}")
 
 with tab_kuliah:
     st.subheader("Katalog Mata Kuliah")
