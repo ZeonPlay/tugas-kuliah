@@ -14,6 +14,11 @@ Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas
 - Dashboard deadline terdekat
 - Kalender deadline
 - Pencarian dan filter tugas
+- Filter tugas berdasarkan KRS/mata kuliah yang sedang diambil
+- Pengaturan KRS per semester tanpa akun mahasiswa
+- Katalog mata kuliah berbasis database (semester + Wajib/Pilihan)
+- Arsip folder modul per mata kuliah
+- Tautan Google Drive langsung maupun tautan custom
 - Detail/instruksi tugas dengan rich-text editor
 - Link VClass
 - File soal/ketentuan
@@ -32,10 +37,12 @@ tugas-kuliah/
 ├── .streamlit/
 ├── pages/
 │   ├── 1_Kalender.py
-│   └── 2_Admin.py
+│   ├── 2_Admin.py
+│   └── 3_KRS.py
 ├── utils/
 │   ├── auth.py
 │   ├── components.py
+│   ├── krs.py
 │   ├── helpers.py
 │   ├── styles.py
 │   └── supabase_client.py
@@ -87,12 +94,14 @@ Gunakan publishable/anon key, bukan service-role/secret key.
 Database aplikasi menggunakan beberapa bagian Supabase:
 
 1. `tasks` — data tugas.
-2. `admin_users` — whitelist akun yang boleh masuk ke panel admin.
-3. Authentication — akun login admin.
-4. Storage bucket `task-files` — lampiran tugas.
-5. RLS — membatasi operasi database.
+2. `courses` — katalog mata kuliah, semester, dan kategori Wajib/Pilihan.
+3. `module_folders` — arsip folder modul/materi per mata kuliah beserta URL.
+5. `admin_users` — whitelist akun yang boleh masuk ke panel admin.
+6. Authentication — akun login admin.
+7. Storage bucket `task-files` — lampiran tugas.
+8. RLS — membatasi operasi database.
 
-`sql/setup.sql` berisi schema dan RLS dasar untuk tabel `tasks`. Pada project yang sedang dipakai, tabel `admin_users` dan konfigurasi Storage dapat dikelola langsung dari Supabase Dashboard sesuai setup project.
+`sql/setup.sql` berisi schema dan RLS untuk tabel `tasks` dan `courses`. Pada project yang sedang dipakai, tabel `admin_users` dan konfigurasi Storage dapat dikelola langsung dari Supabase Dashboard sesuai setup project.
 
 ### Penting tentang authorization
 
@@ -102,6 +111,23 @@ Aplikasi memiliki dua level:
 - **Admin** — email yang terdaftar pada `admin_users`; dapat mengelola tugas sesuai policy RLS Supabase.
 
 Pastikan policy RLS di Supabase juga mengizinkan operasi yang memang dibutuhkan oleh admin. Jangan hanya mengandalkan tombol/UI Streamlit sebagai pengaman.
+
+
+### Arsip modul
+
+Admin dapat menyimpan folder arsip berdasarkan mata kuliah melalui tab **Arsip Modul**. Setiap entri memiliki nama folder, urutan, URL folder, dan keterangan opsional.
+
+URL dapat berupa tautan **folder Google Drive langsung** maupun **tautan custom** milik asisten/dosen yang pada akhirnya mengarah ke folder materi. Aplikasi tidak mengunduh atau menyalin file Google Drive; aplikasi hanya menyimpan URL folder dan menyediakan tombol untuk membukanya. Hak akses file/folder tetap mengikuti pengaturan berbagi pada Google Drive atau situs tujuan.
+
+### KRS dan mata kuliah
+
+Mata kuliah tidak lagi disimpan sebagai daftar hardcoded di Python. Admin dapat menambah mata kuliah dari tab **Mata Kuliah** pada Panel Admin dan mengatur semester serta kategorinya.
+
+Pada halaman **KRS Saya**, pengguna dapat memilih mata kuliah yang sedang diambil untuk setiap semester. Mata kuliah Wajib otomatis masuk, sedangkan mata kuliah Pilihan dipilih secara manual. Dashboard dan Kalender kemudian hanya menampilkan tugas dari KRS aktif.
+
+Pengaturan KRS saat ini disimpan di session Streamlit, sehingga belum memerlukan akun mahasiswa. Setelah session berakhir, pengguna dapat mengatur KRS kembali.
+
+Setelah perubahan ini, jalankan kembali `sql/setup.sql` di Supabase. File tersebut juga menambahkan tabel `courses` dan kolom `file_soal` bila belum ada. Data awal katalog berisi mata kuliah semester 3 saat ini; kategori/semester dapat disesuaikan oleh admin.
 
 ## Menjalankan
 

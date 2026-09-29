@@ -4,9 +4,23 @@ import streamlit as st
 from utils.editor import rich_text_editor, rich_text_to_markdown, reset_rich_text_editor
 
 from utils.auth import current_email, get_authed_client, is_admin, login, logout, signup
-from utils.helpers import JENIS, MATA_KULIAH, format_deadline, now_wib, parse_deadline, to_utc_iso
+from utils.helpers import JENIS, format_deadline, now_wib, parse_deadline, to_utc_iso
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import ADMIN_EMAIL, delete_task, fetch_tasks, insert_task, update_task, upload_file
+from utils.supabase_client import (
+    ADMIN_EMAIL,
+    delete_task,
+    fetch_courses,
+    fetch_module_folders,
+    fetch_tasks,
+    insert_course,
+    insert_module_folder,
+    insert_task,
+    update_course,
+    update_module_folder,
+    update_task,
+    delete_module_folder,
+    upload_file,
+)
 
 st.set_page_config(page_title="Admin Tugas Kuliah", layout="wide")
 mode = render_theme_toggle()
@@ -27,7 +41,7 @@ if not is_admin():
         with st.form("form_login"):
             email = st.text_input("Email")
             password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Masuk", type="primary", use_container_width=True)
+            submit = st.form_submit_button("Masuk", type="primary", width="stretch")
         if submit:
             berhasil, pesan = login(email, password)
             if berhasil:
@@ -40,7 +54,7 @@ if not is_admin():
         with st.form("form_signup"):
             reg_email = st.text_input("Email yang terdaftar")
             reg_password = st.text_input("Buat Password Baru", type="password")
-            reg_submit = st.form_submit_button("Daftar Akun", type="primary", use_container_width=True)
+            reg_submit = st.form_submit_button("Daftar Akun", type="primary", width="stretch")
         if reg_submit:
             berhasil, pesan = signup(reg_email, reg_password)
             if berhasil:
@@ -52,7 +66,7 @@ if not is_admin():
 with st.sidebar:
     st.write("Masuk sebagai:")
     st.write(f"**{current_email()}**")
-    if st.button("Keluar", use_container_width=True):
+    if st.button("Keluar", width="stretch"):
         logout()
         st.toast("Berhasil keluar.")
         st.rerun()
@@ -64,16 +78,36 @@ if client is None:
 
 try:
     tasks = fetch_tasks()
+    courses = fetch_courses(only_active=False)
+    modules = fetch_module_folders(only_active=False)
 except Exception as exc:
-    st.error(f"Gagal mengambil data: `{exc}`")
+    st.error(f"Gagal mengambil data: {exc}")
     st.stop()
 
-tab_tambah, tab_kelola, tab_admin_users = st.tabs(["Tambah Tugas", "Kelola Tugas", "Kelola Admin"])
+active_courses = [course for course in courses if course.get("aktif", True)]
+course_names = [course["nama"] for course in active_courses]
+course_labels = {
+    course["nama"]: (course.get("kode") or "-") + " · " + course["nama"]
+    for course in active_courses
+}
+
+tab_tambah, tab_kelola, tab_kuliah, tab_modul, tab_admin_users = st.tabs(
+    ["Tambah Tugas", "Kelola Tugas", "Mata Kuliah", "Arsip Modul", "Kelola Admin"]
+)
 
 with tab_tambah:
     judul = st.text_input("Judul tugas", key="tambah_judul")
     c1, c2 = st.columns(2)
-    mata_kuliah = c1.selectbox("Mata kuliah", MATA_KULIAH, key="tambah_matkul")
+    if not course_names:
+        st.warning("Belum ada mata kuliah. Tambahkan mata kuliah terlebih dahulu di tab Mata Kuliah.")
+        mata_kuliah = None
+    else:
+        mata_kuliah = c1.selectbox(
+            "Mata kuliah",
+            course_names,
+            format_func=lambda name: course_labels.get(name, name),
+            key="tambah_matkul",
+        )
     jenis = c2.selectbox("Jenis", JENIS, index=JENIS.index("Teori"), key="tambah_jenis")
 
     c3, c4 = st.columns(2)
@@ -99,6 +133,8 @@ with tab_tambah:
         ketentuan_bersih = _ambil_markdown(ketentuan_raw)
         if not judul.strip():
             st.error("Judul tugas wajib diisi.")
+        elif not mata_kuliah:
+            st.error("Mata kuliah wajib dipilih.")
         elif link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
             st.error("Link VClass harus diawali http:// atau https://")
         else:
@@ -128,8 +164,17 @@ with tab_kelola:
     if not tasks:
         st.info("Belum ada tugas.")
     else:
+        legacy_courses = sorted(
+            {
+                task.get("mata_kuliah")
+                for task in tasks
+                if task.get("mata_kuliah") and task.get("mata_kuliah") not in course_names
+            }
+        )
+        filter_course_options = course_names + legacy_courses
+
         f1, f2 = st.columns(2)
-        f_matkul = f1.multiselect("Filter Mata Kuliah", MATA_KULIAH)
+        f_matkul = f1.multiselect("Filter Mata Kuliah", filter_course_options)
         f_jenis = f2.multiselect("Filter Jenis", JENIS)
         cari = st.text_input("Cari judul / ketentuan", placeholder="Ketik kata kunci...")
 
@@ -158,12 +203,13 @@ with tab_kelola:
 
                 c1, c2 = st.columns(2)
                 matkul_saat_ini = t.get("mata_kuliah")
-                opsi_matkul = MATA_KULIAH.copy()
+                opsi_matkul = course_names.copy()
                 if matkul_saat_ini and matkul_saat_ini not in opsi_matkul:
                     opsi_matkul.append(matkul_saat_ini)
                 e_matkul = c1.selectbox(
                     "Mata kuliah",
                     opsi_matkul,
+                    format_func=lambda name: course_labels.get(name, name),
                     index=opsi_matkul.index(matkul_saat_ini) if matkul_saat_ini in opsi_matkul else 0,
                     key=f"edit_matkul_{tid}",
                 )
@@ -232,6 +278,228 @@ with tab_kelola:
                     except Exception as exc:
                         st.error(f"Gagal menghapus: {exc}")
 
+with tab_kuliah:
+    st.subheader("Katalog Mata Kuliah")
+    st.caption("Daftar ini menjadi sumber mata kuliah untuk tugas dan pengaturan KRS. Semester dan kategori bisa diperbarui tanpa mengubah tugas lama.")
+
+    with st.form("form_tambah_mata_kuliah"):
+        c1, c2 = st.columns(2)
+        kode_baru = c1.text_input("Kode mata kuliah", placeholder="Contoh: SI401")
+        nama_baru = c2.text_input("Nama mata kuliah", placeholder="Contoh: Data Mining")
+
+        c3, c4 = st.columns(2)
+        semester_baru = c3.number_input("Semester", min_value=1, max_value=8, value=4, step=1)
+        kategori_baru = c4.selectbox("Kategori", ["Wajib", "Pilihan", "Belum dikategorikan"])
+
+        if st.form_submit_button("Tambah Mata Kuliah", type="primary", width="stretch"):
+            kode_bersih = kode_baru.strip().upper()
+            nama_bersih = nama_baru.strip()
+            try:
+                if not nama_bersih:
+                    raise ValueError("Nama mata kuliah wajib diisi.")
+                insert_course(
+                    client,
+                    {
+                        "kode": kode_bersih or None,
+                        "nama": nama_bersih,
+                        "semester": int(semester_baru),
+                        "kategori": kategori_baru,
+                        "aktif": True,
+                    },
+                )
+                st.toast("Mata kuliah berhasil ditambahkan.")
+                st.rerun()
+            except Exception as exc:
+                st.error(f"Gagal menambahkan mata kuliah: {exc}")
+
+    st.divider()
+
+    if not courses:
+        st.info("Belum ada mata kuliah.")
+    else:
+        for course in courses:
+            cid = course["id"]
+            label = f'{course.get("kode") or "-"} · {course["nama"]} · Semester {course["semester"]}'
+            with st.expander(label):
+                c1, c2, c3 = st.columns([2, 1, 1])
+                e_kode = c1.text_input("Kode", value=course.get("kode") or "", key=f"course_kode_{cid}")
+                e_semester = c2.number_input(
+                    "Semester",
+                    min_value=1,
+                    max_value=8,
+                    value=int(course.get("semester") or 1),
+                    step=1,
+                    key=f"course_semester_{cid}",
+                )
+                kategori_opsi = ["Wajib", "Pilihan", "Belum dikategorikan"]
+                current_kategori = course.get("kategori") or "Belum dikategorikan"
+                e_kategori = c3.selectbox(
+                    "Kategori",
+                    kategori_opsi,
+                    index=kategori_opsi.index(current_kategori) if current_kategori in kategori_opsi else 2,
+                    key=f"course_kategori_{cid}",
+                )
+
+                st.text_input("Nama mata kuliah", value=course["nama"], disabled=True, key=f"course_nama_{cid}")
+
+                if st.button("Simpan perubahan", type="primary", key=f"course_simpan_{cid}"):
+                    try:
+                        update_course(
+                            client,
+                            cid,
+                            {
+                                "kode": e_kode.strip().upper() or None,
+                                "semester": int(e_semester),
+                                "kategori": e_kategori,
+                            },
+                        )
+                        st.toast("Data mata kuliah diperbarui.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Gagal memperbarui mata kuliah: {exc}")
+
+with tab_modul:
+    st.subheader("Arsip Modul")
+    st.caption("Simpan tautan folder modul per mata kuliah. Folder Google Drive maupun folder dari tautan custom didukung; aplikasi hanya menyimpan URL dan membukanya langsung.")
+
+    if not course_names:
+        st.warning("Belum ada mata kuliah. Tambahkan mata kuliah terlebih dahulu di tab Mata Kuliah.")
+    else:
+        with st.form("form_tambah_module_folder"):
+            c1, c2 = st.columns([2, 1])
+            modul_judul = c1.text_input("Nama folder", placeholder="Contoh: Modul Praktikum")
+            modul_urutan = c2.number_input("Urutan", min_value=1, max_value=99, value=1, step=1)
+
+            modul_course = st.selectbox(
+                "Mata kuliah",
+                course_names,
+            )
+            modul_url = st.text_input(
+                "Link folder",
+                placeholder="https://drive.google.com/... atau https://contoh-link...",
+            )
+            modul_keterangan = st.text_area(
+                "Keterangan (opsional)",
+                placeholder="Contoh: Berisi PDF modul dan materi praktikum.",
+            )
+
+            if st.form_submit_button("Tambah Folder", type="primary", width="stretch"):
+                url_bersih = modul_url.strip()
+                if not modul_judul.strip():
+                    st.error("Nama folder wajib diisi.")
+                elif not url_bersih.lower().startswith(("http://", "https://")):
+                    st.error("Link folder harus diawali http:// atau https://")
+                else:
+                    try:
+                        course_id = next(
+                            course["id"] for course in active_courses if course["nama"] == modul_course
+                        )
+                        insert_module_folder(
+                            client,
+                            {
+                                "course_id": course_id,
+                                "nama": modul_judul.strip(),
+                                "urutan": int(modul_urutan),
+                                "url": url_bersih,
+                                "keterangan": modul_keterangan.strip() or None,
+                                "aktif": True,
+                            },
+                        )
+                        st.toast("Folder arsip berhasil ditambahkan.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Gagal menambahkan folder: {exc}")
+
+    st.divider()
+
+    visible_folders = [
+        module for module in modules
+        if module.get("course_id") in {course["id"] for course in active_courses}
+    ]
+
+    if not visible_folders:
+        st.info("Belum ada modul.")
+    else:
+        course_by_id = {course["id"]: course for course in courses}
+        for module in visible_folders:
+            module_id = module["id"]
+            course = course_by_id.get(module["course_id"], {})
+            order_label = f"Modul {module['urutan']}" if module.get("urutan") is not None else "Materi"
+            label = f"{course.get('nama', 'Mata Kuliah tidak ditemukan')} · {order_label} — {module['judul']}"
+
+            with st.expander(label):
+                current_course_id = module["course_id"]
+                module_course_options = course_names.copy()
+                current_course = course_by_id.get(current_course_id)
+                if current_course and current_course["nama"] not in module_course_options:
+                    module_course_options.append(current_course["nama"])
+
+                current_course_name = current_course["nama"] if current_course else course_names[0]
+                e_modul_course = st.selectbox(
+                    "Mata kuliah",
+                    module_course_options,
+                    index=module_course_options.index(current_course_name),
+                    key=f"module_course_{module_id}",
+                )
+                e_modul_judul = st.text_input(
+                    "Nama folder",
+                    value=module["nama"],
+                    key=f"module_judul_{module_id}",
+                )
+                e_modul_urutan = st.number_input(
+                    "Urutan",
+                    min_value=1,
+                    max_value=99,
+                    value=int(module.get("urutan") or 1),
+                    step=1,
+                    key=f"module_urutan_{module_id}",
+                )
+                e_modul_url = st.text_input(
+                    "Link folder",
+                    value=module["url"],
+                    key=f"module_url_{module_id}",
+                )
+                e_modul_keterangan = st.text_area(
+                    "Keterangan",
+                    value=module.get("keterangan") or "",
+                    key=f"module_keterangan_{module_id}",
+                )
+
+                if st.button("Simpan perubahan", type="primary", key=f"module_simpan_{module_id}"):
+                    url_bersih = e_modul_url.strip()
+                    if not e_modul_judul.strip():
+                        st.error("Nama folder wajib diisi.")
+                    elif not url_bersih.lower().startswith(("http://", "https://")):
+                        st.error("Link folder harus diawali http:// atau https://")
+                    else:
+                        try:
+                            new_course_id = next(
+                                course["id"] for course in active_courses if course["nama"] == e_modul_course
+                            )
+                            update_module_folder(
+                                client,
+                                module_id,
+                                {
+                                    "course_id": new_course_id,
+                                    "nama": e_modul_judul.strip(),
+                                    "urutan": int(e_modul_urutan),
+                                    "url": url_bersih,
+                                    "keterangan": e_modul_keterangan.strip() or None,
+                                },
+                            )
+                            st.toast("Perubahan folder tersimpan.")
+                            st.rerun()
+                        except Exception as exc:
+                            st.error(f"Gagal menyimpan folder: {exc}")
+
+                if st.button("Hapus folder", key=f"module_hapus_{module_id}"):
+                    try:
+                        delete_module_folder(client, module_id)
+                        st.toast("Folder arsip terhapus.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Gagal menghapus modul: {exc}")
+
 with tab_admin_users:
     is_super_admin = current_email() == ADMIN_EMAIL
 
@@ -242,7 +510,7 @@ with tab_admin_users:
             "Tambah Email Admin Baru",
             placeholder="contoh: teman@gmail.com",
         )
-        if st.button("Tambah Admin", type="primary", use_container_width=True):
+        if st.button("Tambah Admin", type="primary", width="stretch"):
             email_baru = new_admin_email.strip().lower()
             if not email_baru or "@" not in email_baru:
                 st.error("Email tidak valid.")

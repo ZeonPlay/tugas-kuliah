@@ -58,8 +58,20 @@ def fetch_tasks() -> list[dict]:
     return response.data or []
 
 
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_courses(only_active: bool = True) -> list[dict]:
+    client = get_public_client()
+    query = client.table("courses").select("id,kode,nama,semester,kategori,aktif").order("semester").order("nama")
+    if only_active:
+        query = query.eq("aktif", True)
+    response = query.execute()
+    return response.data or []
+
+
 def clear_cache() -> None:
     fetch_tasks.clear()
+    fetch_courses.clear()
+    fetch_module_folders.clear()
 
 
 def delete_file_from_storage(client: Client, file_url: str | None) -> None:
@@ -72,6 +84,50 @@ def delete_file_from_storage(client: Client, file_url: str | None) -> None:
             client.storage.from_("task-files").remove([file_name])
     except Exception:
         pass
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def fetch_module_folders(only_active: bool = True) -> list[dict]:
+    client = get_public_client()
+    query = (
+        client.table("module_folders")
+        .select("id,course_id,nama,urutan,url,keterangan,aktif")
+        .order("urutan")
+        .order("judul")
+    )
+    if only_active:
+        query = query.eq("aktif", True)
+    response = query.execute()
+    return response.data or []
+
+
+def insert_module_folder(client: Client, payload: dict) -> dict:
+    response = client.table("module_folders").insert(payload).execute()
+    fetch_module_folders.clear()
+    return (response.data or [{}])[0]
+
+
+def update_module_folder(client: Client, module_id: str, payload: dict) -> dict:
+    response = client.table("module_folders").update(payload).eq("id", module_id).execute()
+    fetch_module_folders.clear()
+    return (response.data or [{}])[0]
+
+
+def delete_module_folder(client: Client, module_id: str) -> None:
+    client.table("module_folders").delete().eq("id", module_id).execute()
+    fetch_module_folders.clear()
+
+
+def insert_course(client: Client, payload: dict) -> dict:
+    response = client.table("courses").insert(payload).execute()
+    fetch_courses.clear()
+    return (response.data or [{}])[0]
+
+
+def update_course(client: Client, course_id: str, payload: dict) -> dict:
+    response = client.table("courses").update(payload).eq("id", course_id).execute()
+    fetch_courses.clear()
+    return (response.data or [{}])[0]
 
 
 def insert_task(client: Client, payload: dict) -> dict:

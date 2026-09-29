@@ -1,20 +1,10 @@
+import hashlib
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 WIB = ZoneInfo("Asia/Jakarta")
 UTC = ZoneInfo("UTC")
 
-MATA_KULIAH = [
-    "Analisis Kota Cerdas",
-    "Jaringan Komputer dan Komunikasi Data",
-    "Manajemen Proses Bisnis",
-    "Pemrograman Berorientasi Objek",
-    "Pemrograman Terstruktur",
-    "Rekayasa Perangkat Lunak",
-    "Sistem Basis Data",
-    "Sistem Operasi",
-    "UI/UX Design",
-]
 
 JENIS = ["Praktikum", "Teori", "Quiz", "Ujian"]
 
@@ -109,10 +99,14 @@ def warna_urgensi(tokens: dict, level: str) -> str:
 
 
 def warna_matkul(tokens: dict, nama: str) -> str:
+    """Beri warna konsisten untuk nama mata kuliah tanpa daftar hardcoded."""
     palet = tokens["course"]
-    if nama not in MATA_KULIAH:
+    if not nama or not palet:
         return tokens["ink_soft"]
-    return palet[MATA_KULIAH.index(nama) % len(palet)]
+
+    # hashlib dipakai agar hasil tetap sama antar-restart aplikasi.
+    indeks = int(hashlib.sha256(str(nama).encode("utf-8")).hexdigest()[:8], 16) % len(palet)
+    return palet[indeks]
 
 
 def punya_link(task: dict) -> bool:
