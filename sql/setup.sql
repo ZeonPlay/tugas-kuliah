@@ -124,6 +124,82 @@ values
 on conflict (nama) do nothing;
 
 -- ---------------------------------------------------------------------
+-- 3. ARSIP MODUL
+--    Satu modul dapat memakai URL Google Drive langsung atau URL custom.
+--    Aplikasi tidak membutuhkan OAuth/API Google Drive untuk membuka link.
+-- ---------------------------------------------------------------------
+create table if not exists public.modules (
+    id           uuid primary key default gen_random_uuid(),
+    course_id    uuid not null references public.courses(id) on delete restrict,
+    judul        text not null,
+    urutan       smallint not null default 1 check (urutan between 1 and 99),
+    url          text not null,
+    keterangan   text,
+    aktif        boolean not null default true,
+    created_at   timestamptz not null default now(),
+    updated_at   timestamptz not null default now()
+);
+
+create index if not exists modules_course_order_idx
+    on public.modules (course_id, urutan, judul);
+
+alter table public.modules enable row level security;
+
+drop policy if exists modules_select_public on public.modules;
+drop policy if exists modules_insert_admin on public.modules;
+drop policy if exists modules_update_admin on public.modules;
+drop policy if exists modules_delete_admin on public.modules;
+
+create policy modules_select_public
+    on public.modules
+    for select
+    to anon, authenticated
+    using (aktif = true);
+
+create policy modules_insert_admin
+    on public.modules
+    for insert
+    to authenticated
+    with check (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
+
+create policy modules_update_admin
+    on public.modules
+    for update
+    to authenticated
+    using (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    )
+    with check (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
+
+create policy modules_delete_admin
+    on public.modules
+    for delete
+    to authenticated
+    using (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
+
+-- ---------------------------------------------------------------------
 -- 3. TRIGGER updated_at
 -- ---------------------------------------------------------------------
 create or replace function public.set_updated_at()
@@ -149,7 +225,7 @@ create trigger courses_set_updated_at
     execute function public.set_updated_at();
 
 -- ---------------------------------------------------------------------
--- 4. ROW LEVEL SECURITY
+-- 5. ROW LEVEL SECURITY
 --    Ini lapisan keamanan utama. Meskipun seseorang membuka halaman
 --    Admin lewat URL langsung, database tetap menolak operasi tulis.
 -- ---------------------------------------------------------------------
@@ -214,7 +290,7 @@ create policy tasks_delete_admin
     );
 
 -- ---------------------------------------------------------------------
--- 5. (Opsional) Data contoh untuk mengetes tampilan kalender.
+-- 6. (Opsional) Data contoh untuk mengetes tampilan kalender.
 --    Hapus tanda komentar kalau mau dipakai.
 -- ---------------------------------------------------------------------
 -- insert into public.tasks (judul, mata_kuliah, jenis, deadline, ketentuan, link_vclass)
@@ -227,7 +303,7 @@ create policy tasks_delete_admin
 --    null);
 
 -- ---------------------------------------------------------------------
--- 6. Bersihkan kolom lama yang sudah tidak digunakan.
+-- 7. Bersihkan kolom lama yang sudah tidak digunakan.
 --    Jalankan setup.sql pada database lama untuk menghapusnya.
 -- ---------------------------------------------------------------------
 alter table public.tasks drop column if exists prioritas;
