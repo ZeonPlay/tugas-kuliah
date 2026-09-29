@@ -371,6 +371,80 @@ def calendar_css(mode="Sistem") -> str:
         border-color: rgba(150, 150, 150, 0.18) !important;
     }
 
+    /* List view: tampilkan deadline sebagai daftar tugas, bukan
+       baris agregat "2 deadline" yang sulit dibaca. */
+    .fc-list {
+        background: var(--secondary-background-color) !important;
+        border: 1px solid rgba(150, 150, 150, .18) !important;
+        border-radius: 10px !important;
+        overflow: hidden;
+    }
+
+    .fc-list-day-cushion {
+        padding: 11px 14px !important;
+        background: rgba(127, 127, 127, .08) !important;
+        color: var(--text-color) !important;
+        font-weight: 750 !important;
+        border-bottom: 1px solid rgba(150, 150, 150, .16) !important;
+    }
+
+    .fc-list-day-text,
+    .fc-list-day-side-text {
+        color: var(--text-color) !important;
+        font-weight: 750 !important;
+        text-decoration: none !important;
+    }
+
+    .fc-list-table {
+        border: 0 !important;
+    }
+
+    .fc-list-table td {
+        border-color: rgba(150, 150, 150, .13) !important;
+    }
+
+    .fc-list-event:hover td {
+        background: rgba(127, 127, 127, .07) !important;
+    }
+
+    .fc-list-event-dot {
+        border-width: 6px !important;
+        margin: 0 10px !important;
+    }
+
+    .fc-list-event-time {
+        width: 92px;
+        color: var(--text-color) !important;
+        opacity: .72;
+        font-weight: 650 !important;
+        white-space: nowrap;
+        vertical-align: middle !important;
+    }
+
+    .fc-list-event-title {
+        padding: 11px 14px 11px 4px !important;
+        color: var(--text-color) !important;
+        font-weight: 650 !important;
+        line-height: 1.35;
+        vertical-align: middle !important;
+    }
+
+    .fc-list-event-title a {
+        color: var(--text-color) !important;
+        text-decoration: none !important;
+    }
+
+    .fc-list-empty {
+        background: transparent !important;
+        border: 0 !important;
+    }
+
+    .fc-list-empty-cushion {
+        color: var(--text-color) !important;
+        opacity: .7;
+        font-weight: 600;
+    }
+
     .fc-event {
         border-radius: 5px !important;
         border: none !important;
@@ -398,5 +472,19 @@ def calendar_css(mode="Sistem") -> str:
         }
 
         .fc-daygrid-day-number { font-size: .8rem; }
+
+        .fc-list-event-time {
+            width: 72px;
+            font-size: .78rem !important;
+        }
+
+        .fc-list-event-title {
+            padding: 10px 10px 10px 2px !important;
+            font-size: .82rem !important;
+        }
+
+        .fc-list-day-cushion {
+            padding: 10px 12px !important;
+        }
     }
     """
