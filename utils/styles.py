@@ -373,6 +373,16 @@ def calendar_css(mode="Sistem") -> str:
 
     /* List view: tampilkan deadline sebagai daftar tugas, bukan
        baris agregat "2 deadline" yang sulit dibaca. */
+    /* Tampilan Bulan tetap memakai ringkasan per tanggal.
+       Tampilan Daftar memakai event tugas individual. */
+    .fc-daygrid-view .calendar-task-event {
+        display: none !important;
+    }
+
+    .fc-list-view .calendar-summary-event {
+        display: none !important;
+    }
+
     .fc-list {
         background: var(--secondary-background-color) !important;
         border: 1px solid rgba(150, 150, 150, .18) !important;
