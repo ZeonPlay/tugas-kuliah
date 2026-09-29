@@ -69,6 +69,48 @@ def inject_base_css(mode="Sistem") -> None:
             }
         }
 
+        /* Main-page navigation links should read clearly as clickable buttons. */
+        .block-container .stPageLink {
+            margin-bottom: 0 !important;
+        }
+
+        .block-container a[data-testid="stPageLink-NavLink"] {
+            box-sizing: border-box;
+            display: flex !important;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px !important;
+            border: 1px solid rgba(150, 150, 150, .24);
+            border-radius: 10px;
+            background: var(--secondary-background-color);
+            color: var(--text-color) !important;
+            text-decoration: none !important;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+            transition:
+                transform var(--mograph-fast) var(--mograph-ease),
+                box-shadow var(--mograph-slow) var(--mograph-ease),
+                border-color var(--mograph-fast) ease,
+                background-color var(--mograph-fast) ease;
+        }
+
+        .block-container a[data-testid="stPageLink-NavLink"]:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+        }
+
+        .block-container a[data-testid="stPageLink-NavLink"]:active {
+            transform: translateY(1px) scale(.98);
+        }
+
+        .block-container a[data-testid="stPageLink-NavLink"] span {
+            color: var(--text-color) !important;
+        }
+
         .stButton > button,
         .stLinkButton a,
         .stDownloadButton > button,
