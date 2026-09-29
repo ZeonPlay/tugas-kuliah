@@ -41,7 +41,7 @@ if not is_admin():
         with st.form("form_login"):
             email = st.text_input("Email")
             password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Masuk", type="primary", use_container_width=True)
+            submit = st.form_submit_button("Masuk", type="primary", width="stretch")
         if submit:
             berhasil, pesan = login(email, password)
             if berhasil:
@@ -54,7 +54,7 @@ if not is_admin():
         with st.form("form_signup"):
             reg_email = st.text_input("Email yang terdaftar")
             reg_password = st.text_input("Buat Password Baru", type="password")
-            reg_submit = st.form_submit_button("Daftar Akun", type="primary", use_container_width=True)
+            reg_submit = st.form_submit_button("Daftar Akun", type="primary", width="stretch")
         if reg_submit:
             berhasil, pesan = signup(reg_email, reg_password)
             if berhasil:
@@ -66,7 +66,7 @@ if not is_admin():
 with st.sidebar:
     st.write("Masuk sebagai:")
     st.write(f"**{current_email()}**")
-    if st.button("Keluar", use_container_width=True):
+    if st.button("Keluar", width="stretch"):
         logout()
         st.toast("Berhasil keluar.")
         st.rerun()
@@ -291,7 +291,7 @@ with tab_kuliah:
         semester_baru = c3.number_input("Semester", min_value=1, max_value=8, value=4, step=1)
         kategori_baru = c4.selectbox("Kategori", ["Wajib", "Pilihan", "Belum dikategorikan"])
 
-        if st.form_submit_button("Tambah Mata Kuliah", type="primary", use_container_width=True):
+        if st.form_submit_button("Tambah Mata Kuliah", type="primary", width="stretch"):
             kode_bersih = kode_baru.strip().upper()
             nama_bersih = nama_baru.strip()
             try:
@@ -384,7 +384,7 @@ with tab_modul:
                 placeholder="Contoh: Materi sebelum praktikum minggu depan.",
             )
 
-            if st.form_submit_button("Tambah Modul", type="primary", use_container_width=True):
+            if st.form_submit_button("Tambah Modul", type="primary", width="stretch"):
                 url_bersih = modul_url.strip()
                 if not modul_judul.strip():
                     st.error("Judul modul wajib diisi.")
@@ -512,7 +512,7 @@ with tab_admin_users:
             "Tambah Email Admin Baru",
             placeholder="contoh: teman@gmail.com",
         )
-        if st.button("Tambah Admin", type="primary", use_container_width=True):
+        if st.button("Tambah Admin", type="primary", width="stretch"):
             email_baru = new_admin_email.strip().lower()
             if not email_baru or "@" not in email_baru:
                 st.error("Email tidak valid.")
