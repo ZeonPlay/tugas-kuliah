@@ -373,7 +373,6 @@ with tab_modul:
             modul_course = st.selectbox(
                 "Mata kuliah",
                 course_names,
-                format_func=lambda name: course_labels.get(name, name),
             )
             modul_url = st.text_input(
                 "Link folder",
@@ -440,7 +439,6 @@ with tab_modul:
                     "Mata kuliah",
                     module_course_options,
                     index=module_course_options.index(current_course_name),
-                    format_func=lambda name: course_labels.get(name, name),
                     key=f"module_course_{module_id}",
                 )
                 e_modul_judul = st.text_input(
