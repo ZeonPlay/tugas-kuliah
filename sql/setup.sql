@@ -123,6 +123,35 @@ values
     (null, 'UI/UX Design', 3, 'Wajib')
 on conflict (nama) do nothing;
 
+-- Migrasi dari versi awal arsip modul:
+-- versi sebelumnya memakai tabel public.modules dan kolom judul.
+do $
+begin
+    if to_regclass('public.modules') is not null
+       and to_regclass('public.module_folders') is null then
+        alter table public.modules rename to module_folders;
+    end if;
+
+    if to_regclass('public.module_folders') is not null
+       and exists (
+           select 1
+           from information_schema.columns
+           where table_schema = 'public'
+             and table_name = 'module_folders'
+             and column_name = 'judul'
+       )
+       and not exists (
+           select 1
+           from information_schema.columns
+           where table_schema = 'public'
+             and table_name = 'module_folders'
+             and column_name = 'nama'
+       ) then
+        alter table public.module_folders rename column judul to nama;
+    end if;
+end
+$;
+
 -- ---------------------------------------------------------------------
 -- 3. ARSIP MODUL
 --    Setiap entri mewakili satu folder arsip yang dibuka langsung dari URL.
@@ -141,10 +170,14 @@ create table if not exists public.module_folders (
 );
 
 create index if not exists module_folders_course_order_idx
-    on public.module_folders (course_id, urutan, judul);
+    on public.module_folders (course_id, urutan, nama);
 
 alter table public.module_folders enable row level security;
 
+drop policy if exists modules_select_public on public.module_folders;
+drop policy if exists modules_insert_admin on public.module_folders;
+drop policy if exists modules_update_admin on public.module_folders;
+drop policy if exists modules_delete_admin on public.module_folders;
 drop policy if exists module_folders_select_public on public.module_folders;
 drop policy if exists module_folders_insert_admin on public.module_folders;
 drop policy if exists module_folders_update_admin on public.module_folders;
