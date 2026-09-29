@@ -76,6 +76,9 @@ def inject_base_css(mode="Sistem") -> None:
 
         .block-container a[data-testid="stPageLink-NavLink"] {
             box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
             display: flex !important;
             min-height: 44px;
             align-items: center;
@@ -115,6 +118,9 @@ def inject_base_css(mode="Sistem") -> None:
         .stLinkButton a,
         .stDownloadButton > button,
         [data-testid="stFormSubmitButton"] > button {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
             transition:
                 transform var(--mograph-fast) var(--mograph-ease),
                 box-shadow var(--mograph-slow) var(--mograph-ease),
@@ -141,6 +147,9 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         [data-baseweb="tab"] {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
             transition:
                 transform var(--mograph-fast) var(--mograph-ease),
                 color var(--mograph-fast) ease,
