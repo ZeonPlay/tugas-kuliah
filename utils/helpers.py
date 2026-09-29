@@ -119,8 +119,34 @@ def sudah_lewat(task: dict) -> bool:
 
 
 def build_calendar_events(tasks: list[dict], tokens: dict) -> list[dict]:
+    per_tanggal: dict[date, list[dict]] = {}
+    for task in tasks:
+        d = parse_deadline(task["deadline"]).date()
+        per_tanggal.setdefault(d, []).append(task)
+
+    hari_ini = now_wib().date()
     events: list[dict] = []
 
+    # Event ringkas untuk tampilan Bulan.
+    # Event individual disiapkan khusus untuk tampilan Daftar lewat CSS.
+    for d, daftar in sorted(per_tanggal.items()):
+        jumlah = len(daftar)
+        warna = tokens["ink_soft"] if d < hari_ini else tokens["urgent"]
+        events.append(
+            {
+                "start": d.isoformat(),
+                "end": (d + timedelta(days=1)).isoformat(),
+                "allDay": True,
+                "title": f"{jumlah} deadline",
+                "backgroundColor": warna,
+                "borderColor": warna,
+                "textColor": "#FFFFFF",
+                "classNames": ["calendar-summary-event"],
+            }
+        )
+
+    # Event individual untuk tampilan Daftar agar setiap deadline bisa
+    # dibaca langsung beserta jam dan mata kuliahnya.
     for task in sorted(tasks, key=lambda item: parse_deadline(item["deadline"])):
         deadline = parse_deadline(task["deadline"])
         _, level = sisa_waktu(task["deadline"])
@@ -137,6 +163,7 @@ def build_calendar_events(tasks: list[dict], tokens: dict) -> list[dict]:
                 "backgroundColor": warna,
                 "borderColor": warna,
                 "textColor": "#FFFFFF",
+                "classNames": ["calendar-task-event"],
                 "extendedProps": {
                     "task_id": task.get("id"),
                     "mata_kuliah": course,
