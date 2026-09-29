@@ -10,15 +10,15 @@ from utils.supabase_client import (
     ADMIN_EMAIL,
     delete_task,
     fetch_courses,
-    fetch_modules,
+    fetch_module_folders,
     fetch_tasks,
     insert_course,
-    insert_module,
+    insert_module_folder,
     insert_task,
     update_course,
-    update_module,
+    update_module_folder,
     update_task,
-    delete_module,
+    delete_module_folder,
     upload_file,
 )
 
@@ -79,7 +79,7 @@ if client is None:
 try:
     tasks = fetch_tasks()
     courses = fetch_courses(only_active=False)
-    modules = fetch_modules(only_active=False)
+    modules = fetch_module_folders(only_active=False)
 except Exception as exc:
     st.error(f"Gagal mengambil data: {exc}")
     st.stop()
@@ -360,15 +360,15 @@ with tab_kuliah:
 
 with tab_modul:
     st.subheader("Arsip Modul")
-    st.caption("Simpan tautan modul per mata kuliah. Tautan Google Drive maupun tautan custom didukung; aplikasi hanya menyimpan URL dan membukanya langsung.")
+    st.caption("Simpan tautan folder modul per mata kuliah. Folder Google Drive maupun folder dari tautan custom didukung; aplikasi hanya menyimpan URL dan membukanya langsung.")
 
     if not course_names:
         st.warning("Belum ada mata kuliah. Tambahkan mata kuliah terlebih dahulu di tab Mata Kuliah.")
     else:
         with st.form("form_tambah_modul"):
             c1, c2 = st.columns([2, 1])
-            modul_judul = c1.text_input("Judul modul", placeholder="Contoh: Modul 3 — ERD")
-            modul_urutan = c2.number_input("Nomor modul", min_value=1, max_value=99, value=1, step=1)
+            modul_judul = c1.text_input("Nama folder", placeholder="Contoh: Modul Praktikum")
+            modul_urutan = c2.number_input("Urutan", min_value=1, max_value=99, value=1, step=1)
 
             modul_course = st.selectbox(
                 "Mata kuliah",
@@ -376,15 +376,15 @@ with tab_modul:
                 format_func=lambda name: course_labels.get(name, name),
             )
             modul_url = st.text_input(
-                "Link modul",
+                "Link folder",
                 placeholder="https://drive.google.com/... atau https://contoh-link...",
             )
             modul_keterangan = st.text_area(
                 "Keterangan (opsional)",
-                placeholder="Contoh: Materi sebelum praktikum minggu depan.",
+                placeholder="Contoh: Berisi PDF modul dan materi praktikum.",
             )
 
-            if st.form_submit_button("Tambah Modul", type="primary", width="stretch"):
+            if st.form_submit_button("Tambah Folder", type="primary", width="stretch"):
                 url_bersih = modul_url.strip()
                 if not modul_judul.strip():
                     st.error("Judul modul wajib diisi.")
@@ -395,18 +395,18 @@ with tab_modul:
                         course_id = next(
                             course["id"] for course in active_courses if course["nama"] == modul_course
                         )
-                        insert_module(
+                        insert_module_folder(
                             client,
                             {
                                 "course_id": course_id,
-                                "judul": modul_judul.strip(),
+                                "nama": modul_judul.strip(),
                                 "urutan": int(modul_urutan),
                                 "url": url_bersih,
                                 "keterangan": modul_keterangan.strip() or None,
                                 "aktif": True,
                             },
                         )
-                        st.toast("Modul berhasil ditambahkan.")
+                        st.toast("Folder arsip berhasil ditambahkan.")
                         st.rerun()
                     except Exception as exc:
                         st.error(f"Gagal menambahkan modul: {exc}")
@@ -444,12 +444,12 @@ with tab_modul:
                     key=f"module_course_{module_id}",
                 )
                 e_modul_judul = st.text_input(
-                    "Judul modul",
-                    value=module["judul"],
+                    "Nama folder",
+                    value=module["nama"],
                     key=f"module_judul_{module_id}",
                 )
                 e_modul_urutan = st.number_input(
-                    "Nomor modul",
+                    "Urutan",
                     min_value=1,
                     max_value=99,
                     value=int(module.get("urutan") or 1),
@@ -457,7 +457,7 @@ with tab_modul:
                     key=f"module_urutan_{module_id}",
                 )
                 e_modul_url = st.text_input(
-                    "Link modul",
+                    "Link folder",
                     value=module["url"],
                     key=f"module_url_{module_id}",
                 )
@@ -478,26 +478,26 @@ with tab_modul:
                             new_course_id = next(
                                 course["id"] for course in active_courses if course["nama"] == e_modul_course
                             )
-                            update_module(
+                            update_module_folder(
                                 client,
                                 module_id,
                                 {
                                     "course_id": new_course_id,
-                                    "judul": e_modul_judul.strip(),
+                                    "nama": e_modul_judul.strip(),
                                     "urutan": int(e_modul_urutan),
                                     "url": url_bersih,
                                     "keterangan": e_modul_keterangan.strip() or None,
                                 },
                             )
-                            st.toast("Perubahan modul tersimpan.")
+                            st.toast("Perubahan folder tersimpan.")
                             st.rerun()
                         except Exception as exc:
                             st.error(f"Gagal menyimpan modul: {exc}")
 
                 if st.button("Hapus modul", key=f"module_hapus_{module_id}"):
                     try:
-                        delete_module(client, module_id)
-                        st.toast("Modul terhapus.")
+                        delete_module_folder(client, module_id)
+                        st.toast("Folder arsip terhapus.")
                         st.rerun()
                     except Exception as exc:
                         st.error(f"Gagal menghapus modul: {exc}")
