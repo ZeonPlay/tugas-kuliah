@@ -59,8 +59,20 @@ elif is_krs_configured():
 visible_course_options = active_krs or course_options
 
 c_nav1, c_nav2 = st.columns(2)
-c_nav1.page_link("pages/3_KRS.py", label="Atur KRS Saya", icon="📚")
-c_nav2.page_link("pages/4_Modul.py", label="Arsip Modul", icon="📖")
+c_nav1.page_link(
+    "pages/3_KRS.py",
+    label="Atur KRS Saya",
+    icon=":material/tune:",
+    width="stretch",
+    help="Atur mata kuliah yang kamu ambil di KRS.",
+)
+c_nav2.page_link(
+    "pages/4_Modul.py",
+    label="Arsip Modul",
+    icon=":material/folder_open:",
+    width="stretch",
+    help="Buka arsip folder modul per mata kuliah.",
+)
 
 with st.expander("🔎 Cari & filter tugas", expanded=False):
     search = st.text_input(
