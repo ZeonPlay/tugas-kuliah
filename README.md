@@ -17,7 +17,7 @@ Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas
 - Filter tugas berdasarkan KRS/mata kuliah yang sedang diambil
 - Pengaturan KRS per semester tanpa akun mahasiswa
 - Katalog mata kuliah berbasis database (semester + Wajib/Pilihan)
-- Arsip modul per mata kuliah
+- Arsip folder modul per mata kuliah
 - Tautan Google Drive langsung maupun tautan custom
 - Detail/instruksi tugas dengan rich-text editor
 - Link VClass
@@ -95,11 +95,11 @@ Database aplikasi menggunakan beberapa bagian Supabase:
 
 1. `tasks` — data tugas.
 2. `courses` — katalog mata kuliah, semester, dan kategori Wajib/Pilihan.
-3. `modules` — arsip modul/materi per mata kuliah beserta URL.
-4. `admin_users` — whitelist akun yang boleh masuk ke panel admin.
-4. Authentication — akun login admin.
-5. Storage bucket `task-files` — lampiran tugas.
-7. RLS — membatasi operasi database.
+3. `module_folders` — arsip folder modul/materi per mata kuliah beserta URL.
+5. `admin_users` — whitelist akun yang boleh masuk ke panel admin.
+6. Authentication — akun login admin.
+7. Storage bucket `task-files` — lampiran tugas.
+8. RLS — membatasi operasi database.
 
 `sql/setup.sql` berisi schema dan RLS untuk tabel `tasks` dan `courses`. Pada project yang sedang dipakai, tabel `admin_users` dan konfigurasi Storage dapat dikelola langsung dari Supabase Dashboard sesuai setup project.
 
@@ -115,9 +115,9 @@ Pastikan policy RLS di Supabase juga mengizinkan operasi yang memang dibutuhkan 
 
 ### Arsip modul
 
-Admin dapat menyimpan modul berdasarkan mata kuliah melalui tab **Arsip Modul**. Setiap entri memiliki judul, nomor modul, URL, dan keterangan opsional.
+Admin dapat menyimpan folder arsip berdasarkan mata kuliah melalui tab **Arsip Modul**. Setiap entri memiliki nama folder, urutan, URL folder, dan keterangan opsional.
 
-URL dapat berupa tautan **Google Drive langsung** maupun **tautan custom** milik asisten/dosen yang pada akhirnya mengarah ke materi. Aplikasi tidak mengunduh atau menyalin file Google Drive; aplikasi hanya menyimpan URL dan menyediakan tombol untuk membukanya. Hak akses file/folder tetap mengikuti pengaturan berbagi pada Google Drive atau situs tujuan.
+URL dapat berupa tautan **folder Google Drive langsung** maupun **tautan custom** milik asisten/dosen yang pada akhirnya mengarah ke folder materi. Aplikasi tidak mengunduh atau menyalin file Google Drive; aplikasi hanya menyimpan URL folder dan menyediakan tombol untuk membukanya. Hak akses file/folder tetap mengikuti pengaturan berbagi pada Google Drive atau situs tujuan.
 
 ### KRS dan mata kuliah
 
