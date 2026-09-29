@@ -376,13 +376,14 @@ def calendar_css(mode="Sistem") -> str:
     /* Tampilan Bulan tetap memakai ringkasan per tanggal.
        Tampilan Daftar memakai event tugas individual. */
     /* Ringkasan hanya untuk tampilan Bulan. Detail tugas hanya untuk Daftar. */
-    .fc-daygrid-view .fc-event.calendar-task-event,
-    .fc-daygrid-view .calendar-task-event {
+    .fc-daygrid .fc-event.calendar-task-event,
+    .fc-daygrid .calendar-task-event,
+    .fc-daygrid .fc-daygrid-dot-event.calendar-task-event {
         display: none !important;
     }
 
-    .fc-list-view .fc-event.calendar-summary-event,
-    .fc-list-view .calendar-summary-event {
+    .fc-list .fc-event.calendar-summary-event,
+    .fc-list .calendar-summary-event {
         display: none !important;
     }
 
