@@ -101,7 +101,7 @@ tasks_on_day = tasks_pada_tanggal(tasks, selected_date)
 
 left, right = st.columns([4, 1])
 left.subheader(f"Tugas pada {format_tanggal(selected_date)}")
-if right.button("Tutup", use_container_width=True):
+if right.button("Tutup", width="stretch"):
     st.session_state.pop("tanggal_dipilih", None)
     st.session_state["_kalender_abaikan_callback"] = True
     st.rerun()
