@@ -1,6 +1,6 @@
-import streamlit as st
+from urllib.parse import urlparse
 
-from utils.helpers import format_deadline
+import streamlit as st
 from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, fetch_courses, fetch_modules
@@ -32,12 +32,13 @@ except Exception as exc:
     st.stop()
 
 
-course_by_name = {course["nama"]: course for course in courses}
+course_by_id = {course["id"]: course for course in courses}
 active_krs = get_active_krs() if is_krs_configured() else []
 
 if active_krs:
     visible_courses = [course for course in courses if course["nama"] in active_krs]
-    modules = [module for module in modules if module["course_id"] in {course["id"] for course in visible_courses}]
+    visible_course_ids = {course["id"] for course in visible_courses}
+    modules = [module for module in modules if module["course_id"] in visible_course_ids]
     st.caption(f"📚 KRS aktif · Semester {get_active_semester()}")
 else:
     visible_courses = courses
@@ -53,13 +54,13 @@ with st.expander("🔎 Cari & filter modul", expanded=False):
     filter_courses = st.multiselect("Mata kuliah", course_options, default=course_options)
 
 selected_course_names = set(filter_courses)
+selected_course_ids = {
+    course["id"]
+    for course in visible_courses
+    if course["nama"] in selected_course_names
+}
 filtered_modules = [
-    module
-    for module in modules
-    if course_by_name.get(next(
-        (name for name in course_by_name if course_by_name[name]["id"] == module["course_id"]),
-        "",
-    ), {}).get("nama") in selected_course_names
+    module for module in modules if module["course_id"] in selected_course_ids
 ]
 
 if search.strip():
@@ -78,10 +79,7 @@ if not filtered_modules:
 # Group by mata kuliah so the archive remains easy to scan.
 grouped = {}
 for module in filtered_modules:
-    course = next(
-        (course for course in visible_courses if course["id"] == module["course_id"]),
-        None,
-    )
+    course = course_by_id.get(module["course_id"])
     if course:
         grouped.setdefault(course["nama"], []).append(module)
 
@@ -99,7 +97,7 @@ for course_name in course_options:
                 st.caption(module["keterangan"])
 
             url = module["url"]
-            host = url.split("/")[2].lower() if "://" in url and "/" in url[8:] else ""
+            host = urlparse(url).netloc.lower()
             is_drive = host == "drive.google.com" or host.endswith(".drive.google.com") or host == "docs.google.com"
             label = "Buka Google Drive ↗" if is_drive else "Buka Materi ↗"
             st.link_button(label, url, width="stretch")
