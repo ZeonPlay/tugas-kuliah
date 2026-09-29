@@ -86,10 +86,6 @@ except Exception as exc:
 
 active_courses = [course for course in courses if course.get("aktif", True)]
 course_names = [course["nama"] for course in active_courses]
-course_labels = {
-    course["nama"]: (course.get("kode") or "-") + " · " + course["nama"]
-    for course in active_courses
-}
 
 tab_tambah, tab_kelola, tab_kuliah, tab_modul, tab_admin_users = st.tabs(
     ["Tambah Tugas", "Kelola Tugas", "Mata Kuliah", "Arsip Modul", "Kelola Admin"]
@@ -105,7 +101,6 @@ with tab_tambah:
         mata_kuliah = c1.selectbox(
             "Mata kuliah",
             course_names,
-            format_func=lambda name: course_labels.get(name, name),
             key="tambah_matkul",
         )
     jenis = c2.selectbox("Jenis", JENIS, index=JENIS.index("Teori"), key="tambah_jenis")
@@ -209,7 +204,6 @@ with tab_kelola:
                 e_matkul = c1.selectbox(
                     "Mata kuliah",
                     opsi_matkul,
-                    format_func=lambda name: course_labels.get(name, name),
                     index=opsi_matkul.index(matkul_saat_ini) if matkul_saat_ini in opsi_matkul else 0,
                     key=f"edit_matkul_{tid}",
                 )
