@@ -125,13 +125,13 @@ on conflict (nama) do nothing;
 
 -- ---------------------------------------------------------------------
 -- 3. ARSIP MODUL
---    Satu modul dapat memakai URL Google Drive langsung atau URL custom.
+--    Setiap entri mewakili satu folder arsip yang dibuka langsung dari URL.
 --    Aplikasi tidak membutuhkan OAuth/API Google Drive untuk membuka link.
 -- ---------------------------------------------------------------------
-create table if not exists public.modules (
+create table if not exists public.module_folders (
     id           uuid primary key default gen_random_uuid(),
     course_id    uuid not null references public.courses(id) on delete restrict,
-    judul        text not null,
+    nama         text not null,
     urutan       smallint not null default 1 check (urutan between 1 and 99),
     url          text not null,
     keterangan   text,
@@ -140,24 +140,24 @@ create table if not exists public.modules (
     updated_at   timestamptz not null default now()
 );
 
-create index if not exists modules_course_order_idx
-    on public.modules (course_id, urutan, judul);
+create index if not exists module_folders_course_order_idx
+    on public.module_folders (course_id, urutan, judul);
 
-alter table public.modules enable row level security;
+alter table public.module_folders enable row level security;
 
-drop policy if exists modules_select_public on public.modules;
-drop policy if exists modules_insert_admin on public.modules;
-drop policy if exists modules_update_admin on public.modules;
-drop policy if exists modules_delete_admin on public.modules;
+drop policy if exists module_folders_select_public on public.module_folders;
+drop policy if exists module_folders_insert_admin on public.module_folders;
+drop policy if exists module_folders_update_admin on public.module_folders;
+drop policy if exists module_folders_delete_admin on public.module_folders;
 
-create policy modules_select_public
-    on public.modules
+create policy module_folders_select_public
+    on public.module_folders
     for select
     to anon, authenticated
     using (aktif = true);
 
-create policy modules_insert_admin
-    on public.modules
+create policy module_folders_insert_admin
+    on public.module_folders
     for insert
     to authenticated
     with check (
@@ -168,8 +168,8 @@ create policy modules_insert_admin
         )
     );
 
-create policy modules_update_admin
-    on public.modules
+create policy module_folders_update_admin
+    on public.module_folders
     for update
     to authenticated
     using (
@@ -187,8 +187,8 @@ create policy modules_update_admin
         )
     );
 
-create policy modules_delete_admin
-    on public.modules
+create policy module_folders_delete_admin
+    on public.module_folders
     for delete
     to authenticated
     using (
