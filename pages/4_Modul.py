@@ -1,9 +1,8 @@
-from urllib.parse import urlparse
-
 import streamlit as st
+
 from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
-from utils.supabase_client import ConfigError, fetch_courses, fetch_modules
+from utils.supabase_client import ConfigError, fetch_courses, fetch_module_folders
 
 
 st.set_page_config(
@@ -18,12 +17,12 @@ inject_base_css(mode)
 get_tokens(mode)
 
 st.title("Arsip Modul")
-st.caption("Kumpulan modul dan materi kuliah yang dibagikan asisten dosen.")
+st.caption("Kumpulan folder modul dan materi yang dibagikan asisten dosen.")
 
 
 try:
     courses = fetch_courses()
-    modules = fetch_modules()
+    folders = fetch_module_folders()
 except ConfigError as exc:
     st.error(f"Konfigurasi belum lengkap.\n\n{exc}")
     st.stop()
@@ -38,17 +37,17 @@ active_krs = get_active_krs() if is_krs_configured() else []
 if active_krs:
     visible_courses = [course for course in courses if course["nama"] in active_krs]
     visible_course_ids = {course["id"] for course in visible_courses}
-    modules = [module for module in modules if module["course_id"] in visible_course_ids]
+    folders = [folder for folder in folders if folder["course_id"] in visible_course_ids]
     st.caption(f"📚 KRS aktif · Semester {get_active_semester()}")
 else:
     visible_courses = courses
 
 course_options = [course["nama"] for course in visible_courses]
 
-with st.expander("🔎 Cari & filter modul", expanded=False):
+with st.expander("🔎 Cari & filter arsip", expanded=False):
     search = st.text_input(
-        "Cari modul",
-        placeholder="Contoh: modul basis data",
+        "Cari folder",
+        placeholder="Contoh: praktikum, modul 3, database",
         label_visibility="collapsed",
     )
     filter_courses = st.multiselect("Mata kuliah", course_options, default=course_options)
@@ -59,45 +58,40 @@ selected_course_ids = {
     for course in visible_courses
     if course["nama"] in selected_course_names
 }
-filtered_modules = [
-    module for module in modules if module["course_id"] in selected_course_ids
+filtered_folders = [
+    folder for folder in folders if folder["course_id"] in selected_course_ids
 ]
 
 if search.strip():
     key = search.strip().lower()
-    filtered_modules = [
-        module
-        for module in filtered_modules
-        if key in (module.get("judul") or "").lower()
-        or key in (module.get("keterangan") or "").lower()
+    filtered_folders = [
+        folder
+        for folder in filtered_folders
+        if key in (folder.get("nama") or "").lower()
+        or key in (folder.get("keterangan") or "").lower()
     ]
 
-if not filtered_modules:
-    st.info("Belum ada modul yang sesuai.")
+if not filtered_folders:
+    st.info("Belum ada folder arsip yang sesuai.")
     st.stop()
 
-# Group by mata kuliah so the archive remains easy to scan.
 grouped = {}
-for module in filtered_modules:
-    course = course_by_id.get(module["course_id"])
+for folder in filtered_folders:
+    course = course_by_id.get(folder["course_id"])
     if course:
-        grouped.setdefault(course["nama"], []).append(module)
+        grouped.setdefault(course["nama"], []).append(folder)
 
 for course_name in course_options:
-    course_modules = grouped.get(course_name, [])
-    if not course_modules:
+    course_folders = grouped.get(course_name, [])
+    if not course_folders:
         continue
 
     st.subheader(course_name)
-    for module in course_modules:
-        prefix = f"Modul {module['urutan']}" if module.get("urutan") is not None else "Materi"
-        with st.container(border=True):
-            st.markdown(f"### {prefix} — {module['judul']}")
-            if module.get("keterangan"):
-                st.caption(module["keterangan"])
 
-            url = module["url"]
-            host = urlparse(url).netloc.lower()
-            is_drive = host == "drive.google.com" or host.endswith(".drive.google.com") or host == "docs.google.com"
-            label = "Buka Google Drive ↗" if is_drive else "Buka Materi ↗"
-            st.link_button(label, url, width="stretch")
+    for folder in course_folders:
+        with st.container(border=True):
+            st.markdown(f"### 📁 {folder['nama']}")
+            if folder.get("keterangan"):
+                st.caption(folder["keterangan"])
+
+            st.link_button("Buka Folder ↗", folder["url"], width="stretch")
