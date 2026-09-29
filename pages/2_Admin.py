@@ -10,11 +10,15 @@ from utils.supabase_client import (
     ADMIN_EMAIL,
     delete_task,
     fetch_courses,
+    fetch_modules,
     fetch_tasks,
     insert_course,
+    insert_module,
     insert_task,
     update_course,
+    update_module,
     update_task,
+    delete_module,
     upload_file,
 )
 
@@ -75,6 +79,7 @@ if client is None:
 try:
     tasks = fetch_tasks()
     courses = fetch_courses(only_active=False)
+    modules = fetch_modules(only_active=False)
 except Exception as exc:
     st.error(f"Gagal mengambil data: {exc}")
     st.stop()
@@ -86,8 +91,8 @@ course_labels = {
     for course in active_courses
 }
 
-tab_tambah, tab_kelola, tab_kuliah, tab_admin_users = st.tabs(
-    ["Tambah Tugas", "Kelola Tugas", "Mata Kuliah", "Kelola Admin"]
+tab_tambah, tab_kelola, tab_kuliah, tab_modul, tab_admin_users = st.tabs(
+    ["Tambah Tugas", "Kelola Tugas", "Mata Kuliah", "Arsip Modul", "Kelola Admin"]
 )
 
 with tab_tambah:
@@ -352,6 +357,150 @@ with tab_kuliah:
                         st.rerun()
                     except Exception as exc:
                         st.error(f"Gagal memperbarui mata kuliah: {exc}")
+
+with tab_modul:
+    st.subheader("Arsip Modul")
+    st.caption("Simpan tautan modul per mata kuliah. Tautan Google Drive maupun tautan custom didukung; aplikasi hanya menyimpan URL dan membukanya langsung.")
+
+    if not course_names:
+        st.warning("Belum ada mata kuliah. Tambahkan mata kuliah terlebih dahulu di tab Mata Kuliah.")
+    else:
+        with st.form("form_tambah_modul"):
+            c1, c2 = st.columns([2, 1])
+            modul_judul = c1.text_input("Judul modul", placeholder="Contoh: Modul 3 — ERD")
+            modul_urutan = c2.number_input("Nomor modul", min_value=1, max_value=99, value=1, step=1)
+
+            modul_course = st.selectbox(
+                "Mata kuliah",
+                course_names,
+                format_func=lambda name: course_labels.get(name, name),
+            )
+            modul_url = st.text_input(
+                "Link modul",
+                placeholder="https://drive.google.com/... atau https://contoh-link...",
+            )
+            modul_keterangan = st.text_area(
+                "Keterangan (opsional)",
+                placeholder="Contoh: Materi sebelum praktikum minggu depan.",
+            )
+
+            if st.form_submit_button("Tambah Modul", type="primary", use_container_width=True):
+                url_bersih = modul_url.strip()
+                if not modul_judul.strip():
+                    st.error("Judul modul wajib diisi.")
+                elif not url_bersih.lower().startswith(("http://", "https://")):
+                    st.error("Link modul harus diawali http:// atau https://")
+                else:
+                    try:
+                        course_id = next(
+                            course["id"] for course in active_courses if course["nama"] == modul_course
+                        )
+                        insert_module(
+                            client,
+                            {
+                                "course_id": course_id,
+                                "judul": modul_judul.strip(),
+                                "urutan": int(modul_urutan),
+                                "url": url_bersih,
+                                "keterangan": modul_keterangan.strip() or None,
+                                "aktif": True,
+                            },
+                        )
+                        st.toast("Modul berhasil ditambahkan.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Gagal menambahkan modul: {exc}")
+
+    st.divider()
+
+    visible_modules = [
+        module for module in modules
+        if module.get("course_id") in {course["id"] for course in active_courses}
+    ]
+
+    if not visible_modules:
+        st.info("Belum ada modul.")
+    else:
+        course_by_id = {course["id"]: course for course in courses}
+        for module in visible_modules:
+            module_id = module["id"]
+            course = course_by_id.get(module["course_id"], {})
+            order_label = f"Modul {module['urutan']}" if module.get("urutan") is not None else "Materi"
+            label = f"{course.get('nama', 'Mata Kuliah tidak ditemukan')} · {order_label} — {module['judul']}"
+
+            with st.expander(label):
+                current_course_id = module["course_id"]
+                module_course_options = course_names.copy()
+                current_course = course_by_id.get(current_course_id)
+                if current_course and current_course["nama"] not in module_course_options:
+                    module_course_options.append(current_course["nama"])
+
+                current_course_name = current_course["nama"] if current_course else course_names[0]
+                e_modul_course = st.selectbox(
+                    "Mata kuliah",
+                    module_course_options,
+                    index=module_course_options.index(current_course_name),
+                    format_func=lambda name: course_labels.get(name, name),
+                    key=f"module_course_{module_id}",
+                )
+                e_modul_judul = st.text_input(
+                    "Judul modul",
+                    value=module["judul"],
+                    key=f"module_judul_{module_id}",
+                )
+                e_modul_urutan = st.number_input(
+                    "Nomor modul",
+                    min_value=1,
+                    max_value=99,
+                    value=int(module.get("urutan") or 1),
+                    step=1,
+                    key=f"module_urutan_{module_id}",
+                )
+                e_modul_url = st.text_input(
+                    "Link modul",
+                    value=module["url"],
+                    key=f"module_url_{module_id}",
+                )
+                e_modul_keterangan = st.text_area(
+                    "Keterangan",
+                    value=module.get("keterangan") or "",
+                    key=f"module_keterangan_{module_id}",
+                )
+
+                if st.button("Simpan perubahan", type="primary", key=f"module_simpan_{module_id}"):
+                    url_bersih = e_modul_url.strip()
+                    if not e_modul_judul.strip():
+                        st.error("Judul modul wajib diisi.")
+                    elif not url_bersih.lower().startswith(("http://", "https://")):
+                        st.error("Link modul harus diawali http:// atau https://")
+                    else:
+                        try:
+                            new_course_id = next(
+                                course["id"] for course in active_courses if course["nama"] == e_modul_course
+                            )
+                            update_module(
+                                client,
+                                module_id,
+                                {
+                                    "course_id": new_course_id,
+                                    "judul": e_modul_judul.strip(),
+                                    "urutan": int(e_modul_urutan),
+                                    "url": url_bersih,
+                                    "keterangan": e_modul_keterangan.strip() or None,
+                                },
+                            )
+                            st.toast("Perubahan modul tersimpan.")
+                            st.rerun()
+                        except Exception as exc:
+                            st.error(f"Gagal menyimpan modul: {exc}")
+
+                if st.button("Hapus modul", key=f"module_hapus_{module_id}"):
+                    try:
+                        delete_module(client, module_id)
+                        st.toast("Modul terhapus.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Gagal menghapus modul: {exc}")
 
 with tab_admin_users:
     is_super_admin = current_email() == ADMIN_EMAIL
