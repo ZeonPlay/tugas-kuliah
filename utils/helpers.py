@@ -119,26 +119,28 @@ def sudah_lewat(task: dict) -> bool:
 
 
 def build_calendar_events(tasks: list[dict], tokens: dict) -> list[dict]:
-    per_tanggal: dict[date, list[dict]] = {}
-    for t in tasks:
-        d = parse_deadline(t["deadline"]).date()
-        per_tanggal.setdefault(d, []).append(t)
-
-    hari_ini = now_wib().date()
     events: list[dict] = []
 
-    for d, daftar in sorted(per_tanggal.items()):
-        jumlah = len(daftar)
-        warna = tokens["ink_soft"] if d < hari_ini else tokens["urgent"]
+    for task in sorted(tasks, key=lambda item: parse_deadline(item["deadline"])):
+        deadline = parse_deadline(task["deadline"])
+        _, level = sisa_waktu(task["deadline"])
+        warna = warna_urgensi(tokens, level)
+
+        course = task.get("mata_kuliah") or "Tanpa Mata Kuliah"
+        judul = task.get("judul") or "Tugas tanpa judul"
+
         events.append(
             {
-                "start": d.isoformat(),
-                "end": (d + timedelta(days=1)).isoformat(),
-                "allDay": True,
-                "title": f"{jumlah} deadline",
+                "start": deadline.isoformat(),
+                "allDay": False,
+                "title": f"{judul} · {course}",
                 "backgroundColor": warna,
                 "borderColor": warna,
                 "textColor": "#FFFFFF",
+                "extendedProps": {
+                    "task_id": task.get("id"),
+                    "mata_kuliah": course,
+                },
             }
         )
 
