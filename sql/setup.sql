@@ -125,7 +125,7 @@ on conflict (nama) do nothing;
 
 -- Migrasi dari versi awal arsip modul:
 -- versi sebelumnya memakai tabel public.modules dan kolom judul.
-do $
+do $$
 begin
     if to_regclass('public.modules') is not null
        and to_regclass('public.module_folders') is null then
@@ -150,7 +150,7 @@ begin
         alter table public.module_folders rename column judul to nama;
     end if;
 end
-$;
+$$;
 
 -- ---------------------------------------------------------------------
 -- 3. ARSIP MODUL
