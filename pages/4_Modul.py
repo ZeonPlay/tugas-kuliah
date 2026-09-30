@@ -81,17 +81,21 @@ for folder in filtered_folders:
     if course:
         grouped.setdefault(course["nama"], []).append(folder)
 
-for course_name in course_options:
-    course_folders = grouped.get(course_name, [])
-    if not course_folders:
-        continue
+visible_groups = [
+    (course_name, grouped.get(course_name, []))
+    for course_name in course_options
+    if grouped.get(course_name)
+]
 
-    st.subheader(course_name)
+for course_name, course_folders in visible_groups:
+    with st.expander(
+        f"📚 {course_name} · {len(course_folders)} folder",
+        expanded=len(visible_groups) == 1,
+    ):
+        for folder in course_folders:
+            with st.container(border=True):
+                st.markdown(f"**📁 {folder['nama']}**")
+                if folder.get("keterangan"):
+                    st.caption(folder["keterangan"])
 
-    for folder in course_folders:
-        with st.container(border=True):
-            st.markdown(f"### 📁 {folder['nama']}")
-            if folder.get("keterangan"):
-                st.caption(folder["keterangan"])
-
-            st.link_button("Buka Folder ↗", folder["url"], width="stretch")
+                st.link_button("Buka Folder ↗", folder["url"], width="stretch")
