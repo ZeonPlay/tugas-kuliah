@@ -432,9 +432,10 @@ with tab_kuliah:
                 for course in semester_courses:
                     cid = course["id"]
                     code = (course.get("kode") or "").strip()
-                    label = f"{code} · {course['nama']}" if code else course["nama"]
+                    status_label = "" if course.get("aktif", True) else " · Nonaktif"
+                    label = f"{code} · {course['nama']}{status_label}" if code else f"{course['nama']}{status_label}"
                     with st.expander(label):
-                        c1, c2, c3 = st.columns([2, 1, 1])
+                        c1, c2, c3, c4 = st.columns([2, 1, 1, 1])
                         e_kode = c1.text_input("Kode", value=course.get("kode") or "", key=f"course_kode_{cid}")
                         e_semester = c2.number_input(
                             "Semester",
@@ -451,6 +452,11 @@ with tab_kuliah:
                             kategori_opsi,
                             index=kategori_opsi.index(current_kategori) if current_kategori in kategori_opsi else 2,
                             key=f"course_kategori_{cid}",
+                        )
+                        e_aktif = c4.checkbox(
+                            "Aktif",
+                            value=bool(course.get("aktif", True)),
+                            key=f"course_aktif_{cid}",
                         )
 
                         st.text_input("Nama mata kuliah", value=course["nama"], disabled=True, key=f"course_nama_{cid}")
@@ -539,7 +545,8 @@ with tab_modul:
             module_id = module["id"]
             course = course_by_id.get(module["course_id"], {})
             order_label = f"Modul {module['urutan']}" if module.get("urutan") is not None else "Materi"
-            label = f"{course.get('nama', 'Mata Kuliah tidak ditemukan')} · {order_label} — {module['nama']}"
+            status_label = "" if module.get("aktif", True) else " · Nonaktif"
+            label = f"{course.get('nama', 'Mata Kuliah tidak ditemukan')} · {order_label} — {module['nama']}{status_label}"
 
             with st.expander(label):
                 current_course_id = module["course_id"]
@@ -578,6 +585,11 @@ with tab_modul:
                     value=module.get("keterangan") or "",
                     key=f"module_keterangan_{module_id}",
                 )
+                e_modul_aktif = st.checkbox(
+                    "Aktif",
+                    value=bool(module.get("aktif", True)),
+                    key=f"module_aktif_{module_id}",
+                )
 
                 if st.button("Simpan perubahan", type="primary", key=f"module_simpan_{module_id}"):
                     url_bersih = e_modul_url.strip()
@@ -599,6 +611,7 @@ with tab_modul:
                                     "urutan": int(e_modul_urutan),
                                     "url": url_bersih,
                                     "keterangan": e_modul_keterangan.strip() or None,
+                                    "aktif": e_modul_aktif,
                                 },
                             )
                             st.toast("Perubahan folder tersimpan.")
