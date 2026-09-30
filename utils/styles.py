@@ -35,6 +35,10 @@ def inject_base_css(mode="Sistem") -> None:
             border: 1px solid rgba(150,150,150,.18);
             border-radius: 10px;
             background: var(--secondary-background-color);
+            transition:
+                transform var(--mograph-slow) var(--mograph-ease),
+                box-shadow var(--mograph-slow) var(--mograph-ease),
+                border-color var(--mograph-fast) ease;
         }
 
         .course-row span:nth-child(2) {
@@ -47,6 +51,42 @@ def inject_base_css(mode="Sistem") -> None:
             height: 10px;
             min-width: 10px;
             border-radius: 50%;
+        }
+
+        .krs-course-item,
+        .krs-summary-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 40px;
+            padding: 9px 12px;
+            margin-bottom: 7px;
+            border: 1px solid rgba(150,150,150,.18);
+            border-radius: 10px;
+            background: var(--secondary-background-color);
+            color: var(--text-color);
+        }
+
+        .krs-course-item {
+            font-weight: 600;
+        }
+
+        .krs-summary-item {
+            padding-left: 14px;
+        }
+
+        .krs-check {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            flex: 0 0 22px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            font-size: .78rem;
+            font-weight: 800;
         }
 
         /* Mograph test: subtle spring-like motion for interactive UI. */
@@ -197,13 +237,6 @@ def inject_base_css(mode="Sistem") -> None:
             box-shadow: 0 0 0 1px var(--primary-color), 0 8px 20px rgba(0, 0, 0, .10);
         }
 
-        .course-row {
-            transition:
-                transform var(--mograph-slow) var(--mograph-ease),
-                box-shadow var(--mograph-slow) var(--mograph-ease),
-                border-color var(--mograph-fast) ease;
-        }
-
         .course-row:hover {
             transform: translateX(4px);
             box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
@@ -276,6 +309,13 @@ def inject_base_css(mode="Sistem") -> None:
             h2 { font-size: 1.25rem !important; }
             h3 { font-size: 1.05rem !important; }
             [data-testid="stMetricValue"] { font-size: 1.35rem; }
+
+        .krs-course-item,
+        .krs-summary-item {
+            min-height: 38px;
+            padding: 8px 10px;
+            font-size: .88rem;
+        }
         }
         </style>
         """,
@@ -371,11 +411,7 @@ def calendar_css(mode="Sistem") -> str:
         border-color: rgba(150, 150, 150, 0.18) !important;
     }
 
-    /* List view: tampilkan deadline sebagai daftar tugas, bukan
-       baris agregat "2 deadline" yang sulit dibaca. */
-    /* Tampilan Bulan tetap memakai ringkasan per tanggal.
-       Tampilan Daftar memakai event tugas individual. */
-    /* Ringkasan hanya untuk tampilan Bulan. Detail tugas hanya untuk Daftar. */
+    /* Pisahkan event ringkasan Bulan dari event detail Daftar. */
     .fc-daygrid .fc-event.calendar-task-event,
     .fc-daygrid .calendar-task-event,
     .fc-daygrid .fc-daygrid-dot-event.calendar-task-event {
