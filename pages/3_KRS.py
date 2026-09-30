@@ -1,3 +1,5 @@
+import html
+
 import streamlit as st
 
 from utils.krs import get_active_semester, get_krs_for_semester, reset_krs, set_active_semester, set_krs_for_semester
@@ -66,7 +68,7 @@ if wajib:
 
     for name in wajib:
         st.markdown(
-            f'<div class="krs-course-item"><span class="krs-check">✓</span><span>{name}</span></div>',
+            f'<div class="krs-course-item"><span class="krs-check">✓</span><span>{html.escape(name)}</span></div>',
             unsafe_allow_html=True,
         )
 
@@ -97,7 +99,7 @@ st.metric("Mata kuliah aktif", len(semua_dipilih))
 if semua_dipilih:
     for name in semua_dipilih:
         st.markdown(
-            f'<div class="krs-summary-item">{name}</div>',
+            f'<div class="krs-summary-item">{html.escape(name)}</div>',
             unsafe_allow_html=True,
         )
 else:
