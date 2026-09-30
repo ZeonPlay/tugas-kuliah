@@ -233,7 +233,7 @@ create policy module_folders_delete_admin
     );
 
 -- ---------------------------------------------------------------------
--- 3. TRIGGER updated_at
+-- 4. TRIGGER updated_at
 -- ---------------------------------------------------------------------
 create or replace function public.set_updated_at()
 returns trigger
@@ -254,6 +254,12 @@ create trigger tasks_set_updated_at
 drop trigger if exists courses_set_updated_at on public.courses;
 create trigger courses_set_updated_at
     before update on public.courses
+    for each row
+    execute function public.set_updated_at();
+
+drop trigger if exists module_folders_set_updated_at on public.module_folders;
+create trigger module_folders_set_updated_at
+    before update on public.module_folders
     for each row
     execute function public.set_updated_at();
 
