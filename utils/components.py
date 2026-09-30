@@ -56,4 +56,4 @@ def render_task_card(task: dict, tokens: dict, *, detail_label: str = "Detail & 
         if actions:
             columns = st.columns(len(actions))
             for column, (label, url) in zip(columns, actions):
-                column.link_button(label, url, use_container_width=True)
+                column.link_button(label, url, width="stretch")
