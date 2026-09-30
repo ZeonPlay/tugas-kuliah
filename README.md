@@ -38,7 +38,8 @@ tugas-kuliah/
 ├── pages/
 │   ├── 1_Kalender.py
 │   ├── 2_Admin.py
-│   └── 3_KRS.py
+│   ├── 3_KRS.py
+│   └── 4_Modul.py
 ├── utils/
 │   ├── auth.py
 │   ├── components.py
