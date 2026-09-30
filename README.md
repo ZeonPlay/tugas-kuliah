@@ -96,10 +96,10 @@ Database aplikasi menggunakan beberapa bagian Supabase:
 1. `tasks` — data tugas.
 2. `courses` — katalog mata kuliah, semester, dan kategori Wajib/Pilihan.
 3. `module_folders` — arsip folder modul/materi per mata kuliah beserta URL.
-5. `admin_users` — whitelist akun yang boleh masuk ke panel admin.
-6. Authentication — akun login admin.
-7. Storage bucket `task-files` — lampiran tugas.
-8. RLS — membatasi operasi database.
+4. `admin_users` — whitelist akun yang boleh masuk ke panel admin.
+5. Authentication — akun login admin.
+6. Storage bucket `task-files` — lampiran tugas.
+7. RLS — membatasi operasi database.
 
 `sql/setup.sql` berisi schema dan RLS untuk tabel `tasks` dan `courses`. Pada project yang sedang dipakai, tabel `admin_users` dan konfigurasi Storage dapat dikelola langsung dari Supabase Dashboard sesuai setup project.
 
@@ -177,9 +177,9 @@ Untuk Streamlit Community Cloud:
 
 ## Catatan UI
 
-Dashboard memakai komponen Streamlit native sebanyak mungkin agar lebih stabil di layar kecil. Custom CSS hanya digunakan untuk spacing, task card, warna mata kuliah, dan kalender.
+Dashboard memakai komponen Streamlit native sebanyak mungkin agar lebih stabil di layar kecil. Custom CSS digunakan secara terpusat untuk spacing, tombol, navigasi, task card, daftar KRS, warna mata kuliah, dan kalender.
 
-Di Android, filter berada di dalam expandable section sehingga tidak memenuhi layar. Di laptop, dashboard menggunakan dua kolom untuk memanfaatkan ruang yang lebih lebar.
+Di Android, filter berada di dalam expandable section sehingga tidak memenuhi layar. Daftar KRS dan arsip modul dikelompokkan agar tetap ringkas. Di laptop, dashboard menggunakan dua kolom untuk memanfaatkan ruang yang lebih lebar.
 
 ## Troubleshooting
 
