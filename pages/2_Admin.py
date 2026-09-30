@@ -22,7 +22,12 @@ from utils.supabase_client import (
     upload_file,
 )
 
-st.set_page_config(page_title="Admin Tugas Kuliah", layout="wide")
+st.set_page_config(
+    page_title="Admin Tugas Kuliah",
+    page_icon="🛠️",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 mode = render_theme_toggle()
 inject_base_css(mode)
 tokens = get_tokens(mode)
@@ -193,18 +198,26 @@ with tab_kelola:
             st.info("Tidak ada tugas yang cocok dengan filter.")
         else:
 
-            # Kelompokkan tugas secara dinamis berdasarkan mata kuliah.
+            # Kelompokkan tugas secara dinamis dan pertahankan urutan katalog.
             grouped_tasks = {}
             for task in hasil:
                 course_name = task.get("mata_kuliah") or "Tanpa Mata Kuliah"
                 grouped_tasks.setdefault(course_name, []).append(task)
 
+            group_order = course_names + [
+                name for name in legacy_courses if name not in course_names
+            ]
+            group_order = [
+                name for name in group_order
+                if name in grouped_tasks
+            ]
             selected_id = st.session_state.get("admin_selected_task_id")
 
             st.divider()
             st.subheader("Daftar Tugas")
 
-            for course_name, course_tasks in grouped_tasks.items():
+            for course_name in group_order:
+                course_tasks = grouped_tasks[course_name]
                 course_task_ids = {task["id"] for task in course_tasks}
                 is_selected_course = selected_id in course_task_ids
                 with st.expander(
@@ -213,16 +226,13 @@ with tab_kelola:
                 ):
                     for task in sorted(course_tasks, key=lambda item: item.get("deadline") or ""):
                         tid = task["id"]
-                        c1, c2, c3 = st.columns([5, 2, 1])
+                        c1, c2 = st.columns([6, 1])
 
                         c1.markdown(f"**{task['judul']}**")
                         c1.caption(
                             f"{task.get('jenis', 'Teori')} · Deadline {format_deadline(task['deadline'])}"
                         )
-                        c2.caption(
-                            "Sedang diedit" if selected_id == tid else ""
-                        )
-                        if c3.button(
+                        if c2.button(
                             "Edit",
                             key=f"pilih_edit_{tid}",
                             type="primary" if selected_id == tid else "secondary",
@@ -408,46 +418,59 @@ with tab_kuliah:
     if not courses:
         st.info("Belum ada mata kuliah.")
     else:
+        courses_by_semester = {}
         for course in courses:
-            cid = course["id"]
-            label = f'{course.get("kode") or "-"} · {course["nama"]} · Semester {course["semester"]}'
-            with st.expander(label):
-                c1, c2, c3 = st.columns([2, 1, 1])
-                e_kode = c1.text_input("Kode", value=course.get("kode") or "", key=f"course_kode_{cid}")
-                e_semester = c2.number_input(
-                    "Semester",
-                    min_value=1,
-                    max_value=8,
-                    value=int(course.get("semester") or 1),
-                    step=1,
-                    key=f"course_semester_{cid}",
-                )
-                kategori_opsi = ["Wajib", "Pilihan", "Belum dikategorikan"]
-                current_kategori = course.get("kategori") or "Belum dikategorikan"
-                e_kategori = c3.selectbox(
-                    "Kategori",
-                    kategori_opsi,
-                    index=kategori_opsi.index(current_kategori) if current_kategori in kategori_opsi else 2,
-                    key=f"course_kategori_{cid}",
-                )
+            semester = int(course.get("semester") or 0)
+            courses_by_semester.setdefault(semester, []).append(course)
 
-                st.text_input("Nama mata kuliah", value=course["nama"], disabled=True, key=f"course_nama_{cid}")
-
-                if st.button("Simpan perubahan", type="primary", key=f"course_simpan_{cid}"):
-                    try:
-                        update_course(
-                            client,
-                            cid,
-                            {
-                                "kode": e_kode.strip().upper() or None,
-                                "semester": int(e_semester),
-                                "kategori": e_kategori,
-                            },
+        for semester in sorted(courses_by_semester):
+            semester_courses = courses_by_semester[semester]
+            with st.expander(
+                f"Semester {semester} · {len(semester_courses)} mata kuliah",
+                expanded=len(courses_by_semester) == 1,
+            ):
+                for course in semester_courses:
+                    cid = course["id"]
+                    code = (course.get("kode") or "").strip()
+                    label = f"{code} · {course['nama']}" if code else course["nama"]
+                    with st.expander(label):
+                        c1, c2, c3 = st.columns([2, 1, 1])
+                        e_kode = c1.text_input("Kode", value=course.get("kode") or "", key=f"course_kode_{cid}")
+                        e_semester = c2.number_input(
+                            "Semester",
+                            min_value=1,
+                            max_value=8,
+                            value=int(course.get("semester") or 1),
+                            step=1,
+                            key=f"course_semester_{cid}",
                         )
-                        st.toast("Data mata kuliah diperbarui.")
-                        st.rerun()
-                    except Exception as exc:
-                        st.error(f"Gagal memperbarui mata kuliah: {exc}")
+                        kategori_opsi = ["Wajib", "Pilihan", "Belum dikategorikan"]
+                        current_kategori = course.get("kategori") or "Belum dikategorikan"
+                        e_kategori = c3.selectbox(
+                            "Kategori",
+                            kategori_opsi,
+                            index=kategori_opsi.index(current_kategori) if current_kategori in kategori_opsi else 2,
+                            key=f"course_kategori_{cid}",
+                        )
+
+                        st.text_input("Nama mata kuliah", value=course["nama"], disabled=True, key=f"course_nama_{cid}")
+
+                        if st.button("Simpan perubahan", type="primary", key=f"course_simpan_{cid}", width="stretch"):
+                            try:
+                                update_course(
+                                    client,
+                                    cid,
+                                    {
+                                        "kode": e_kode.strip().upper() or None,
+                                        "semester": int(e_semester),
+                                        "kategori": e_kategori,
+                                    },
+                                )
+                                st.toast("Data mata kuliah diperbarui.")
+                                st.rerun()
+                            except Exception as exc:
+                                st.error(f"Gagal memperbarui mata kuliah: {exc}")
+
 
 with tab_modul:
     st.subheader("Arsip Modul")
