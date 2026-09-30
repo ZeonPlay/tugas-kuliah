@@ -1,14 +1,13 @@
 import streamlit as st
 
 from utils.krs import get_active_semester, get_krs_for_semester, reset_krs, set_active_semester, set_krs_for_semester
-from utils.styles import get_tokens, inject_base_css, render_theme_toggle
+from utils.styles import inject_base_css, render_theme_toggle
 from utils.supabase_client import ConfigError, fetch_courses
 
 st.set_page_config(page_title="KRS Saya", page_icon="📚", layout="wide", initial_sidebar_state="collapsed")
 
 mode = render_theme_toggle()
 inject_base_css(mode)
-get_tokens(mode)
 
 st.title("KRS Saya")
 st.caption("Pilih mata kuliah yang sedang kamu ambil. Dashboard dan kalender akan mengikuti pilihan ini.")
@@ -64,11 +63,12 @@ st.subheader(f"Semester {active_semester}")
 if wajib:
     st.write("**Mata kuliah wajib**")
     st.caption("Otomatis masuk KRS.")
-    st.dataframe(
-        [{"Mata kuliah": name} for name in wajib],
-        hide_index=True,
-        width="stretch",
-    )
+
+    for name in wajib:
+        st.markdown(
+            f'<div class="krs-course-item"><span class="krs-check">✓</span><span>{name}</span></div>',
+            unsafe_allow_html=True,
+        )
 
 pilihan_terpilih = st.multiselect(
     "Mata kuliah pilihan yang kamu ambil",
@@ -96,12 +96,17 @@ st.metric("Mata kuliah aktif", len(semua_dipilih))
 
 if semua_dipilih:
     for name in semua_dipilih:
-        st.markdown(f"- {name}")
+        st.markdown(
+            f'<div class="krs-summary-item">{name}</div>',
+            unsafe_allow_html=True,
+        )
 else:
     st.info("Belum ada mata kuliah terpilih.")
 
-st.caption("Pengaturan ini disimpan selama sesi browser saat ini. Belum memerlukan akun mahasiswa.")
+st.caption("Perubahan KRS tersimpan otomatis selama sesi browser ini.")
 
-if st.button("Reset KRS semua semester", type="secondary"):
-    reset_krs()
-    st.rerun()
+with st.expander("Pengaturan ulang", expanded=False):
+    st.caption("Gunakan ini bila ingin menghapus pilihan KRS dari semua semester.")
+    if st.button("Reset KRS semua semester", type="secondary", width="stretch"):
+        reset_krs()
+        st.rerun()
