@@ -21,7 +21,7 @@ def render_task_card(task: dict, tokens: dict, *, detail_label: str = "Detail & 
     else:
         badge_bg, badge_color = "rgba(16,185,129,.14)", tokens["safe"]
 
-    with st.container(border=True):
+    with st.container(border=True, key=f"task-card-{task['id']}"):
         left, right = st.columns([3, 1])
 
         with left:
