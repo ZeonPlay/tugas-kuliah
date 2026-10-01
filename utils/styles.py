@@ -33,7 +33,7 @@ def inject_base_css(mode="Sistem") -> None:
             padding: 10px 12px;
             margin-bottom: 7px;
             border: 1px solid rgba(150,150,150,.18);
-            border-radius: 10px;
+            border-radius: var(--morph-radius);
             background: var(--secondary-background-color);
             transition:
                 transform var(--mograph-slow) var(--mograph-ease),
@@ -75,6 +75,31 @@ def inject_base_css(mode="Sistem") -> None:
             padding-left: 14px;
         }
 
+        .krs-course-item,
+        .krs-summary-item {
+            transition:
+                transform var(--mograph-slow) var(--mograph-ease),
+                border-color var(--mograph-fast) ease,
+                box-shadow var(--mograph-slow) var(--mograph-ease),
+                border-radius var(--mograph-slow) var(--mograph-ease);
+        }
+
+        .krs-course-item:hover,
+        .krs-summary-item:hover {
+            transform: translateX(4px);
+            border-radius: 13px;
+            border-color: rgba(150,150,150,.32);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .10);
+        }
+
+        .krs-check {
+            transition: transform var(--mograph-slow) var(--mograph-ease);
+        }
+
+        .krs-course-item:hover .krs-check {
+            transform: scale(1.08) rotate(-4deg);
+        }
+
         .krs-check {
             display: inline-flex;
             align-items: center;
@@ -89,27 +114,80 @@ def inject_base_css(mode="Sistem") -> None:
             font-weight: 800;
         }
 
-        /* Mograph test: subtle spring-like motion for interactive UI. */
+        /* Fluid motion: spring-like easing + subtle morphing. */
         :root {
-            --mograph-ease: cubic-bezier(.22, 1, .36, 1);
-            --mograph-fast: 160ms;
-            --mograph-slow: 320ms;
+            --mograph-ease: cubic-bezier(.18, 1.28, .32, 1);
+            --mograph-fast: 170ms;
+            --mograph-slow: 360ms;
+            --morph-radius: 10px;
+            --morph-radius-hover: 14px;
         }
 
-        @keyframes mograph-enter {
-            from {
+        @keyframes caelestia-enter {
+            0% {
                 opacity: 0;
-                transform: translateY(8px) scale(.985);
-                filter: blur(2px);
+                transform: translateY(9px) scale(.965);
+                filter: blur(3px);
             }
-            to {
+            62% {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateY(-2px) scale(1.008);
                 filter: blur(0);
             }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes caelestia-pop {
+            0% {
+                transform: scale(.96);
+            }
+            55% {
+                transform: scale(1.025);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Task cards: subtle lift + corner morph, without affecting layout flow. */
+        [class*="st-key-task-card-"] {
+            transition:
+                transform var(--mograph-slow) var(--mograph-ease),
+                box-shadow var(--mograph-slow) var(--mograph-ease),
+                border-color var(--mograph-fast) ease,
+                border-radius var(--mograph-slow) var(--mograph-ease);
+            border-radius: var(--morph-radius);
+            animation: caelestia-enter 420ms var(--mograph-ease) both;
+            will-change: transform;
+        }
+
+        [class*="st-key-task-card-"]:hover {
+            transform: translateY(-3px) scale(1.006);
+            border-radius: var(--morph-radius-hover);
+            box-shadow: 0 14px 34px rgba(0, 0, 0, .16);
+            border-color: rgba(150, 150, 150, .34);
         }
 
         /* Main-page navigation links should read clearly as clickable buttons. */
+        [data-testid="stSidebarNav"] a {
+            border-radius: var(--morph-radius) !important;
+            transition:
+                transform var(--mograph-fast) var(--mograph-ease),
+                background-color var(--mograph-fast) ease,
+                color var(--mograph-fast) ease;
+        }
+
+        [data-testid="stSidebarNav"] a:hover {
+            transform: translateX(5px);
+        }
+
+        [data-testid="stSidebarNav"] a[aria-current="page"] {
+            border-radius: var(--morph-radius-hover) !important;
+        }
+
         .block-container .stPageLink {
             margin-bottom: 0 !important;
         }
@@ -141,9 +219,19 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         .block-container a[data-testid="stPageLink-NavLink"]:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px) scale(1.012);
+            border-radius: var(--morph-radius-hover);
             border-color: var(--primary-color);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, .14);
+        }
+
+        .block-container a[data-testid="stPageLink-NavLink"] svg {
+            transition:
+                transform var(--mograph-fast) var(--mograph-ease);
+        }
+
+        .block-container a[data-testid="stPageLink-NavLink"]:hover svg {
+            transform: scale(1.08) rotate(-2deg);
         }
 
         .block-container a[data-testid="stPageLink-NavLink"]:active {
@@ -167,23 +255,35 @@ def inject_base_css(mode="Sistem") -> None:
                 filter var(--mograph-fast) var(--mograph-ease);
             transform-origin: center;
             will-change: transform;
+            border-radius: var(--morph-radius);
+            cursor: pointer;
         }
 
         .stButton > button:hover,
         .stLinkButton a:hover,
         .stDownloadButton > button:hover,
         [data-testid="stFormSubmitButton"] > button:hover {
-            transform: translateY(-2px) scale(1.015);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
-            filter: brightness(1.04);
+            transform: translateY(-2px) scale(1.018);
+            border-radius: var(--morph-radius-hover);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, .16);
+            filter: brightness(1.045);
         }
 
         .stButton > button:active,
         .stLinkButton a:active,
         .stDownloadButton > button:active,
         [data-testid="stFormSubmitButton"] > button:active {
-            transform: translateY(1px) scale(.975);
-            transition-duration: 70ms;
+            transform: translateY(1px) scale(.955);
+            border-radius: 9px;
+            transition-duration: 80ms;
+        }
+
+        .stButton > button:focus-visible,
+        .stLinkButton a:focus-visible,
+        .stDownloadButton > button:focus-visible,
+        [data-testid="stFormSubmitButton"] > button:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
         }
 
         [data-baseweb="tab"] {
@@ -194,10 +294,15 @@ def inject_base_css(mode="Sistem") -> None:
                 transform var(--mograph-fast) var(--mograph-ease),
                 color var(--mograph-fast) ease,
                 opacity var(--mograph-fast) ease;
+            border-radius: 8px;
         }
 
         [data-baseweb="tab"]:hover {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+        }
+
+        [data-baseweb="tab"][aria-selected="true"] {
+            animation: caelestia-pop 260ms var(--mograph-ease) both;
         }
 
         [data-testid="stExpander"] details > summary {
@@ -205,11 +310,13 @@ def inject_base_css(mode="Sistem") -> None:
                 background-color var(--mograph-fast) ease,
                 color var(--mograph-fast) ease,
                 padding-left var(--mograph-fast) var(--mograph-ease),
-                transform var(--mograph-fast) var(--mograph-ease);
+                transform var(--mograph-fast) var(--mograph-ease),
+                border-radius var(--mograph-slow) var(--mograph-ease);
         }
 
         [data-testid="stExpander"] details > summary:hover {
-            padding-left: 4px;
+            padding-left: 5px;
+            transform: translateX(2px);
         }
 
         input,
@@ -219,7 +326,8 @@ def inject_base_css(mode="Sistem") -> None:
             transition:
                 transform var(--mograph-fast) var(--mograph-ease),
                 box-shadow var(--mograph-slow) var(--mograph-ease),
-                border-color var(--mograph-fast) ease;
+                border-color var(--mograph-fast) ease,
+                border-radius var(--mograph-slow) var(--mograph-ease);
         }
 
         input:hover,
@@ -227,20 +335,23 @@ def inject_base_css(mode="Sistem") -> None:
         [data-baseweb="select"] > div:hover,
         [data-baseweb="input"] > div:hover {
             transform: translateY(-1px);
+            border-radius: 12px;
         }
 
         input:focus,
         textarea:focus,
         [data-baseweb="select"] > div:focus-within,
         [data-baseweb="input"] > div:focus-within {
-            transform: translateY(-1px);
-            box-shadow: 0 0 0 1px var(--primary-color), 0 8px 20px rgba(0, 0, 0, .10);
+            transform: translateY(-1px) scale(1.002);
+            border-radius: 13px;
+            box-shadow: 0 0 0 1px var(--primary-color), 0 10px 24px rgba(0, 0, 0, .12);
         }
 
         .course-row:hover {
             transform: translateX(4px);
             box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
             border-color: rgba(150, 150, 150, .35);
+            border-radius: 13px;
         }
 
         .course-dot {
@@ -259,8 +370,9 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         .fc-button:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 7px 18px rgba(0, 0, 0, .14);
+            transform: translateY(-2px) scale(1.025);
+            border-radius: 10px !important;
+            box-shadow: 0 9px 20px rgba(0, 0, 0, .14);
         }
 
         .fc-button:active {
@@ -275,19 +387,27 @@ def inject_base_css(mode="Sistem") -> None:
 
         .fc-event:hover {
             transform: translateY(-2px) scale(1.025);
+            border-radius: 7px !important;
             filter: brightness(1.08);
         }
 
-        .stButton > button,
-        .stLinkButton a,
-        .stDownloadButton > button,
-        [data-testid="stFormSubmitButton"] > button,
-        [data-baseweb="tab"],
-        [data-testid="stExpander"] details > summary,
-        .course-row,
-        .fc-button,
-        .fc-event {
-            animation: mograph-enter 420ms var(--mograph-ease) both;
+        /* Interactive elements animate on interaction; task cards use the
+           dedicated enter animation above so periodic Streamlit reruns do not
+           make every button flash. */
+
+        @media (hover: none) {
+            .stButton > button:hover,
+            .stLinkButton a:hover,
+            .stDownloadButton > button:hover,
+            [data-testid="stFormSubmitButton"] > button:hover,
+            .block-container a[data-testid="stPageLink-NavLink"]:hover,
+            .course-row:hover,
+            .krs-course-item:hover,
+            .krs-summary-item:hover,
+            [data-testid="stSidebarNav"] a:hover {
+                transform: none !important;
+                box-shadow: none !important;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -298,6 +418,7 @@ def inject_base_css(mode="Sistem") -> None:
                 animation-iteration-count: 1 !important;
                 scroll-behavior: auto !important;
                 transition-duration: 1ms !important;
+                animation: none !important;
             }
         }
 
