@@ -172,19 +172,54 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         /* Main-page navigation links should read clearly as clickable buttons. */
-        [data-testid="stSidebarNav"] a {
+        /* Sidebar navigation: clear slide + highlight on hover. */
+        [data-testid="stSidebarNav"] li > a,
+        [data-testid="stSidebarNav"] li > button {
+            position: relative;
             border-radius: var(--morph-radius) !important;
             transition:
                 transform var(--mograph-fast) var(--mograph-ease),
                 background-color var(--mograph-fast) ease,
-                color var(--mograph-fast) ease;
+                color var(--mograph-fast) ease,
+                padding-left var(--mograph-fast) var(--mograph-ease),
+                box-shadow var(--mograph-slow) var(--mograph-ease);
         }
 
-        [data-testid="stSidebarNav"] a:hover {
-            transform: translateX(5px);
+        [data-testid="stSidebarNav"] li > a::before,
+        [data-testid="stSidebarNav"] li > button::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            border-radius: 999px;
+            background: var(--primary-color);
+            opacity: 0;
+            transform: scaleY(.25);
+            transform-origin: center;
+            transition:
+                opacity var(--mograph-fast) ease,
+                transform var(--mograph-slow) var(--mograph-ease);
         }
 
-        [data-testid="stSidebarNav"] a[aria-current="page"] {
+        [data-testid="stSidebarNav"] li > a:hover,
+        [data-testid="stSidebarNav"] li > button:hover {
+            transform: translateX(6px);
+            padding-left: 5px;
+            box-shadow: 0 7px 18px rgba(0, 0, 0, .10);
+        }
+
+        [data-testid="stSidebarNav"] li > a:hover::before,
+        [data-testid="stSidebarNav"] li > button:hover::before,
+        [data-testid="stSidebarNav"] li > a[aria-current="page"]::before,
+        [data-testid="stSidebarNav"] li > button[aria-current="page"]::before {
+            opacity: .95;
+            transform: scaleY(1);
+        }
+
+        [data-testid="stSidebarNav"] li > a[aria-current="page"],
+        [data-testid="stSidebarNav"] li > button[aria-current="page"] {
             border-radius: var(--morph-radius-hover) !important;
         }
 
@@ -298,11 +333,70 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         [data-baseweb="tab"]:hover {
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.015);
+            background: rgba(127, 127, 127, .08);
         }
 
         [data-baseweb="tab"][aria-selected="true"] {
             animation: caelestia-pop 260ms var(--mograph-ease) both;
+        }
+
+        /* Dropdown/popover: animate when BaseWeb inserts the menu. */
+        [data-baseweb="popover"] {
+            transform-origin: top center;
+            animation: caelestia-popover 240ms var(--mograph-ease) both;
+            will-change: transform, opacity;
+        }
+
+        [data-baseweb="menu"],
+        [role="listbox"] {
+            transform-origin: top center;
+            animation: caelestia-menu 220ms var(--mograph-ease) both;
+            will-change: transform, opacity;
+        }
+
+        [role="option"],
+        [data-baseweb="menu"] li {
+            transition:
+                background-color var(--mograph-fast) ease,
+                transform var(--mograph-fast) var(--mograph-ease);
+        }
+
+        [role="option"]:hover,
+        [data-baseweb="menu"] li:hover {
+            transform: translateX(3px);
+        }
+
+        @keyframes caelestia-popover {
+            0% {
+                opacity: 0;
+                transform: translateY(-6px) scale(.965);
+                filter: blur(2px);
+            }
+            65% {
+                opacity: 1;
+                transform: translateY(1px) scale(1.006);
+                filter: blur(0);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes caelestia-menu {
+            0% {
+                opacity: 0;
+                transform: translateY(-5px) scale(.975);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(1px) scale(1.004);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         [data-testid="stExpander"] details > summary {
@@ -317,6 +411,24 @@ def inject_base_css(mode="Sistem") -> None:
         [data-testid="stExpander"] details > summary:hover {
             padding-left: 5px;
             transform: translateX(2px);
+        }
+
+        [data-testid="stExpander"] details[open] > div {
+            animation: caelestia-expand 300ms var(--mograph-ease) both;
+            transform-origin: top center;
+        }
+
+        @keyframes caelestia-expand {
+            0% {
+                opacity: 0;
+                transform: translateY(-5px) scaleY(.965);
+                clip-path: inset(0 0 10px 0 round 10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scaleY(1);
+                clip-path: inset(0 0 0 0 round 10px);
+            }
         }
 
         input,
@@ -396,6 +508,18 @@ def inject_base_css(mode="Sistem") -> None:
            make every button flash. */
 
         @media (hover: none) {
+            [data-testid="stSidebarNav"] li > a:hover,
+            [data-testid="stSidebarNav"] li > button:hover {
+                transform: none !important;
+                padding-left: inherit !important;
+                box-shadow: none !important;
+            }
+
+            [role="option"]:hover,
+            [data-baseweb="menu"] li:hover {
+                transform: none !important;
+            }
+
             .stButton > button:hover,
             .stLinkButton a:hover,
             .stDownloadButton > button:hover,
