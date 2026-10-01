@@ -86,7 +86,7 @@ def inject_base_css(mode="Sistem") -> None:
 
         .krs-course-item:hover,
         .krs-summary-item:hover {
-            transform: translateX(4px);
+            transform: none;
             border-radius: 13px;
             border-color: rgba(150,150,150,.32);
             box-shadow: 0 8px 20px rgba(0, 0, 0, .10);
@@ -121,6 +121,7 @@ def inject_base_css(mode="Sistem") -> None:
             --mograph-slow: 360ms;
             --morph-radius: 10px;
             --morph-radius-hover: 14px;
+            --morph-color: var(--primary-color);
         }
 
         @keyframes caelestia-enter {
@@ -152,6 +153,46 @@ def inject_base_css(mode="Sistem") -> None:
             }
         }
 
+        /* Shape morph: the surface stays in place while its inner blob
+           expands, bends and settles. This is intentionally not a slide. */
+        @keyframes caelestia-shape {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(.18) rotate(-10deg);
+                border-radius: 62% 38% 54% 46% / 46% 58% 42% 54%;
+            }
+            42% {
+                opacity: .18;
+                transform: translate(-50%, -50%) scale(1.04) rotate(4deg);
+                border-radius: 38% 62% 44% 56% / 58% 40% 60% 42%;
+            }
+            72% {
+                opacity: .12;
+                transform: translate(-50%, -50%) scale(1.18) rotate(7deg);
+                border-radius: 54% 46% 62% 38% / 42% 62% 38% 58%;
+            }
+            100% {
+                opacity: .14;
+                transform: translate(-50%, -50%) scale(1.10) rotate(3deg);
+                border-radius: 46% 54% 40% 60% / 60% 42% 58% 40%;
+            }
+        }
+
+        @keyframes caelestia-ring {
+            0% {
+                opacity: 0;
+                transform: scale(.94);
+            }
+            50% {
+                opacity: .65;
+                transform: scale(1.015);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.06);
+            }
+        }
+
         /* Task cards: subtle lift + corner morph, without affecting layout flow. */
         [class*="st-key-task-card-"] {
             transition:
@@ -165,23 +206,24 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         [class*="st-key-task-card-"]:hover {
-            transform: translateY(-3px) scale(1.006);
+            transform: none;
             border-radius: var(--morph-radius-hover);
             box-shadow: 0 14px 34px rgba(0, 0, 0, .16);
             border-color: rgba(150, 150, 150, .34);
         }
 
         /* Main-page navigation links should read clearly as clickable buttons. */
-        /* Sidebar navigation: clear slide + highlight on hover. */
+        /* Sidebar navigation: shape morphs inside the fixed item bounds. */
         [data-testid="stSidebarNav"] li > a,
         [data-testid="stSidebarNav"] li > button {
             position: relative;
+            isolation: isolate;
+            overflow: hidden;
             border-radius: var(--morph-radius) !important;
             transition:
-                transform var(--mograph-fast) var(--mograph-ease),
-                background-color var(--mograph-fast) ease,
+                background-color var(--mograph-slow) var(--mograph-ease),
                 color var(--mograph-fast) ease,
-                padding-left var(--mograph-fast) var(--mograph-ease),
+                border-radius var(--mograph-slow) var(--mograph-ease),
                 box-shadow var(--mograph-slow) var(--mograph-ease);
         }
 
@@ -189,38 +231,39 @@ def inject_base_css(mode="Sistem") -> None:
         [data-testid="stSidebarNav"] li > button::before {
             content: "";
             position: absolute;
-            left: 0;
-            top: 8px;
-            bottom: 8px;
-            width: 3px;
-            border-radius: 999px;
-            background: var(--primary-color);
+            z-index: -1;
+            width: 130%;
+            aspect-ratio: 1;
+            left: 50%;
+            top: 50%;
+            border-radius: 50%;
+            background: var(--morph-color);
             opacity: 0;
-            transform: scaleY(.25);
-            transform-origin: center;
-            transition:
-                opacity var(--mograph-fast) ease,
-                transform var(--mograph-slow) var(--mograph-ease);
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(.18);
         }
 
         [data-testid="stSidebarNav"] li > a:hover,
         [data-testid="stSidebarNav"] li > button:hover {
-            transform: translateX(6px);
-            padding-left: 5px;
-            box-shadow: 0 7px 18px rgba(0, 0, 0, .10);
+            transform: none;
+            border-radius: var(--morph-radius-hover) !important;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .11);
         }
 
         [data-testid="stSidebarNav"] li > a:hover::before,
-        [data-testid="stSidebarNav"] li > button:hover::before,
-        [data-testid="stSidebarNav"] li > a[aria-current="page"]::before,
-        [data-testid="stSidebarNav"] li > button[aria-current="page"]::before {
-            opacity: .95;
-            transform: scaleY(1);
+        [data-testid="stSidebarNav"] li > button:hover::before {
+            animation: caelestia-shape 560ms var(--mograph-ease) both;
         }
 
         [data-testid="stSidebarNav"] li > a[aria-current="page"],
         [data-testid="stSidebarNav"] li > button[aria-current="page"] {
             border-radius: var(--morph-radius-hover) !important;
+        }
+
+        [data-testid="stSidebarNav"] li > a[aria-current="page"]::before,
+        [data-testid="stSidebarNav"] li > button[aria-current="page"]::before {
+            opacity: .10;
+            transform: translate(-50%, -50%) scale(1.1);
         }
 
         .block-container .stPageLink {
@@ -229,6 +272,9 @@ def inject_base_css(mode="Sistem") -> None:
 
         .block-container a[data-testid="stPageLink-NavLink"] {
             box-sizing: border-box;
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -252,12 +298,31 @@ def inject_base_css(mode="Sistem") -> None:
                 border-color var(--mograph-fast) ease,
                 background-color var(--mograph-fast) ease;
         }
+        
+        .block-container a[data-testid="stPageLink-NavLink"]::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            width: 125%;
+            aspect-ratio: 1;
+            left: 50%;
+            top: 50%;
+            border-radius: 50%;
+            background: var(--morph-color);
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(.18);
+        }
 
         .block-container a[data-testid="stPageLink-NavLink"]:hover {
-            transform: translateY(-3px) scale(1.012);
+            transform: none;
             border-radius: var(--morph-radius-hover);
             border-color: var(--primary-color);
             box-shadow: 0 12px 26px rgba(0, 0, 0, .14);
+        }
+
+        .block-container a[data-testid="stPageLink-NavLink"]:hover::before {
+            animation: caelestia-shape 560ms var(--mograph-ease) both;
         }
 
         .block-container a[data-testid="stPageLink-NavLink"] svg {
@@ -284,6 +349,9 @@ def inject_base_css(mode="Sistem") -> None:
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
             transition:
                 transform var(--mograph-fast) var(--mograph-ease),
                 box-shadow var(--mograph-slow) var(--mograph-ease),
@@ -294,14 +362,41 @@ def inject_base_css(mode="Sistem") -> None:
             cursor: pointer;
         }
 
+
+
+        .stButton > button::before,
+        .stLinkButton a::before,
+        .stDownloadButton > button::before,
+        [data-testid="stFormSubmitButton"] > button::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            width: 125%;
+            aspect-ratio: 1;
+            left: 50%;
+            top: 50%;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(.18);
+        }
+
         .stButton > button:hover,
         .stLinkButton a:hover,
         .stDownloadButton > button:hover,
         [data-testid="stFormSubmitButton"] > button:hover {
-            transform: translateY(-2px) scale(1.018);
+            transform: none;
             border-radius: var(--morph-radius-hover);
             box-shadow: 0 10px 26px rgba(0, 0, 0, .16);
             filter: brightness(1.045);
+        }
+
+        .stButton > button:hover::before,
+        .stLinkButton a:hover::before,
+        .stDownloadButton > button:hover::before,
+        [data-testid="stFormSubmitButton"] > button:hover::before {
+            animation: caelestia-shape 560ms var(--mograph-ease) both;
         }
 
         .stButton > button:active,
@@ -322,6 +417,9 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         [data-baseweb="tab"] {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -332,9 +430,24 @@ def inject_base_css(mode="Sistem") -> None:
             border-radius: 8px;
         }
 
+        [data-baseweb="tab"]::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: inherit;
+            border: 1px solid var(--primary-color);
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(.94);
+        }
+
         [data-baseweb="tab"]:hover {
-            transform: translateY(-2px) scale(1.015);
+            transform: none;
             background: rgba(127, 127, 127, .08);
+        }
+
+        [data-baseweb="tab"]:hover::before {
+            animation: caelestia-ring 420ms var(--mograph-ease) both;
         }
 
         [data-baseweb="tab"][aria-selected="true"] {
@@ -410,7 +523,7 @@ def inject_base_css(mode="Sistem") -> None:
 
         [data-testid="stExpander"] details > summary:hover {
             padding-left: 5px;
-            transform: translateX(2px);
+            transform: none;
         }
 
         [data-testid="stExpander"] details[open] > div {
@@ -446,7 +559,7 @@ def inject_base_css(mode="Sistem") -> None:
         textarea:hover,
         [data-baseweb="select"] > div:hover,
         [data-baseweb="input"] > div:hover {
-            transform: translateY(-1px);
+            transform: none;
             border-radius: 12px;
         }
 
@@ -454,13 +567,13 @@ def inject_base_css(mode="Sistem") -> None:
         textarea:focus,
         [data-baseweb="select"] > div:focus-within,
         [data-baseweb="input"] > div:focus-within {
-            transform: translateY(-1px) scale(1.002);
+            transform: none;
             border-radius: 13px;
             box-shadow: 0 0 0 1px var(--primary-color), 0 10px 24px rgba(0, 0, 0, .12);
         }
 
         .course-row:hover {
-            transform: translateX(4px);
+            transform: none;
             box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
             border-color: rgba(150, 150, 150, .35);
             border-radius: 13px;
@@ -482,7 +595,7 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         .fc-button:hover {
-            transform: translateY(-2px) scale(1.025);
+            transform: none;
             border-radius: 10px !important;
             box-shadow: 0 9px 20px rgba(0, 0, 0, .14);
         }
@@ -498,7 +611,7 @@ def inject_base_css(mode="Sistem") -> None:
         }
 
         .fc-event:hover {
-            transform: translateY(-2px) scale(1.025);
+            transform: none;
             border-radius: 7px !important;
             filter: brightness(1.08);
         }
@@ -508,6 +621,18 @@ def inject_base_css(mode="Sistem") -> None:
            make every button flash. */
 
         @media (hover: none) {
+            [data-testid="stSidebarNav"] li > a:hover::before,
+            [data-testid="stSidebarNav"] li > button:hover::before,
+            .block-container a[data-testid="stPageLink-NavLink"]:hover::before,
+            .stButton > button:hover::before,
+            .stLinkButton a:hover::before,
+            .stDownloadButton > button:hover::before,
+            [data-testid="stFormSubmitButton"] > button:hover::before,
+            [data-baseweb="tab"]:hover::before {
+                animation: none !important;
+                opacity: 0 !important;
+            }
+
             [data-testid="stSidebarNav"] li > a:hover,
             [data-testid="stSidebarNav"] li > button:hover {
                 transform: none !important;
