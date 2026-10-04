@@ -574,7 +574,13 @@ export default function(component) {
             const module = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
             const createClient = module.createClient;
 
-            state.supabase = createClient(config.url, config.key);
+            state.supabase = createClient(config.url, config.key, {
+                auth: {
+                    persistSession: false,
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false,
+                },
+            });
             state.channel = state.supabase.channel(state.channelName, {
                 config: {
                     broadcast: { self: false },
@@ -695,7 +701,10 @@ export default function(component) {
 
         removePresenceChannel();
         layer.remove();
-        delete window.__zeonSitePresence;
+
+        // Keep the singleton client in the page context so Streamlit reruns
+        // do not create another GoTrueClient with the same storage key.
+        state.supabase = state.supabase || null;
     };
 }
 """
