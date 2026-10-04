@@ -4,6 +4,7 @@ from utils.components import render_task_card
 from utils.helpers import (
     JENIS,
     deadline_terdekat,
+    format_deadline,
     format_tanggal,
     now_wib,
     sisa_waktu,
@@ -137,40 +138,29 @@ if baru_terlewat:
 
     for task in baru_terlewat[:3]:
         with st.container(border=True):
-            left, action1, action2 = st.columns([5, 1.6, 1.6], vertical_alignment="center")
-
-            with left:
-                st.markdown(
-                    f"**{task.get('judul') or 'Tugas tanpa judul'}**"
-                )
-                st.caption(
-                    f"{task.get('mata_kuliah') or 'Tanpa Mata Kuliah'} · Deadline {format_deadline(task['deadline'])}"
-                )
+            st.markdown(
+                f"**{task.get('judul') or 'Tugas tanpa judul'}**"
+            )
+            st.caption(
+                f"{task.get('mata_kuliah') or 'Tanpa Mata Kuliah'} · Deadline {format_deadline(task['deadline'])}"
+            )
 
             vclass_url = (task.get("link_vclass") or "").strip()
             file_url = (task.get("file_soal") or "").strip()
 
+            actions = []
             if vclass_url:
-                action1.link_button(
-                    "Kerjakan ↗",
-                    vclass_url,
-                    width="stretch",
-                )
+                actions.append(("Kerjakan ↗", vclass_url))
             elif file_url:
-                action1.link_button(
-                    "Buka soal ↗",
-                    file_url,
-                    width="stretch",
-                )
+                actions.append(("Buka soal ↗", file_url))
 
             if vclass_url and file_url:
-                action2.link_button(
-                    "File soal ↗",
-                    file_url,
-                    width="stretch",
-                )
-            else:
-                action2.markdown("")
+                actions.append(("File soal ↗", file_url))
+
+            if actions:
+                action_cols = st.columns(len(actions))
+                for col, (label, url) in zip(action_cols, actions):
+                    col.link_button(label, url, width="stretch")
 
     if len(baru_terlewat) > 3:
         st.caption(
