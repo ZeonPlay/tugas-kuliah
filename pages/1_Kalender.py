@@ -7,6 +7,7 @@ from utils.components import render_task_card
 from utils.helpers import JENIS, build_calendar_events, format_tanggal, parse_click_date, tasks_pada_tanggal
 from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import calendar_css, get_tokens, inject_base_css, render_theme_toggle
+from utils.presence import render_presence
 from utils.supabase_client import ConfigError, fetch_courses, fetch_tasks
 
 st.set_page_config(page_title="Kalender Tugas", page_icon="🗓️", layout="wide", initial_sidebar_state="collapsed")
