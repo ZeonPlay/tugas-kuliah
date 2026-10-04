@@ -509,7 +509,7 @@ export default function(component) {
                     if (state.pendingCursor) {
                         const pending = state.pendingCursor;
                         state.pendingCursor = null;
-                        sendCursor(pending.x, pending.y, pending.device);
+                        sendCursor(pending);
                     }
                 });
         } catch (error) {
