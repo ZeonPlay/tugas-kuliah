@@ -130,7 +130,7 @@ export default function(component) {
         pendingCursor: null,
         listenersAttached: false,
         cursors: new Map(),
-        iframeListeners: new WeakMap(),
+        iframeListeners: new Map(),
         iframeScanTimer: null,
         iframeObserver: null,
         cleanupTimer: null,
@@ -643,7 +643,15 @@ export default function(component) {
             cursor.element.remove();
         });
         state.cursors.clear();
-        state.iframeListeners = new WeakMap();
+        state.iframeListeners.forEach(({ doc, onMove, onDown }) => {
+            try {
+                doc.removeEventListener("pointermove", onMove);
+                doc.removeEventListener("pointerdown", onDown);
+            } catch (error) {
+                // The iframe may already have been destroyed.
+            }
+        });
+        state.iframeListeners.clear();
 
         removePresenceChannel();
         layer.remove();
