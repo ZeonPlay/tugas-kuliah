@@ -8,6 +8,7 @@ from utils.helpers import (
     now_wib,
     sisa_waktu,
     tugas_terlewat,
+    tugas_baru_terlewat,
     warna_matkul,
 )
 from utils.krs import get_active_krs, get_active_semester, is_krs_configured
@@ -100,6 +101,7 @@ if search.strip():
     ]
 
 terlewat = tugas_terlewat(tasks)
+baru_terlewat = tugas_baru_terlewat(tasks, hari=3)
 terdekat = deadline_terdekat(tasks, jumlah=5)
 mendesak_count = sum(
     1 for t in terdekat
@@ -114,10 +116,10 @@ m3.metric("Sudah lewat", len(terlewat))
 if search or f_matkul or f_jenis:
     st.caption(f"Menampilkan {len(tasks)} dari {len(all_tasks)} tugas.")
 
-if terlewat:
-    daftar = ", ".join(t["judul"] for t in terlewat[:3])
-    lebih = f" dan {len(terlewat) - 3} lainnya" if len(terlewat) > 3 else ""
-    st.error(f"⚠️ Tugas terlewat: {daftar}{lebih}")
+if baru_terlewat:
+    daftar = ", ".join(t["judul"] for t in baru_terlewat[:3])
+    lebih = f" dan {len(baru_terlewat) - 3} lainnya" if len(baru_terlewat) > 3 else ""
+    st.warning(f"⚠️ Baru terlewat: {daftar}{lebih}")
 
 st.divider()
 
