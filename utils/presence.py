@@ -278,7 +278,14 @@ export default function(component) {
             sameRoute ||
             samePage ||
             (!payload.route && !payload.page);
-        
+
+        // Cross-device layouts can differ substantially (desktop vs mobile),
+        // so page mismatch must not make the cursor translucent in that case.
+        const localDeviceClass = isTouchDevice() ? "touch" : "mouse";
+        const remoteDeviceClass =
+            payload.device === "touch" ? "touch" : "mouse";
+        const sameDeviceClass = localDeviceClass === remoteDeviceClass;
+
         if (payload.frame === "calendar" && sameContext) {
             const calendarFrame = Array.from(document.querySelectorAll("iframe"))
                 .find((frame) => isCalendarFrame(frame));
@@ -310,6 +317,7 @@ export default function(component) {
             "translate3d(" + screenX + "px, " + screenY + "px, 0)";
         cursor.element.classList.toggle(
             "is-other-page",
+            sameDeviceClass &&
             Boolean(payload.route && payload.page && !sameContext)
         );
         cursor.element.classList.remove("is-stale");
