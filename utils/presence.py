@@ -661,6 +661,7 @@ export default function(component) {
     return () => {
         document.removeEventListener("pointermove", handlePointerMove);
         document.removeEventListener("pointerdown", handlePointerDown);
+        state.listenersAttached = false;
 
         if (state.sendTimer) {
             clearTimeout(state.sendTimer);
