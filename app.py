@@ -117,9 +117,65 @@ if search or f_matkul or f_jenis:
     st.caption(f"Menampilkan {len(tasks)} dari {len(all_tasks)} tugas.")
 
 if baru_terlewat:
-    daftar = ", ".join(t["judul"] for t in baru_terlewat[:3])
-    lebih = f" dan {len(baru_terlewat) - 3} lainnya" if len(baru_terlewat) > 3 else ""
-    st.warning(f"⚠️ Baru terlewat: {daftar}{lebih}")
+    st.markdown(
+        """
+        <div style="
+            padding: 14px 16px;
+            border: 1px solid rgba(245,158,11,.30);
+            border-radius: 14px;
+            background: rgba(245,158,11,.08);
+            margin-bottom: 12px;
+        ">
+            <div style="font-weight:800;font-size:1rem;">⚠️ Baru terlewat</div>
+            <div style="opacity:.72;font-size:.82rem;margin-top:3px;">
+                Deadline yang lewat dalam 3 hari terakhir · buka langsung untuk segera mengerjakannya.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    for task in baru_terlewat[:3]:
+        with st.container(border=True):
+            left, action1, action2 = st.columns([5, 1.6, 1.6], vertical_alignment="center")
+
+            with left:
+                st.markdown(
+                    f"**{task.get('judul') or 'Tugas tanpa judul'}**"
+                )
+                st.caption(
+                    f"{task.get('mata_kuliah') or 'Tanpa Mata Kuliah'} · Deadline {format_deadline(task['deadline'])}"
+                )
+
+            vclass_url = (task.get("link_vclass") or "").strip()
+            file_url = (task.get("file_soal") or "").strip()
+
+            if vclass_url:
+                action1.link_button(
+                    "Kerjakan ↗",
+                    vclass_url,
+                    width="stretch",
+                )
+            elif file_url:
+                action1.link_button(
+                    "Buka soal ↗",
+                    file_url,
+                    width="stretch",
+                )
+
+            if vclass_url and file_url:
+                action2.link_button(
+                    "File soal ↗",
+                    file_url,
+                    width="stretch",
+                )
+            else:
+                action2.markdown("")
+
+    if len(baru_terlewat) > 3:
+        st.caption(
+            f"Dan {len(baru_terlewat) - 3} tugas baru terlewat lainnya ada di daftar tugas."
+        )
 
 st.divider()
 
