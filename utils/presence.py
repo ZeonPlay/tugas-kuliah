@@ -130,6 +130,9 @@ export default function(component) {
         pendingCursor: null,
         listenersAttached: false,
         cursors: new Map(),
+        iframeListeners: new WeakMap(),
+        iframeScanTimer: null,
+        iframeObserver: null,
         cleanupTimer: null,
     };
 
@@ -265,9 +268,23 @@ export default function(component) {
         const fallbackX = Math.max(0, Math.min(1, normalizedX)) * window.innerWidth;
         const fallbackY = Math.max(0, Math.min(1, normalizedY)) * window.innerHeight;
         let resolvedPoint = null;
-        if (!payload.page || payload.page === config.page) {
+
+        if (payload.frame === "calendar" && (!payload.page || payload.page === config.page)) {
+            const calendarFrame = Array.from(document.querySelectorAll("iframe"))
+                .find((frame) => isCalendarFrame(frame));
+            if (calendarFrame) {
+                const rect = calendarFrame.getBoundingClientRect();
+                resolvedPoint = {
+                    x: rect.left + Math.max(0, Math.min(1, Number(payload.frame_x) || 0)) * rect.width,
+                    y: rect.top + Math.max(0, Math.min(1, Number(payload.frame_y) || 0)) * rect.height,
+                };
+            }
+        }
+
+        if (!resolvedPoint && (!payload.frame || payload.frame !== "calendar") && (!payload.page || payload.page === config.page)) {
             resolvedPoint = resolveAnchor(payload.anchor, fallbackX, fallbackY);
         }
+
         const screenX = resolvedPoint?.x ?? fallbackX;
         const screenY = resolvedPoint?.y ?? fallbackY;
 
@@ -436,7 +453,12 @@ export default function(component) {
                     device: cursor.device,
                     x: cursor.x,
                     y: cursor.y,
-                    anchor: cursor.anchor,
+                    anchor: cursor.anchor || null,
+                    frame: cursor.frame || null,
+                    frame_x: cursor.frame_x ?? null,
+                    frame_y: cursor.frame_y ?? null,
+                    frame_w: cursor.frame_w ?? null,
+                    frame_h: cursor.frame_h ?? null,
                     color: state.identity.color,
                     page: config.page,
                     ts: Date.now(),
@@ -447,6 +469,23 @@ export default function(component) {
         else if (!state.sendTimer) state.sendTimer = window.setTimeout(send, 66 - elapsed);
     }
 
+    function viewportPointFromFrame(frame, event) {
+        const rect = frame.getBoundingClientRect();
+        const width = Math.max(rect.width, 1);
+        const height = Math.max(rect.height, 1);
+        return {
+            x: (rect.left + event.clientX) / Math.max(window.innerWidth, 1),
+            y: (rect.top + event.clientY) / Math.max(window.innerHeight, 1),
+            frame: "calendar",
+            frame_x: Math.max(0, Math.min(1, event.clientX / width)),
+            frame_y: Math.max(0, Math.min(1, event.clientY / height)),
+            frame_w: width,
+            frame_h: height,
+            device: event.pointerType,
+            anchor: null,
+        };
+    }
+
     function handlePointerMove(event) {
         if (!["mouse", "touch", "pen"].includes(event.pointerType)) return;
         sendCursor(buildCursorPayload(event));
@@ -455,6 +494,58 @@ export default function(component) {
     function handlePointerDown(event) {
         if (event.pointerType !== "touch") return;
         sendCursor(buildCursorPayload(event));
+    }
+
+    function isCalendarFrame(frame) {
+        try {
+            return Boolean(frame.contentDocument?.querySelector(".fc"));
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function attachCalendarFrame(frame) {
+        if (!frame || state.iframeListeners.has(frame) || !isCalendarFrame(frame)) {
+            return;
+        }
+
+        let doc;
+        try {
+            doc = frame.contentDocument;
+        } catch (error) {
+            return;
+        }
+        if (!doc) return;
+
+        const onMove = (event) => {
+            sendCursor(viewportPointFromFrame(frame, event));
+        };
+        const onDown = (event) => {
+            if (event.pointerType === "touch") {
+                sendCursor(viewportPointFromFrame(frame, event));
+            }
+        };
+
+        doc.addEventListener("pointermove", onMove, { passive: true });
+        doc.addEventListener("pointerdown", onDown, { passive: true });
+        state.iframeListeners.set(frame, { doc, onMove, onDown });
+    }
+
+    function scanCalendarFrames() {
+        document.querySelectorAll("iframe").forEach((frame) => {
+            attachCalendarFrame(frame);
+        });
+    }
+
+    function startCalendarFrameTracking() {
+        scanCalendarFrames();
+        if (!state.iframeObserver) {
+            state.iframeObserver = new MutationObserver(() => scanCalendarFrames());
+            state.iframeObserver.observe(document.body, { childList: true, subtree: true });
+        }
+        if (!state.iframeScanTimer) {
+            state.iframeScanTimer = window.setInterval(scanCalendarFrames, 1000);
+        }
     }
     function removePresenceChannel() {
         if (state.channel && state.supabase) {
@@ -526,6 +617,7 @@ export default function(component) {
         state.listenersAttached = true;
     }
 
+    startCalendarFrameTracking();
     updateIdentity();
     startRealtime();
 
@@ -536,7 +628,14 @@ export default function(component) {
         if (state.sendTimer) {
             clearTimeout(state.sendTimer);
         }
-
+        if (state.iframeScanTimer) {
+            clearInterval(state.iframeScanTimer);
+            state.iframeScanTimer = null;
+        }
+        if (state.iframeObserver) {
+            state.iframeObserver.disconnect();
+            state.iframeObserver = null;
+        }
         state.cursors.forEach((cursor) => {
             if (cursor.staleTimer) {
                 clearTimeout(cursor.staleTimer);
@@ -544,6 +643,7 @@ export default function(component) {
             cursor.element.remove();
         });
         state.cursors.clear();
+        state.iframeListeners = new WeakMap();
 
         removePresenceChannel();
         layer.remove();
