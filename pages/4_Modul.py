@@ -16,6 +16,7 @@ st.set_page_config(
 mode = render_theme_toggle()
 inject_base_css(mode)
 get_tokens(mode)
+render_presence("Arsip Modul")
 
 st.title("Arsip Modul")
 st.caption("Kumpulan folder modul dan materi yang dibagikan asisten dosen.")
