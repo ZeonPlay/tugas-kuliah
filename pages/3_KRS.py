@@ -4,12 +4,14 @@ import streamlit as st
 
 from utils.krs import get_active_semester, get_krs_for_semester, reset_krs, set_active_semester, set_krs_for_semester
 from utils.styles import inject_base_css, render_theme_toggle
+from utils.presence import render_presence
 from utils.supabase_client import ConfigError, fetch_courses
 
 st.set_page_config(page_title="KRS Saya", page_icon="📚", layout="wide", initial_sidebar_state="collapsed")
 
 mode = render_theme_toggle()
 inject_base_css(mode)
+render_presence("KRS Saya")
 
 st.title("KRS Saya")
 st.caption("Pilih mata kuliah yang sedang kamu ambil. Dashboard dan kalender akan mengikuti pilihan ini.")
