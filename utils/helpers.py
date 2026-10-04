@@ -187,4 +187,17 @@ def deadline_terdekat(tasks: list[dict], jumlah: int = 5) -> list[dict]:
 
 
 def tugas_terlewat(tasks: list[dict]) -> list[dict]:
+    """Semua tugas yang deadline-nya sudah lewat."""
     return [t for t in tasks if sudah_lewat(t)]
+
+
+def tugas_baru_terlewat(tasks: list[dict], hari: int = 3) -> list[dict]:
+    """Tugas yang deadline-nya lewat dalam N hari terakhir."""
+    sekarang = now_wib()
+    batas = sekarang - timedelta(days=hari)
+    hasil = [
+        t for t in tasks
+        if batas <= parse_deadline(t["deadline"]) < sekarang
+    ]
+    hasil.sort(key=lambda t: parse_deadline(t["deadline"]), reverse=True)
+    return hasil
