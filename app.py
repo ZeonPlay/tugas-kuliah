@@ -12,6 +12,7 @@ from utils.helpers import (
 )
 from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
+from utils.presence import render_presence
 from utils.supabase_client import ConfigError, fetch_courses, fetch_tasks
 
 st.set_page_config(
@@ -24,6 +25,7 @@ st.set_page_config(
 mode = render_theme_toggle()
 inject_base_css(mode)
 tokens = get_tokens(mode)
+render_presence("Beranda")
 
 st.title("Tugas Kuliah")
 st.caption(f"S1 Sistem Informasi · {format_tanggal(now_wib().date())} · WIB")
