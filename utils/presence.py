@@ -272,9 +272,14 @@ export default function(component) {
         const fallbackY = Math.max(0, Math.min(1, normalizedY)) * window.innerHeight;
         let resolvedPoint = null;
 
-        const sameRoute = !payload.route || payload.route === config.route;
+        const sameRoute = Boolean(payload.route && payload.route === config.route);
+        const samePage = Boolean(payload.page && payload.page === config.page);
+        const sameContext =
+            sameRoute ||
+            samePage ||
+            (!payload.route && !payload.page);
         
-        if (payload.frame === "calendar" && sameRoute) {
+        if (payload.frame === "calendar" && sameContext) {
             const calendarFrame = Array.from(document.querySelectorAll("iframe"))
                 .find((frame) => isCalendarFrame(frame));
             if (calendarFrame) {
@@ -286,7 +291,7 @@ export default function(component) {
             }
         }
 
-        if (!resolvedPoint && (!payload.frame || payload.frame !== "calendar") && sameRoute) {
+        if (!resolvedPoint && (!payload.frame || payload.frame !== "calendar") && sameContext) {
             resolvedPoint = resolveAnchor(payload.anchor, fallbackX, fallbackY);
         }
 
@@ -303,7 +308,10 @@ export default function(component) {
         );
         cursor.element.style.transform =
             "translate3d(" + screenX + "px, " + screenY + "px, 0)";
-        cursor.element.classList.toggle("is-other-page", !sameRoute);
+        cursor.element.classList.toggle(
+            "is-other-page",
+            Boolean(payload.route && payload.page && !sameContext)
+        );
         cursor.element.classList.remove("is-stale");
         cursor.name.textContent = payload.display_name || "Pelajar Anonim";
         cursor.device.textContent = deviceIcon(payload.device);
