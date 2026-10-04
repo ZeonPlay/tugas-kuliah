@@ -2,6 +2,7 @@ import streamlit as st
 
 from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
+from utils.presence import render_presence
 from utils.supabase_client import ConfigError, fetch_courses, fetch_module_folders
 
 
