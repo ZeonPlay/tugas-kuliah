@@ -34,6 +34,10 @@ _PRESENCE_CSS = r"""
     opacity: 0;
 }
 
+.zeon-presence-cursor.is-other-page {
+    opacity: .45;
+}
+
 .zeon-presence-pointer {
     display: block;
     width: 22px;
@@ -254,12 +258,18 @@ export default function(component) {
             return;
         }
 
-        const x = Number(payload.x);
-        const y = Number(payload.y);
+        const normalizedX = Number(payload.x);
+        const normalizedY = Number(payload.y);
+        if (!Number.isFinite(normalizedX) || !Number.isFinite(normalizedY)) return;
 
-        if (!Number.isFinite(x) || !Number.isFinite(y)) {
-            return;
+        const fallbackX = Math.max(0, Math.min(1, normalizedX)) * window.innerWidth;
+        const fallbackY = Math.max(0, Math.min(1, normalizedY)) * window.innerHeight;
+        let resolvedPoint = null;
+        if (!payload.page || payload.page === config.page) {
+            resolvedPoint = resolveAnchor(payload.anchor, fallbackX, fallbackY);
         }
+        const screenX = resolvedPoint?.x ?? fallbackX;
+        const screenY = resolvedPoint?.y ?? fallbackY;
 
         const cursor = getOrCreateCursor(payload.session_id, payload);
         const timestamp = Number(payload.ts || Date.now());
@@ -270,9 +280,9 @@ export default function(component) {
             payload.color || cursorColor(payload.session_id)
         );
         cursor.element.style.transform =
-            `translate3d(${Math.max(0, Math.min(1, x)) * 100}vw, ${Math.max(0, Math.min(1, y)) * 100}vh, 0)`;
+            "translate3d(" + screenX + "px, " + screenY + "px, 0)";
+        cursor.element.classList.toggle("is-other-page", Boolean(payload.page && payload.page !== config.page));
         cursor.element.classList.remove("is-stale");
-
         cursor.name.textContent = payload.display_name || "Pelajar Anonim";
         cursor.device.textContent = deviceIcon(payload.device);
         cursor.lastTs = timestamp;
@@ -302,24 +312,120 @@ export default function(component) {
         state.cursors.delete(sessionId);
     }
 
-    function sendCursor(x, y, device) {
-        state.pendingCursor = { x, y, device };
+    function cleanText(value) {
+        return String(value || "").replace(/\s+/g, " ").trim().slice(0, 80);
+    }
 
-        if (!state.ready || !state.channel) {
-            return;
+    function isUsefulAnchor(element) {
+        if (!element || !(element instanceof HTMLElement)) {
+            return false;
         }
+
+        const tag = element.tagName.toLowerCase();
+        const meaningfulTag = [
+            "a", "button", "input", "select", "textarea",
+            "h1", "h2", "h3", "h4", "summary",
+        ].includes(tag);
+        const meaningfulRole = Boolean(element.getAttribute("role"));
+        const hasTestId = Boolean(element.getAttribute("data-testid"));
+        const rect = element.getBoundingClientRect();
+
+        return rect.width > 0 && rect.height > 0 &&
+            (meaningfulTag || meaningfulRole || hasTestId);
+    }
+
+    function getAnchorAtPoint(x, y) {
+        let element = document.elementFromPoint(x, y);
+
+        for (let depth = 0; element && depth < 7; depth += 1) {
+            if (isUsefulAnchor(element)) {
+                const rect = element.getBoundingClientRect();
+                return {
+                    tag: element.tagName.toLowerCase(),
+                    testid: element.getAttribute("data-testid") || "",
+                    role: element.getAttribute("role") || "",
+                    aria: element.getAttribute("aria-label") || "",
+                    title: element.getAttribute("title") || "",
+                    placeholder: element.getAttribute("placeholder") || "",
+                    text: cleanText(element.innerText || element.textContent),
+                    offset_x: rect.width ? (x - rect.left) / rect.width : 0.5,
+                    offset_y: rect.height ? (y - rect.top) / rect.height : 0.5,
+                };
+            }
+            element = element.parentElement;
+        }
+        return null;
+    }
+
+    function isCandidateForAnchor(node, anchor) {
+        if (!isUsefulAnchor(node)) return false;
+        const tag = node.tagName.toLowerCase();
+        const nodeText = cleanText(node.innerText || node.textContent);
+        if (anchor.testid && node.getAttribute("data-testid") !== anchor.testid) return false;
+        if (anchor.tag && tag !== anchor.tag) return false;
+        const attrs = [
+            ["role", anchor.role],
+            ["aria-label", anchor.aria],
+            ["title", anchor.title],
+            ["placeholder", anchor.placeholder],
+        ];
+        for (const [name, expected] of attrs) {
+            if (expected && node.getAttribute(name) !== expected) return false;
+        }
+        if (anchor.text && nodeText !== anchor.text && !nodeText.includes(anchor.text)) return false;
+        return true;
+    }
+
+    function resolveAnchor(anchor, fallbackX, fallbackY) {
+        if (!anchor) return null;
+
+        const selectors = "a,button,input,select,textarea,h1,h2,h3,h4,summary,[role],[data-testid]";
+        const candidates = Array.from(document.querySelectorAll(selectors))
+            .filter((node) => isCandidateForAnchor(node, anchor));
+        if (!candidates.length) return null;
+
+        let best = null;
+        let bestDistance = Number.POSITIVE_INFINITY;
+        for (const node of candidates) {
+            const rect = node.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const distance = Math.pow(centerX - fallbackX, 2) + Math.pow(centerY - fallbackY, 2);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = rect;
+            }
+        }
+
+        if (!best || best.width <= 0 || best.height <= 0) return null;
+        return {
+            x: best.left + Math.max(0, Math.min(1, Number(anchor.offset_x) || 0.5)) * best.width,
+            y: best.top + Math.max(0, Math.min(1, Number(anchor.offset_y) || 0.5)) * best.height,
+        };
+    }
+
+    function buildCursorPayload(event) {
+        const width = Math.max(window.innerWidth, 1);
+        const height = Math.max(window.innerHeight, 1);
+        return {
+            x: event.clientX / width,
+            y: event.clientY / height,
+            device: event.pointerType,
+            anchor: getAnchorAtPoint(event.clientX, event.clientY),
+        };
+    }
+
+    function sendCursor(point) {
+        state.pendingCursor = point;
+        if (!state.ready || !state.channel) return;
 
         const now = performance.now();
         const elapsed = now - state.lastSentAt;
         const send = () => {
             state.sendTimer = null;
-            if (!state.pendingCursor || !state.ready || !state.channel) {
-                return;
-            }
-
-            const point = state.pendingCursor;
+            if (!state.pendingCursor || !state.ready || !state.channel) return;
+            const cursor = state.pendingCursor;
             state.lastSentAt = performance.now();
-
             state.channel.send({
                 type: "broadcast",
                 event: "cursor",
@@ -327,52 +433,29 @@ export default function(component) {
                     session_id: config.sessionId,
                     display_name: state.identity.display_name,
                     role: state.identity.role,
-                    device: point.device,
-                    x: point.x,
-                    y: point.y,
+                    device: cursor.device,
+                    x: cursor.x,
+                    y: cursor.y,
+                    anchor: cursor.anchor,
                     color: state.identity.color,
+                    page: config.page,
                     ts: Date.now(),
                 },
             });
         };
-
-        if (elapsed >= 66) {
-            send();
-        } else if (!state.sendTimer) {
-            state.sendTimer = window.setTimeout(send, 66 - elapsed);
-        }
+        if (elapsed >= 66) send();
+        else if (!state.sendTimer) state.sendTimer = window.setTimeout(send, 66 - elapsed);
     }
 
     function handlePointerMove(event) {
-        if (!["mouse", "touch", "pen"].includes(event.pointerType)) {
-            return;
-        }
-
-        const width = Math.max(window.innerWidth, 1);
-        const height = Math.max(window.innerHeight, 1);
-
-        sendCursor(
-            event.clientX / width,
-            event.clientY / height,
-            event.pointerType,
-        );
+        if (!["mouse", "touch", "pen"].includes(event.pointerType)) return;
+        sendCursor(buildCursorPayload(event));
     }
 
     function handlePointerDown(event) {
-        if (event.pointerType !== "touch") {
-            return;
-        }
-
-        const width = Math.max(window.innerWidth, 1);
-        const height = Math.max(window.innerHeight, 1);
-
-        sendCursor(
-            event.clientX / width,
-            event.clientY / height,
-            "touch",
-        );
+        if (event.pointerType !== "touch") return;
+        sendCursor(buildCursorPayload(event));
     }
-
     function removePresenceChannel() {
         if (state.channel && state.supabase) {
             state.supabase.removeChannel(state.channel);
