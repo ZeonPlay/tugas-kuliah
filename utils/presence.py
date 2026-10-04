@@ -144,6 +144,7 @@ export default function(component) {
         displayName: String(data?.display_name || "Pelajar Anonim"),
         role: String(data?.role || "anonymous"),
         page: String(data?.page || "unknown"),
+        route: window.location.pathname.replace(/\/+$/, "") || "/",
     };
 
     state.sessionId = config.sessionId;
@@ -191,6 +192,7 @@ export default function(component) {
             display_name: config.displayName,
             role: config.role,
             page: config.page,
+            route: config.route,
             device: isTouchDevice() ? "touch" : "mouse",
             updated_at: new Date().toISOString(),
         });
@@ -270,7 +272,9 @@ export default function(component) {
         const fallbackY = Math.max(0, Math.min(1, normalizedY)) * window.innerHeight;
         let resolvedPoint = null;
 
-        if (payload.frame === "calendar" && (!payload.page || payload.page === config.page)) {
+        const sameRoute = !payload.route || payload.route === config.route;
+        
+        if (payload.frame === "calendar" && sameRoute) {
             const calendarFrame = Array.from(document.querySelectorAll("iframe"))
                 .find((frame) => isCalendarFrame(frame));
             if (calendarFrame) {
@@ -282,7 +286,7 @@ export default function(component) {
             }
         }
 
-        if (!resolvedPoint && (!payload.frame || payload.frame !== "calendar") && (!payload.page || payload.page === config.page)) {
+        if (!resolvedPoint && (!payload.frame || payload.frame !== "calendar") && sameRoute) {
             resolvedPoint = resolveAnchor(payload.anchor, fallbackX, fallbackY);
         }
 
@@ -299,7 +303,7 @@ export default function(component) {
         );
         cursor.element.style.transform =
             "translate3d(" + screenX + "px, " + screenY + "px, 0)";
-        cursor.element.classList.toggle("is-other-page", Boolean(payload.page && payload.page !== config.page));
+        cursor.element.classList.toggle("is-other-page", !sameRoute);
         cursor.element.classList.remove("is-stale");
         cursor.name.textContent = payload.display_name || "Pelajar Anonim";
         cursor.device.textContent = deviceIcon(payload.device);
@@ -469,6 +473,7 @@ export default function(component) {
                     frame_h: cursor.frame_h ?? null,
                     color: state.identity.color,
                     page: config.page,
+                    route: config.route,
                     ts: Date.now(),
                 },
             });
@@ -634,6 +639,7 @@ export default function(component) {
                         display_name: config.displayName,
                         role: config.role,
                         page: config.page,
+                        route: config.route,
                         device: isTouchDevice() ? "touch" : "mouse",
                         updated_at: new Date().toISOString(),
                     });
