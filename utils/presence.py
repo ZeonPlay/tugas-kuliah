@@ -128,6 +128,7 @@ export default function(component) {
         lastSentAt: 0,
         sendTimer: null,
         pendingCursor: null,
+        peerCount: 0,
         listenersAttached: false,
         cursors: new Map(),
         iframeListeners: new Map(),
@@ -432,15 +433,22 @@ export default function(component) {
         };
     }
 
-    function sendCursor(point) {
+    function sendCursor(point, force = false) {
         state.pendingCursor = point;
+
+        // Presence stays connected so new visitors can be detected, but
+        // cursor broadcasts are completely paused while we're alone.
+        if (!force && state.peerCount <= 0) {
+            return;
+        }
+
         if (!state.ready || !state.channel) return;
 
         const now = performance.now();
         const elapsed = now - state.lastSentAt;
         const send = () => {
             state.sendTimer = null;
-            if (!state.pendingCursor || !state.ready || !state.channel) return;
+            if (!state.pendingCursor || !state.ready || !state.channel || state.peerCount <= 0) return;
             const cursor = state.pendingCursor;
             state.lastSentAt = performance.now();
             state.channel.send({
@@ -465,10 +473,10 @@ export default function(component) {
                 },
             });
         };
+
         if (elapsed >= 66) send();
         else if (!state.sendTimer) state.sendTimer = window.setTimeout(send, 66 - elapsed);
     }
-
     function viewportPointFromFrame(frame, event) {
         const rect = frame.getBoundingClientRect();
         const width = Math.max(rect.width, 1);
@@ -574,12 +582,39 @@ export default function(component) {
                 },
             });
 
+            const updatePeerCount = () => {
+                if (!state.channel) {
+                    state.peerCount = 0;
+                    return;
+                }
+
+                const presenceState = state.channel.presenceState();
+                state.peerCount = Object.keys(presenceState).filter(
+                    (key) => key !== config.sessionId
+                ).length;
+
+                // A peer just appeared. Send the most recent local position once
+                // so they don't have to wait for the next pointer movement.
+                if (state.peerCount > 0 && state.pendingCursor && state.ready) {
+                    const pending = state.pendingCursor;
+                    state.pendingCursor = null;
+                    sendCursor(pending, true);
+                }
+            };
+
             state.channel
                 .on("broadcast", { event: "cursor" }, ({ payload }) => {
                     renderCursor(payload);
                 })
+                .on("presence", { event: "sync" }, () => {
+                    updatePeerCount();
+                })
+                .on("presence", { event: "join" }, () => {
+                    updatePeerCount();
+                })
                 .on("presence", { event: "leave" }, ({ key }) => {
                     removeCursor(key);
+                    updatePeerCount();
                 })
                 .subscribe(async (status) => {
                     if (status !== "SUBSCRIBED") {
@@ -597,10 +632,12 @@ export default function(component) {
                         updated_at: new Date().toISOString(),
                     });
 
-                    if (state.pendingCursor) {
+                    updatePeerCount();
+
+                    if (state.peerCount > 0 && state.pendingCursor) {
                         const pending = state.pendingCursor;
                         state.pendingCursor = null;
-                        sendCursor(pending);
+                        sendCursor(pending, true);
                     }
                 });
         } catch (error) {
@@ -627,7 +664,9 @@ export default function(component) {
 
         if (state.sendTimer) {
             clearTimeout(state.sendTimer);
+            state.sendTimer = null;
         }
+        state.peerCount = 0;
         if (state.iframeScanTimer) {
             clearInterval(state.iframeScanTimer);
             state.iframeScanTimer = null;
