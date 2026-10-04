@@ -6,6 +6,7 @@ from utils.editor import rich_text_editor, rich_text_to_markdown, reset_rich_tex
 from utils.auth import current_email, get_authed_client, is_admin, login, logout, signup
 from utils.helpers import JENIS, format_deadline, now_wib, parse_deadline, to_utc_iso
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
+from utils.presence import render_presence
 from utils.supabase_client import (
     ADMIN_EMAIL,
     delete_task,
@@ -31,6 +32,7 @@ st.set_page_config(
 mode = render_theme_toggle()
 inject_base_css(mode)
 tokens = get_tokens(mode)
+render_presence("Panel Admin")
 
 st.title("Panel Admin")
 
