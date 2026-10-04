@@ -14,6 +14,7 @@ st.set_page_config(page_title="Kalender Tugas", page_icon="🗓️", layout="wid
 mode = render_theme_toggle()
 inject_base_css(mode)
 tokens = get_tokens(mode)
+render_presence("Kalender Tugas")
 st_autorefresh(interval=30_000, key="auto_refresh_kalender")
 
 st.title("Kalender Tugas")
