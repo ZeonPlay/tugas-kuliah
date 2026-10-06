@@ -12,7 +12,6 @@ from utils.helpers import (
     tugas_baru_terlewat,
     warna_matkul,
 )
-from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
 from utils.presence import render_presence
 from utils.supabase_client import ConfigError, fetch_courses, fetch_tasks
@@ -52,30 +51,10 @@ legacy_courses = sorted(
 )
 course_options = course_names + legacy_courses
 
-active_krs = get_active_krs() if is_krs_configured() else []
-if active_krs:
-    all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
-    semester = get_active_semester()
-    st.caption(f"📚 KRS aktif · Semester {semester} · {len(active_krs)} mata kuliah")
-elif is_krs_configured():
-    st.caption("📚 KRS aktif, tetapi belum ada mata kuliah yang dipilih.")
-
-visible_course_options = active_krs or course_options
-
-c_nav1, c_nav2 = st.columns(2)
-c_nav1.page_link(
-    "pages/3_KRS.py",
-    label="Atur KRS Saya",
-    icon=":material/tune:",
-    width="stretch",
-    help="Atur mata kuliah yang kamu ambil di KRS.",
-)
-c_nav2.page_link(
+st.link_button(
+    "📁 Arsip Modul",
     "pages/4_Modul.py",
-    label="Arsip Modul",
-    icon=":material/folder_open:",
     width="stretch",
-    help="Buka arsip folder modul per mata kuliah.",
 )
 
 with st.expander("🔎 Cari & filter tugas", expanded=False):
@@ -84,7 +63,7 @@ with st.expander("🔎 Cari & filter tugas", expanded=False):
         placeholder="Contoh: laporan basis data",
         label_visibility="collapsed",
     )
-    f_matkul = st.multiselect("Mata kuliah", visible_course_options)
+    f_matkul = st.multiselect("Mata kuliah", course_options)
     f_jenis = st.multiselect("Jenis", JENIS)
 
 tasks = all_tasks
