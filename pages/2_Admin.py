@@ -123,21 +123,32 @@ with tab_tambah:
             key="tambah_ketentuan",
         )
 
-    link_vclass = st.text_input(
-        "Link Pengumpulan (Opsional)", placeholder="https://...", key="tambah_link"
+    l1, l2 = st.columns(2)
+    link_vclass = l1.text_input(
+        "Link VClass (Opsional)",
+        placeholder="https://vclass.unila.ac.id/...",
+        key="tambah_link_vclass",
+    )
+    link_pengumpulan = l2.text_input(
+        "Link Pengumpulan (Opsional)",
+        placeholder="https://...",
+        key="tambah_link_pengumpulan",
     )
     f_uploaded = st.file_uploader(
         "Upload File Soal/Ketentuan (Opsional)", type=["pdf", "png", "jpg", "jpeg", "docx", "zip"], key="tambah_file"
     )
 
     if st.button("Simpan Tugas Baru", type="primary", key="tambah_simpan"):
-        link_bersih = link_vclass.strip()
+        link_vclass_bersih = link_vclass.strip()
+        link_pengumpulan_bersih = link_pengumpulan.strip()
         ketentuan_bersih = _ambil_markdown(ketentuan_raw)
         if not judul.strip():
             st.error("Judul tugas wajib diisi.")
         elif not mata_kuliah:
             st.error("Mata kuliah wajib dipilih.")
-        elif link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
+        elif link_vclass_bersih and not link_vclass_bersih.lower().startswith(("http://", "https://")):
+            st.error("Link VClass harus diawali http:// atau https://")
+        elif link_pengumpulan_bersih and not link_pengumpulan_bersih.lower().startswith(("http://", "https://")):
             st.error("Link pengumpulan harus diawali http:// atau https://")
         else:
             try:
@@ -150,11 +161,12 @@ with tab_tambah:
                         "jenis": jenis,
                         "deadline": to_utc_iso(tgl, jam),
                         "ketentuan": ketentuan_bersih or None,
-                        "link_vclass": link_bersih or None,
+                        "link_vclass": link_vclass_bersih or None,
+                        "link_pengumpulan": link_pengumpulan_bersih or None,
                         "file_soal": file_url,
                     },
                 )
-                for k in ["tambah_judul", "tambah_link"]:
+                for k in ["tambah_judul", "tambah_link_vclass", "tambah_link_pengumpulan"]:
                     st.session_state.pop(k, None)
                 reset_rich_text_editor("tambah_ketentuan")
                 st.toast("Tugas berhasil disimpan.")
@@ -300,10 +312,16 @@ with tab_kelola:
                         key=editor_key,
                     )
 
-                e_link = st.text_input(
-                    "Link Pengumpulan",
+                e_l1, e_l2 = st.columns(2)
+                e_link_vclass = e_l1.text_input(
+                    "Link VClass",
                     value=selected_task.get("link_vclass") or "",
-                    key=f"edit_link_{tid}",
+                    key=f"edit_link_vclass_{tid}",
+                )
+                e_link_pengumpulan = e_l2.text_input(
+                    "Link Pengumpulan",
+                    value=selected_task.get("link_pengumpulan") or "",
+                    key=f"edit_link_pengumpulan_{tid}",
                 )
 
                 if selected_task.get("file_soal"):
@@ -326,8 +344,11 @@ with tab_kelola:
                     key=f"edit_simpan_{tid}",
                     width="stretch",
                 ):
-                    link_bersih = e_link.strip()
-                    if link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
+                    link_vclass_bersih = e_link_vclass.strip()
+                    link_pengumpulan_bersih = e_link_pengumpulan.strip()
+                    if link_vclass_bersih and not link_vclass_bersih.lower().startswith(("http://", "https://")):
+                        st.error("Link VClass harus valid.")
+                    elif link_pengumpulan_bersih and not link_pengumpulan_bersih.lower().startswith(("http://", "https://")):
                         st.error("Link pengumpulan harus valid.")
                     else:
                         try:
@@ -341,7 +362,8 @@ with tab_kelola:
                                     "jenis": e_jenis,
                                     "deadline": to_utc_iso(e_tgl, e_jam),
                                     "ketentuan": _ambil_markdown(e_ketentuan_raw) or None,
-                                    "link_vclass": link_bersih or None,
+                                    "link_vclass": link_vclass_bersih or None,
+                                    "link_pengumpulan": link_pengumpulan_bersih or None,
                                     "file_soal": file_url,
                                 },
                                 old_file_url=selected_task.get("file_soal") if e_file else None,
