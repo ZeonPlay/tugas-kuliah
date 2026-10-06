@@ -2,7 +2,7 @@ import html
 import streamlit as st
 
 from utils.editor import rich_text_to_markdown
-from utils.helpers import format_deadline, punya_link, sisa_waktu, warna_matkul
+from utils.helpers import format_deadline, sisa_waktu, warna_matkul
 
 
 def _safe(value) -> str:
@@ -48,8 +48,13 @@ def render_task_card(task: dict, tokens: dict, *, detail_label: str = "Detail & 
                 st.markdown(details)
 
         actions = []
-        if punya_link(task):
-            actions.append(("Link Pengumpulan", task["link_vclass"]))
+        vclass_url = (task.get("link_vclass") or "").strip()
+        submission_url = (task.get("link_pengumpulan") or "").strip()
+
+        if vclass_url.lower().startswith(("http://", "https://")):
+            actions.append(("VClass", vclass_url))
+        if submission_url.lower().startswith(("http://", "https://")):
+            actions.append(("Link Pengumpulan", submission_url))
         if task.get("file_soal"):
             actions.append(("File soal", task["file_soal"]))
 
