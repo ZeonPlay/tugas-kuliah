@@ -96,8 +96,7 @@ for course_name, course_folders in visible_groups:
     ):
         for folder in course_folders:
             with st.container(border=True):
-                st.markdown(f"**📁 {folder['nama']}**")
                 if folder.get("keterangan"):
                     st.caption(folder["keterangan"])
 
-                st.link_button("Buka Folder ↗", folder["url"], width="stretch")
+                st.link_button("📁 Buka Folder ↗", folder["url"], width="stretch")
