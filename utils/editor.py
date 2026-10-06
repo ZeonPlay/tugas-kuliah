@@ -20,27 +20,41 @@ def normalize_instruction_markdown(value: str | None) -> str:
     if not text:
         return ""
 
-    # A common paste pattern is:
-    # "1. First 2. Second 3. Third"
-    # Markdown sees that as one paragraph, so split only when another
-    # numbered item follows on the same line.
-    text = re.sub(
-        r"\s+(?=\d{1,2}\.\s+)",
-        "\n",
-        text,
-    )
+    # Normalize inline numbered lists only when there is an actual sequence.
+    # Example: "Tugas Anda: 1. A 2. B 3. C"
+    # becomes:
+    # "Tugas Anda:
+    # 1. A
+    # 2. B
+    # 3. C"
+    numbered_markers = re.findall(r"(?<!\\w)\\d{1,2}\\.\\s+", text)
+    if len(numbered_markers) >= 2:
+        text = re.sub(
+            r"\\s+(?=\\d{1,2}\\.\\s+)",
+            "\\n",
+            text,
+        )
+        # If the first list item is still embedded in the preceding sentence,
+        # put it on its own line too.
+        text = re.sub(
+            r"(?<!^)(?<!\\n)(?<!\\d)(\\d{1,2}\\.\\s+)",
+            r"\\n\\1",
+            text,
+        )
 
-    # Convert inline bullet separators such as:
-    # "Ketentuan • A • B • C"
-    # into a proper Markdown bullet list.
-    text = re.sub(
-        r"\s+[•●]\s+",
-        "\n- ",
-        text,
-    )
+    # Normalize inline bullet markers such as "Ketentuan: ○ A ○ B ○ C".
+    # Only convert them when there are at least two markers, so ordinary
+    # prose containing a single bullet symbol is left alone.
+    bullet_markers = re.findall(r"[•●○]", text)
+    if len(bullet_markers) >= 2:
+        text = re.sub(
+            r"\\s*[•●○]\\s*",
+            "\\n- ",
+            text,
+        )
 
     # Keep list markers clean when pasted with spaces before them.
-    text = re.sub(r"(?m)^[ \t]+(?=(?:\d{1,2}\.\s+|[-*+]\s+))", "", text)
+    text = re.sub(r"(?m)^[ \\t]+(?=(?:\\d{1,2}\\.\\s+|[-*+]\\s+))", "", text)
 
     return text.strip()
 
