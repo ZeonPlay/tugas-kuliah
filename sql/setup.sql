@@ -21,8 +21,9 @@ create table if not exists public.tasks (
                  check (jenis in ('Praktikum', 'Teori', 'Quiz', 'Ujian')),
     deadline     timestamptz not null,
     ketentuan    text,
-    link_vclass  text,                       -- boleh NULL: tugas lisan tidak punya link
-    file_soal    text,                        -- URL lampiran di Storage
+    link_vclass  text,                       -- link halaman tugas/VClass
+    link_pengumpulan text,                   -- link tempat pengumpulan tugas
+    file_soal    text,                       -- URL lampiran di Storage
     -- prioritas dan status sudah tidak digunakan oleh aplikasi.
     created_at   timestamptz not null default now(),
     updated_at   timestamptz not null default now()
@@ -31,6 +32,7 @@ create table if not exists public.tasks (
 create index if not exists tasks_deadline_idx on public.tasks (deadline);
 
 alter table public.tasks add column if not exists file_soal text;
+alter table public.tasks add column if not exists link_pengumpulan text;
 
 -- ---------------------------------------------------------------------
 -- 2. KATALOG MATA KULIAH
@@ -325,7 +327,7 @@ create policy tasks_delete_admin
 -- 6. (Opsional) Data contoh untuk mengetes tampilan kalender.
 --    Hapus tanda komentar kalau mau dipakai.
 -- ---------------------------------------------------------------------
--- insert into public.tasks (judul, mata_kuliah, jenis, deadline, ketentuan, link_vclass)
+-- insert into public.tasks (judul, mata_kuliah, jenis, deadline, ketentuan, link_vclass, link_pengumpulan)
 -- values
 --   ('Laporan Praktikum Modul 1', 'Sistem Basis Data', 'Praktikum',
 --    now() + interval '2 days', 'Format PDF, maksimal 10 halaman.',
