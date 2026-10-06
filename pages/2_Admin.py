@@ -488,10 +488,6 @@ with tab_modul:
         st.warning("Belum ada mata kuliah. Tambahkan mata kuliah terlebih dahulu di tab Mata Kuliah.")
     else:
         with st.form("form_tambah_module_folder"):
-            c1, c2 = st.columns([2, 1])
-            modul_judul = c1.text_input("Nama folder", placeholder="Contoh: Modul Praktikum")
-            modul_urutan = c2.number_input("Urutan", min_value=1, max_value=99, value=1, step=1)
-
             modul_course = st.selectbox(
                 "Mata kuliah",
                 course_names,
@@ -507,9 +503,7 @@ with tab_modul:
 
             if st.form_submit_button("Tambah Folder", type="primary", width="stretch"):
                 url_bersih = modul_url.strip()
-                if not modul_judul.strip():
-                    st.error("Nama folder wajib diisi.")
-                elif not url_bersih.lower().startswith(("http://", "https://")):
+                if not url_bersih.lower().startswith(("http://", "https://")):
                     st.error("Link folder harus diawali http:// atau https://")
                 else:
                     try:
@@ -520,8 +514,6 @@ with tab_modul:
                             client,
                             {
                                 "course_id": course_id,
-                                "nama": modul_judul.strip(),
-                                "urutan": int(modul_urutan),
                                 "url": url_bersih,
                                 "keterangan": modul_keterangan.strip() or None,
                                 "aktif": True,
@@ -543,91 +535,91 @@ with tab_modul:
         st.info("Belum ada modul.")
     else:
         course_by_id = {course["id"]: course for course in courses}
+        grouped_modules = {}
         for module in visible_folders:
-            module_id = module["id"]
             course = course_by_id.get(module["course_id"], {})
-            order_label = f"Modul {module['urutan']}" if module.get("urutan") is not None else "Materi"
-            status_label = "" if module.get("aktif", True) else " · Nonaktif"
-            label = f"{course.get('nama', 'Mata Kuliah tidak ditemukan')} · {order_label} — {module['nama']}{status_label}"
+            course_name = course.get("nama", "Mata Kuliah tidak ditemukan")
+            grouped_modules.setdefault(course_name, []).append(module)
 
-            with st.expander(label):
-                current_course_id = module["course_id"]
-                module_course_options = course_names.copy()
-                current_course = course_by_id.get(current_course_id)
-                if current_course and current_course["nama"] not in module_course_options:
-                    module_course_options.append(current_course["nama"])
+        for course_name in [course["nama"] for course in active_courses if course["nama"] in grouped_modules]:
+            course_modules = grouped_modules[course_name]
+            with st.expander(
+                f"📚 {course_name} · {len(course_modules)} folder",
+                expanded=len(grouped_modules) == 1,
+            ):
+                for module in course_modules:
+                    module_id = module["id"]
+                    with st.container(border=True):
+                        current_course_id = module["course_id"]
+                        module_course_options = course_names.copy()
+                        current_course = course_by_id.get(current_course_id)
+                        if current_course and current_course["nama"] not in module_course_options:
+                            module_course_options.append(current_course["nama"])
 
-                current_course_name = current_course["nama"] if current_course else course_names[0]
-                e_modul_course = st.selectbox(
-                    "Mata kuliah",
-                    module_course_options,
-                    index=module_course_options.index(current_course_name),
-                    key=f"module_course_{module_id}",
-                )
-                e_modul_judul = st.text_input(
-                    "Nama folder",
-                    value=module["nama"],
-                    key=f"module_judul_{module_id}",
-                )
-                e_modul_urutan = st.number_input(
-                    "Urutan",
-                    min_value=1,
-                    max_value=99,
-                    value=int(module.get("urutan") or 1),
-                    step=1,
-                    key=f"module_urutan_{module_id}",
-                )
-                e_modul_url = st.text_input(
-                    "Link folder",
-                    value=module["url"],
-                    key=f"module_url_{module_id}",
-                )
-                e_modul_keterangan = st.text_area(
-                    "Keterangan",
-                    value=module.get("keterangan") or "",
-                    key=f"module_keterangan_{module_id}",
-                )
-                e_modul_aktif = st.checkbox(
-                    "Aktif",
-                    value=bool(module.get("aktif", True)),
-                    key=f"module_aktif_{module_id}",
-                )
+                        current_course_name = current_course["nama"] if current_course else course_names[0]
+                        e_modul_course = st.selectbox(
+                            "Mata kuliah",
+                            module_course_options,
+                            index=module_course_options.index(current_course_name),
+                            key=f"module_course_{module_id}",
+                        )
+                        e_modul_url = st.text_input(
+                            "Link folder",
+                            value=module["url"],
+                            key=f"module_url_{module_id}",
+                        )
+                        e_modul_keterangan = st.text_area(
+                            "Keterangan",
+                            value=module.get("keterangan") or "",
+                            key=f"module_keterangan_{module_id}",
+                        )
+                        e_modul_aktif = st.checkbox(
+                            "Aktif",
+                            value=bool(module.get("aktif", True)),
+                            key=f"module_aktif_{module_id}",
+                        )
 
-                if st.button("Simpan perubahan", type="primary", key=f"module_simpan_{module_id}"):
-                    url_bersih = e_modul_url.strip()
-                    if not e_modul_judul.strip():
-                        st.error("Nama folder wajib diisi.")
-                    elif not url_bersih.lower().startswith(("http://", "https://")):
-                        st.error("Link folder harus diawali http:// atau https://")
-                    else:
-                        try:
-                            new_course_id = next(
-                                course["id"] for course in active_courses if course["nama"] == e_modul_course
-                            )
-                            update_module_folder(
-                                client,
-                                module_id,
-                                {
-                                    "course_id": new_course_id,
-                                    "nama": e_modul_judul.strip(),
-                                    "urutan": int(e_modul_urutan),
-                                    "url": url_bersih,
-                                    "keterangan": e_modul_keterangan.strip() or None,
-                                    "aktif": e_modul_aktif,
-                                },
-                            )
-                            st.toast("Perubahan folder tersimpan.")
-                            st.rerun()
-                        except Exception as exc:
-                            st.error(f"Gagal menyimpan folder: {exc}")
+                        c_simpan, c_hapus = st.columns(2)
+                        if c_simpan.button(
+                            "Simpan perubahan",
+                            type="primary",
+                            key=f"module_simpan_{module_id}",
+                            width="stretch",
+                        ):
+                            url_bersih = e_modul_url.strip()
+                            if not url_bersih.lower().startswith(("http://", "https://")):
+                                st.error("Link folder harus diawali http:// atau https://")
+                            else:
+                                try:
+                                    new_course_id = next(
+                                        course["id"] for course in active_courses if course["nama"] == e_modul_course
+                                    )
+                                    update_module_folder(
+                                        client,
+                                        module_id,
+                                        {
+                                            "course_id": new_course_id,
+                                            "url": url_bersih,
+                                            "keterangan": e_modul_keterangan.strip() or None,
+                                            "aktif": e_modul_aktif,
+                                        },
+                                    )
+                                    st.toast("Perubahan folder tersimpan.")
+                                    st.rerun()
+                                except Exception as exc:
+                                    st.error(f"Gagal menyimpan folder: {exc}")
 
-                if st.button("Hapus folder", key=f"module_hapus_{module_id}"):
-                    try:
-                        delete_module_folder(client, module_id)
-                        st.toast("Folder arsip terhapus.")
-                        st.rerun()
-                    except Exception as exc:
-                        st.error(f"Gagal menghapus modul: {exc}")
+                        if c_hapus.button(
+                            "Hapus folder",
+                            key=f"module_hapus_{module_id}",
+                            width="stretch",
+                        ):
+                            try:
+                                delete_module_folder(client, module_id)
+                                st.toast("Folder arsip terhapus.")
+                                st.rerun()
+                            except Exception as exc:
+                                st.error(f"Gagal menghapus modul: {exc}")
 
 with tab_admin_users:
     is_super_admin = current_email() == ADMIN_EMAIL
