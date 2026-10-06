@@ -124,33 +124,26 @@ values
 on conflict (nama) do nothing;
 
 -- Migrasi dari versi awal arsip modul:
--- versi sebelumnya memakai tabel public.modules dan kolom judul.
-do $$
+-- versi sebelumnya memakai tabel public.modules, kolom judul/nama,
+-- dan kolom urutan. Semua metadata judul/urutan kini tidak digunakan.
+do $
 begin
     if to_regclass('public.modules') is not null
        and to_regclass('public.module_folders') is null then
         alter table public.modules rename to module_folders;
     end if;
+end
+$;
 
-    if to_regclass('public.module_folders') is not null
-       and exists (
-           select 1
-           from information_schema.columns
-           where table_schema = 'public'
-             and table_name = 'module_folders'
-             and column_name = 'judul'
-       )
-       and not exists (
-           select 1
-           from information_schema.columns
-           where table_schema = 'public'
-             and table_name = 'module_folders'
-             and column_name = 'nama'
-       ) then
-        alter table public.module_folders rename column judul to nama;
+do $
+begin
+    if to_regclass('public.module_folders') is not null then
+        alter table public.module_folders drop column if exists judul;
+        alter table public.module_folders drop column if exists nama;
+        alter table public.module_folders drop column if exists urutan;
     end if;
 end
-$$;
+$;
 
 -- ---------------------------------------------------------------------
 -- 3. ARSIP MODUL
@@ -160,8 +153,6 @@ $$;
 create table if not exists public.module_folders (
     id           uuid primary key default gen_random_uuid(),
     course_id    uuid not null references public.courses(id) on delete restrict,
-    nama         text not null,
-    urutan       smallint not null default 1 check (urutan between 1 and 99),
     url          text not null,
     keterangan   text,
     aktif        boolean not null default true,
@@ -169,8 +160,10 @@ create table if not exists public.module_folders (
     updated_at   timestamptz not null default now()
 );
 
-create index if not exists module_folders_course_order_idx
-    on public.module_folders (course_id, urutan, nama);
+drop index if exists public.module_folders_course_order_idx;
+
+create index if not exists module_folders_course_created_idx
+    on public.module_folders (course_id, created_at, url);
 
 alter table public.module_folders enable row level security;
 
