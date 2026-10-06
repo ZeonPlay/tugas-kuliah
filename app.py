@@ -51,10 +51,12 @@ legacy_courses = sorted(
 )
 course_options = course_names + legacy_courses
 
-st.link_button(
-    "📁 Arsip Modul",
+st.page_link(
     "pages/4_Modul.py",
+    label="Arsip Modul",
+    icon=":material/folder_open:",
     width="stretch",
+    help="Buka arsip folder modul per mata kuliah.",
 )
 
 with st.expander("🔎 Cari & filter tugas", expanded=False):
