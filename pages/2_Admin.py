@@ -383,7 +383,7 @@ with tab_kelola:
 
 with tab_kuliah:
     st.subheader("Katalog Mata Kuliah")
-    st.caption("Daftar ini menjadi sumber mata kuliah untuk tugas dan pengaturan KRS. Semester dan kategori bisa diperbarui tanpa mengubah tugas lama.")
+    st.caption("Daftar ini menjadi sumber mata kuliah untuk tugas. Semester dan kategori bisa diperbarui tanpa mengubah tugas lama.")
 
     with st.form("form_tambah_mata_kuliah"):
         c1, c2 = st.columns(2)
