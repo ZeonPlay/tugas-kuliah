@@ -14,8 +14,39 @@ EDITOR_TOOLBAR = [
 ]
 
 
+def normalize_instruction_markdown(value: str | None) -> str:
+    """Normalize common pasted inline numbering/bullets into real Markdown lists."""
+    text = (value or "").strip()
+    if not text:
+        return ""
+
+    # A common paste pattern is:
+    # "1. First 2. Second 3. Third"
+    # Markdown sees that as one paragraph, so split only when another
+    # numbered item follows on the same line.
+    text = re.sub(
+        r"\s+(?=\d{1,2}\.\s+)",
+        "\n",
+        text,
+    )
+
+    # Convert inline bullet separators such as:
+    # "Ketentuan • A • B • C"
+    # into a proper Markdown bullet list.
+    text = re.sub(
+        r"\s+[•●]\s+",
+        "\n- ",
+        text,
+    )
+
+    # Keep list markers clean when pasted with spaces before them.
+    text = re.sub(r"(?m)^[ \t]+(?=(?:\d{1,2}\.\s+|[-*+]\s+))", "", text)
+
+    return text.strip()
+
+
 def rich_text_to_markdown(value: str | None) -> str:
-    """Convert legacy Quill HTML to Markdown while keeping Markdown unchanged."""
+    """Convert legacy editor HTML to Markdown and normalize pasted lists."""
     text = (value or "").strip()
     if not text:
         return ""
@@ -25,14 +56,14 @@ def rich_text_to_markdown(value: str | None) -> str:
         text,
         flags=re.IGNORECASE,
     )
-    if not looks_like_html:
-        return text
+    if looks_like_html:
+        text = markdownify(
+            text,
+            heading_style="ATX",
+            bullets="-",
+        ).strip()
 
-    return markdownify(
-        text,
-        heading_style="ATX",
-        bullets="-",
-    ).strip()
+    return normalize_instruction_markdown(text)
 
 
 def rich_text_editor(*, value: str = "", placeholder: str = "", key: str) -> str:
@@ -56,7 +87,7 @@ def rich_text_editor(*, value: str = "", placeholder: str = "", key: str) -> str
         return value or ""
 
     content = result.get("content", {}) if isinstance(result, dict) else {}
-    return (content.get("markdown") or value or "").strip()
+    return normalize_instruction_markdown(content.get("markdown") or value or "")
 
 
 def reset_rich_text_editor(key: str) -> None:
