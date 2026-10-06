@@ -5,7 +5,6 @@ from streamlit_calendar import calendar
 
 from utils.components import render_task_card
 from utils.helpers import JENIS, build_calendar_events, format_tanggal, parse_click_date, tasks_pada_tanggal
-from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import calendar_css, get_tokens, inject_base_css, render_theme_toggle
 from utils.presence import render_presence
 from utils.supabase_client import ConfigError, fetch_courses, fetch_tasks
@@ -31,11 +30,6 @@ except Exception as exc:
     st.error(f"Gagal mengambil data: {exc}")
     st.stop()
 
-active_krs = get_active_krs() if is_krs_configured() else []
-if active_krs:
-    all_tasks = [task for task in all_tasks if task.get("mata_kuliah") in active_krs]
-    st.caption(f"📚 KRS aktif · Semester {get_active_semester()} · {len(active_krs)} mata kuliah")
-
 if not all_tasks:
     st.info("Belum ada tugas yang tercatat.")
     st.stop()
@@ -43,7 +37,7 @@ if not all_tasks:
 with st.expander("🔎 Filter kalender", expanded=False):
     filter_jenis = st.multiselect("Jenis", JENIS, default=JENIS)
     course_names = [course["nama"] for course in all_courses]
-    visible_course_names = list(dict.fromkeys(active_krs + course_names)) if active_krs else course_names
+    visible_course_names = course_names
     filter_matkul = st.multiselect("Mata kuliah", visible_course_names, default=visible_course_names)
 
 tasks = [
