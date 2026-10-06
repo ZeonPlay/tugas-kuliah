@@ -49,7 +49,7 @@ def render_task_card(task: dict, tokens: dict, *, detail_label: str = "Detail & 
 
         actions = []
         if punya_link(task):
-            actions.append(("VClass", task["link_vclass"]))
+            actions.append(("Link Pengumpulan", task["link_vclass"]))
         if task.get("file_soal"):
             actions.append(("File soal", task["file_soal"]))
 
