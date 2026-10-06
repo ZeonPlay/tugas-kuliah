@@ -124,7 +124,7 @@ with tab_tambah:
         )
 
     link_vclass = st.text_input(
-        "Link VClass (Opsional)", placeholder="https://vclass.unila.ac.id/...", key="tambah_link"
+        "Link Pengumpulan (Opsional)", placeholder="https://...", key="tambah_link"
     )
     f_uploaded = st.file_uploader(
         "Upload File Soal/Ketentuan (Opsional)", type=["pdf", "png", "jpg", "jpeg", "docx", "zip"], key="tambah_file"
@@ -138,7 +138,7 @@ with tab_tambah:
         elif not mata_kuliah:
             st.error("Mata kuliah wajib dipilih.")
         elif link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
-            st.error("Link VClass harus diawali http:// atau https://")
+            st.error("Link pengumpulan harus diawali http:// atau https://")
         else:
             try:
                 file_url = upload_file(client, f_uploaded) if f_uploaded else None
@@ -301,7 +301,7 @@ with tab_kelola:
                     )
 
                 e_link = st.text_input(
-                    "Link VClass",
+                    "Link Pengumpulan",
                     value=selected_task.get("link_vclass") or "",
                     key=f"edit_link_{tid}",
                 )
@@ -328,7 +328,7 @@ with tab_kelola:
                 ):
                     link_bersih = e_link.strip()
                     if link_bersih and not link_bersih.lower().startswith(("http://", "https://")):
-                        st.error("Link VClass harus valid.")
+                        st.error("Link pengumpulan harus valid.")
                     else:
                         try:
                             file_url = upload_file(client, e_file) if e_file else selected_task.get("file_soal")
