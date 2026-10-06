@@ -127,15 +127,15 @@ if baru_terlewat:
             )
 
             vclass_url = (task.get("link_vclass") or "").strip()
+            submission_url = (task.get("link_pengumpulan") or "").strip()
             file_url = (task.get("file_soal") or "").strip()
 
             actions = []
-            if vclass_url:
-                actions.append(("Kerjakan ↗", vclass_url))
-            elif file_url:
-                actions.append(("Buka soal ↗", file_url))
-
-            if vclass_url and file_url:
+            if vclass_url.lower().startswith(("http://", "https://")):
+                actions.append(("VClass ↗", vclass_url))
+            if submission_url.lower().startswith(("http://", "https://")):
+                actions.append(("Link Pengumpulan ↗", submission_url))
+            if file_url:
                 actions.append(("File soal ↗", file_url))
 
             if actions:
