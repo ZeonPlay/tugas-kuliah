@@ -1,6 +1,5 @@
 import streamlit as st
 
-from utils.krs import get_active_krs, get_active_semester, is_krs_configured
 from utils.styles import get_tokens, inject_base_css, render_theme_toggle
 from utils.presence import render_presence
 from utils.supabase_client import ConfigError, fetch_courses, fetch_module_folders
@@ -34,22 +33,14 @@ except Exception as exc:
 
 
 course_by_id = {course["id"]: course for course in courses}
-active_krs = get_active_krs() if is_krs_configured() else []
-
-if active_krs:
-    visible_courses = [course for course in courses if course["nama"] in active_krs]
-    visible_course_ids = {course["id"] for course in visible_courses}
-    folders = [folder for folder in folders if folder["course_id"] in visible_course_ids]
-    st.caption(f"📚 KRS aktif · Semester {get_active_semester()}")
-else:
-    visible_courses = courses
+visible_courses = courses
 
 course_options = [course["nama"] for course in visible_courses]
 
 with st.expander("🔎 Cari & filter arsip", expanded=False):
     search = st.text_input(
         "Cari folder",
-        placeholder="Contoh: praktikum, modul 3, database",
+        placeholder="Cari berdasarkan keterangan...",
         label_visibility="collapsed",
     )
     filter_courses = st.multiselect("Mata kuliah", course_options, default=course_options)
@@ -69,8 +60,7 @@ if search.strip():
     filtered_folders = [
         folder
         for folder in filtered_folders
-        if key in (folder.get("nama") or "").lower()
-        or key in (folder.get("keterangan") or "").lower()
+        if key in (folder.get("keterangan") or "").lower()
     ]
 
 if not filtered_folders:
