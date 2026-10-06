@@ -91,9 +91,9 @@ def fetch_module_folders(only_active: bool = True) -> list[dict]:
     client = get_public_client()
     query = (
         client.table("module_folders")
-        .select("id,course_id,nama,urutan,url,keterangan,aktif")
-        .order("urutan")
-        .order("nama")
+        .select("id,course_id,url,keterangan,aktif,created_at")
+        .order("created_at")
+        .order("url")
     )
     if only_active:
         query = query.eq("aktif", True)
