@@ -20,41 +20,50 @@ def normalize_instruction_markdown(value: str | None) -> str:
     if not text:
         return ""
 
-    # Normalize inline numbered lists only when there is an actual sequence.
-    # Example: "Tugas Anda: 1. A 2. B 3. C"
-    # becomes:
-    # "Tugas Anda:
-    # 1. A
-    # 2. B
-    # 3. C"
-    numbered_markers = re.findall(r"(?<!\\w)\\d{1,2}\\.\\s+", text)
-    if len(numbered_markers) >= 2:
-        text = re.sub(
-            r"\\s+(?=\\d{1,2}\\.\\s+)",
-            "\\n",
-            text,
-        )
-        # If the first list item is still embedded in the preceding sentence,
-        # put it on its own line too.
-        text = re.sub(
-            r"(?<!^)(?<!\\n)(?<!\\d)(\\d{1,2}\\.\\s+)",
-            r"\\n\\1",
-            text,
-        )
+    # Detect an inline numbered sequence such as:
+    # "Tugas Anda: 1. A 2. B 3. C"
+    # and turn it into a real Markdown ordered list.
+    numbered = list(re.finditer(r"(?<!\w)\d{1,2}\.\s+", text))
+    if len(numbered) >= 2:
+        first = numbered[0]
+        prefix = text[:first.start()].rstrip()
+        items = []
 
-    # Normalize inline bullet markers such as "Ketentuan: ○ A ○ B ○ C".
-    # Only convert them when there are at least two markers, so ordinary
-    # prose containing a single bullet symbol is left alone.
-    bullet_markers = re.findall(r"[•●○]", text)
-    if len(bullet_markers) >= 2:
-        text = re.sub(
-            r"\\s*[•●○]\\s*",
-            "\\n- ",
-            text,
-        )
+        for index, marker in enumerate(numbered):
+            item_start = marker.end()
+            item_end = numbered[index + 1].start() if index + 1 < len(numbered) else len(text)
+            item_text = text[item_start:item_end].strip()
+            if item_text:
+                items.append(f"{index + 1}. {item_text}")
 
-    # Keep list markers clean when pasted with spaces before them.
-    text = re.sub(r"(?m)^[ \\t]+(?=(?:\\d{1,2}\\.\\s+|[-*+]\\s+))", "", text)
+        if items:
+            text = f"{prefix}\n\n" + "\n".join(items)
+
+    # Detect inline bullet/circle sequences such as:
+    # "meliputi: ○ A ○ B ○ C"
+    # and turn them into a real Markdown unordered list.
+    bullets = list(re.finditer(r"[•●○]\s*", text))
+    if len(bullets) >= 2:
+        first = bullets[0]
+        prefix = text[:first.start()].rstrip()
+        items = []
+
+        for index, marker in enumerate(bullets):
+            item_start = marker.end()
+            item_end = bullets[index + 1].start() if index + 1 < len(bullets) else len(text)
+            item_text = text[item_start:item_end].strip()
+            if item_text:
+                items.append(f"- {item_text}")
+
+        if items:
+            text = f"{prefix}\n\n" + "\n".join(items)
+
+    # Ensure Markdown lists have a blank line before them.
+    text = re.sub(
+        r"(?m)^(\s*)(?=(?:\d{1,2}\.\s+|[-*+]\s+))",
+        "",
+        text,
+    )
 
     return text.strip()
 
