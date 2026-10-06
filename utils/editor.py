@@ -78,13 +78,6 @@ def normalize_instruction_markdown(value: str | None) -> str:
 
     text = "\n".join(normalized_lines)
 
-    # Keep list markers clean when pasted with spaces before them.
-    text = re.sub(
-        r"(?m)^[ \t]+(?=(?:\d{1,2}\.\s+|[-*+]\s+))",
-        "",
-        text,
-    )
-
     return text.strip()
 
 
