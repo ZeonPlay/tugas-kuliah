@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { supabase } from "../lib/supabase";
 
-type Course = { id: string; nama: string; semester: number; kategori: string; aktif: boolean };
+type Course = { id: string; kode: string | null; nama: string; semester: number; kategori: string; aktif: boolean };
 type ModuleFolder = { id: string; course_id: string; url: string; keterangan: string | null; aktif: boolean; created_at: string };
 type StatusFilter = "all" | "active" | "inactive";
 
@@ -49,7 +49,7 @@ export default function ModuleManager({ onDataChanged }: { onDataChanged: () => 
     setLoading(true);
     setLoadError("");
     const [courseResult, folderResult] = await Promise.all([
-      supabase.from("courses").select("id,nama,semester,kategori,aktif").order("semester", { ascending: true }).order("nama", { ascending: true }),
+      supabase.from("courses").select("id,kode,nama,semester,kategori,aktif").order("semester", { ascending: true }).order("nama", { ascending: true }),
       supabase.from("module_folders").select("id,course_id,url,keterangan,aktif,created_at").order("created_at", { ascending: true }).order("url", { ascending: true }),
     ]);
     const errors = [
