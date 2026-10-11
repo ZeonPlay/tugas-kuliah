@@ -1,0 +1,33 @@
+name: Web frontend build
+
+on:
+  push:
+    branches:
+      - feat/web-migration
+    paths:
+      - "web/**"
+      - ".github/workflows/web-build.yml"
+  pull_request:
+    paths:
+      - "web/**"
+      - ".github/workflows/web-build.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package.json
+      - name: Install dependencies
+        run: npm install
+      - name: Check TypeScript and build
+        run: npm run build
