@@ -108,17 +108,21 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
   const events = useMemo(() => {
     // Month view intentionally contains ONLY one red count badge per date.
     // Individual task titles are exclusively supplied to the List view.
-    const summaries = [...counts.entries()].map(([key, count]) => ({
-      id: "summary-" + key,
-      start: key,
-      end: nextDateKey(key),
-      allDay: true,
-      title: count + " deadline",
-      color: "#ef4444",
-      contrastColor: "#ffffff",
-      className: "calendar-summary-event",
-      extendedProps: { dateKey: key, eventKind: "summary" },
-    }));
+    const summaries = [...counts.entries()].map(([key, count]) => {
+      // A date is overdue only after the whole deadline day has passed in WIB.
+      const overdue = key < todayWib();
+      return {
+        id: "summary-" + key,
+        start: key,
+        end: nextDateKey(key),
+        allDay: true,
+        title: count + " deadline",
+        color: overdue ? "#6b7280" : "#ef4444",
+        contrastColor: "#ffffff",
+        className: overdue ? "calendar-summary-event is-overdue" : "calendar-summary-event",
+        extendedProps: { dateKey: key, eventKind: "summary", overdue },
+      };
+    });
 
     const details = filteredTasks.flatMap((task) => {
       const key = dateKey(task.deadline);
