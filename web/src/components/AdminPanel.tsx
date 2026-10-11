@@ -686,78 +686,160 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
         </section>
       ) : (
         <section className="admin-workspace">
-          <div className="admin-welcome">
-            <div>
-              <p className="admin-eyebrow">PENGELOLAAN AKADEMIK</p>
-              <h1>Panel admin</h1>
-              <p className="admin-section-description">Tambah dan perbarui tugas. Perubahan disimpan langsung ke Supabase.</p>
+          {formTask !== undefined ? (
+            <div className="task-editor-page">
+              <button className="back-to-list" type="button" onClick={() => setFormTask(undefined)}>
+                <span aria-hidden="true">←</span> Kembali ke daftar tugas
+              </button>
+              <TaskForm
+                key={formTask ? formTask.id : "new-task"}
+                task={formTask}
+                courses={courses}
+                onCancel={() => setFormTask(undefined)}
+                onSaved={() => {
+                  setFormTask(undefined);
+                  onDataChanged();
+                }}
+              />
             </div>
-            <button className="primary-action add-task-button" type="button" onClick={() => setFormTask(null)} disabled={courses.length === 0}>
-              <span aria-hidden="true">＋</span> Tambah tugas
-            </button>
-          </div>
-
-          {courses.length === 0 && <p className="admin-inline-note">Belum ada mata kuliah aktif. Tambahkan atau aktifkan mata kuliah sebelum membuat tugas.</p>}
-
-          {formTask !== undefined && (
-            <TaskForm
-              key={formTask ? formTask.id : "new-task"}
-              task={formTask}
-              courses={courses}
-              onCancel={() => setFormTask(undefined)}
-              onSaved={() => {
-                setFormTask(undefined);
-                onDataChanged();
-              }}
-            />
-          )}
-
-          {deleteError && <div className="form-error-summary" role="alert"><strong>Penghapusan gagal.</strong><p>{deleteError}</p></div>}
-
-          <section className="admin-task-list-section" aria-labelledby="admin-task-list-title">
-            <div className="admin-section-heading">
-              <div>
-                <h2 id="admin-task-list-title">Daftar tugas</h2>
-                <p className="admin-section-description">{filteredTasks.length} tugas tercatat.</p>
+          ) : (
+            <>
+              <div className="admin-welcome">
+                <div>
+                  <p className="admin-eyebrow">PENGELOLAAN AKADEMIK</p>
+                  <h1>Kelola tugas</h1>
+                  <p className="admin-section-description">
+                    Pilih tugas untuk mengubah detailnya, atau hapus jika sudah tidak diperlukan.
+                  </p>
+                </div>
+                <button
+                  className="primary-action add-task-button"
+                  type="button"
+                  onClick={() => setFormTask(null)}
+                  disabled={courses.length === 0}
+                >
+                  <span aria-hidden="true">＋</span> Tambah tugas
+                </button>
               </div>
-              <label className="admin-search">
-                <span aria-hidden="true">⌕</span>
-                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari tugas…" aria-label="Cari tugas di panel admin" />
-              </label>
-            </div>
 
-            {filteredTasks.length === 0 ? (
-              <p className="admin-inline-note">{tasks.length === 0 ? "Belum ada tugas. Tambahkan tugas pertama." : "Tidak ada tugas yang cocok dengan pencarian."}</p>
-            ) : (
-              <div className="managed-task-list">
-                {filteredTasks.map((task) => (
-                  <article className="managed-task-row" key={task.id}>
-                    <div className="managed-task-copy">
-                      <span className="managed-task-course">{task.mata_kuliah} <span aria-hidden="true">·</span> {task.jenis}</span>
-                      <h3>{task.judul}</h3>
-                      <p>{new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" }).format(new Date(task.deadline))} WIB</p>
+              {courses.length === 0 && (
+                <p className="admin-inline-note">
+                  Belum ada mata kuliah aktif. Tambahkan atau aktifkan mata kuliah sebelum membuat tugas.
+                </p>
+              )}
+
+              {deleteError && (
+                <div className="form-error-summary" role="alert">
+                  <strong>Penghapusan gagal.</strong>
+                  <p>{deleteError}</p>
+                </div>
+              )}
+
+              <section className="admin-task-list-section" aria-labelledby="admin-task-list-title">
+                <div className="admin-section-heading">
+                  <div>
+                    <h2 id="admin-task-list-title">Daftar tugas</h2>
+                    <p className="admin-section-description">
+                      {filteredTasks.length} tugas. Tombol Edit untuk mengubah detail; Hapus untuk menghapus permanen.
+                    </p>
+                  </div>
+                  <label className="admin-search">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Cari judul atau mata kuliah…"
+                      aria-label="Cari tugas di panel admin"
+                    />
+                  </label>
+                </div>
+
+                {filteredTasks.length === 0 ? (
+                  <p className="admin-inline-note">
+                    {tasks.length === 0
+                      ? "Belum ada tugas. Tekan Tambah tugas untuk membuat yang pertama."
+                      : "Tidak ada tugas yang cocok dengan pencarian."}
+                  </p>
+                ) : (
+                  <div className="managed-task-list">
+                    {filteredTasks.map((task) => (
+                      <article className="managed-task-row" key={task.id}>
+                        <div className="managed-task-copy">
+                          <span className="managed-task-course">
+                            {task.mata_kuliah} <span aria-hidden="true">·</span> {task.jenis}
+                          </span>
+                          <h3>{task.judul}</h3>
+                          <p>
+                            Deadline: {new Intl.DateTimeFormat("id-ID", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                              timeZone: "Asia/Jakarta",
+                            }).format(new Date(task.deadline))} WIB
+                          </p>
+                        </div>
+                        <div className="managed-task-actions">
+                          <button
+                            className="edit-task-button"
+                            type="button"
+                            onClick={() => setFormTask(task)}
+                            aria-label={"Edit tugas " + task.judul}
+                          >
+                            <span aria-hidden="true">✎</span> Edit tugas
+                          </button>
+                          <button
+                            className="delete-task-button"
+                            type="button"
+                            onClick={() => { setDeleteTarget(task); setDeleteError(""); }}
+                            aria-label={"Hapus tugas " + task.judul}
+                          >
+                            <span aria-hidden="true">×</span> Hapus
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {deleteTarget && (
+                <div className="delete-dialog-backdrop">
+                  <section
+                    className="delete-dialog"
+                    role="alertdialog"
+                    aria-modal="true"
+                    aria-labelledby="delete-title"
+                    aria-describedby="delete-description"
+                  >
+                    <p className="admin-eyebrow">KONFIRMASI PENGHAPUSAN</p>
+                    <h2 id="delete-title">Hapus tugas ini?</h2>
+                    <p id="delete-description">
+                      <strong>{deleteTarget.judul}</strong> akan dihapus permanen dari daftar tugas.
+                      Tindakan ini tidak bisa dibatalkan.
+                    </p>
+                    {deleteError && <p className="delete-dialog-error" role="alert">{deleteError}</p>}
+                    <div className="delete-dialog-actions">
+                      <button
+                        className="danger-action"
+                        type="button"
+                        onClick={() => void removeTask()}
+                        disabled={deleting}
+                      >
+                        {deleting ? "Menghapus…" : "Ya, hapus tugas"}
+                      </button>
+                      <button
+                        className="quiet-button"
+                        type="button"
+                        onClick={() => { setDeleteTarget(null); setDeleteError(""); }}
+                        disabled={deleting}
+                      >
+                        Batal
+                      </button>
                     </div>
-                    <div className="managed-task-actions">
-                      <button className="quiet-button" type="button" onClick={() => setFormTask(task)}>Edit</button>
-                      <button className="danger-text-button" type="button" onClick={() => { setDeleteTarget(task); setDeleteError(""); }}>Hapus</button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {deleteTarget && (
-            <div className="delete-confirmation" role="alertdialog" aria-labelledby="delete-title" aria-describedby="delete-description">
-              <div>
-                <h2 id="delete-title">Hapus tugas ini?</h2>
-                <p id="delete-description"><strong>{deleteTarget.judul}</strong> akan dihapus dari daftar tugas. Lampiran yang tersimpan di bucket task-files juga akan dihapus.</p>
-              </div>
-              <div className="form-actions">
-                <button className="danger-action" type="button" onClick={() => void removeTask()} disabled={deleting}>{deleting ? "Menghapus…" : "Hapus permanen"}</button>
-                <button className="quiet-button" type="button" onClick={() => setDeleteTarget(null)} disabled={deleting}>Batal</button>
-              </div>
-            </div>
+                  </section>
+                </div>
+              )}
+            </>
           )}
         </section>
       )}
