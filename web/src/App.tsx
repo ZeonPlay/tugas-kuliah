@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase, supabaseConfigMissing } from "./lib/supabase";
-import AdminPanel from "./components/AdminPanel";
+const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const CalendarPage = lazy(() => import("./components/CalendarPage"));
 import MarkdownContent from "./components/MarkdownContent";
 
@@ -280,12 +280,21 @@ function App() {
 
   if (page === "admin") {
     return (
-      <AdminPanel
-        tasks={tasks}
-        courses={courses}
-        onBack={() => setPage("home")}
-        onDataChanged={() => setRefreshKey((key) => key + 1)}
-      />
+      <Suspense fallback={
+        <main className="app-shell calendar-loading-page" role="status">
+          <div className="calendar-loading">
+            <span className="loading-mark" />
+            <strong>Membuka panel admin…</strong>
+          </div>
+        </main>
+      }>
+        <AdminPanel
+          tasks={tasks}
+          courses={courses}
+          onBack={() => setPage("home")}
+          onDataChanged={() => setRefreshKey((key) => key + 1)}
+        />
+      </Suspense>
     );
   }
 
