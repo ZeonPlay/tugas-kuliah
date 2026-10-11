@@ -5,6 +5,7 @@ import listPlugin from "@fullcalendar/react/list";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import type { ComponentRef, ReactNode } from "react";
 import "@fullcalendar/react/skeleton.css";
+import MarkdownContent from "./MarkdownContent";
 
 type Task = {
   id: string; judul: string; mata_kuliah: string; jenis: string; deadline: string;
@@ -60,7 +61,7 @@ function CalendarTask({ task, now }: { task: Task; now: number }) {
         <time dateTime={task.deadline}>{DEADLINE_FORMAT.format(new Date(task.deadline))} WIB</time>
       </div>
       {overdue && <p className="calendar-overdue-label">Deadline sudah lewat</p>}
-      {task.ketentuan && <p className="calendar-task-instructions">{task.ketentuan}</p>}
+      {task.ketentuan && <MarkdownContent className="calendar-task-instructions" content={task.ketentuan} />}
       <div className="calendar-task-links">
         <Link href={safeUrl(task.link_vclass)}>VClass</Link>
         <Link href={safeUrl(task.link_pengumpulan)}>Pengumpulan</Link>
@@ -74,6 +75,7 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
   const calendarRef = useRef<ComponentRef<typeof FullCalendar> | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [view, setView] = useState<CalendarView>("dayGridMonth");
+  const [monthTitle, setMonthTitle] = useState(() => new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(new Date()));
   const [selectedTypes, setSelectedTypes] = useState<string[] | null>(null);
   const [selectedCourses, setSelectedCourses] = useState<string[] | null>(null);
   const [now, setNow] = useState(Date.now);
@@ -136,6 +138,16 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
   }
   function resetFilters() { setSelectedTypes(null); setSelectedCourses(null); }
   function changeView(next: CalendarView) { calendarRef.current?.getApi().changeView(next); setView(next); }
+  function moveMonth(direction: "previous" | "next") {
+    const api = calendarRef.current?.getApi();
+    if (!api) return;
+    if (direction === "previous") api.prev();
+    else api.next();
+  }
+  function goToToday() {
+    calendarRef.current?.getApi().today();
+    setSelectedDate(todayWib());
+  }
 
   return (
     <main className="app-shell calendar-page">
@@ -185,6 +197,18 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
       {loading ? <div className="calendar-loading" role="status"><span className="loading-mark" /><strong>Memuat deadline…</strong></div>
       : filteredTasks.length === 0 ? <div className="calendar-empty-result" role="status"><strong>{tasks.length === 0 ? "Belum ada tugas yang tercatat." : "Filter saat ini tidak menemukan tugas."}</strong>{tasks.length > 0 && <button className="quiet-button" type="button" onClick={resetFilters}>Tampilkan semua tugas</button>}</div>
       : <section className="calendar-surface" aria-label="Kalender deadline">
+        <div className="calendar-native-toolbar">
+          <div className="calendar-native-nav">
+            <button type="button" className="calendar-nav-arrow" onClick={() => moveMonth("previous")} aria-label="Bulan sebelumnya" title="Bulan sebelumnya">‹</button>
+            <button type="button" className="calendar-nav-arrow" onClick={() => moveMonth("next")} aria-label="Bulan berikutnya" title="Bulan berikutnya">›</button>
+            <button type="button" className="calendar-today-button" onClick={goToToday}>Hari ini</button>
+          </div>
+          <h2>{monthTitle}</h2>
+          <div className="calendar-view-switch" role="group" aria-label="Tampilan kalender">
+            <button type="button" className={view === "dayGridMonth" ? "is-active" : ""} aria-pressed={view === "dayGridMonth"} onClick={() => changeView("dayGridMonth")}>Bulan</button>
+            <button type="button" className={view === "listMonth" ? "is-active" : ""} aria-pressed={view === "listMonth"} onClick={() => changeView("listMonth")}>Daftar</button>
+          </div>
+        </div>
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
@@ -198,6 +222,7 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
           firstDay={1}
           timeZone="Asia/Jakarta"
           events={events}
+          datesSet={(info) => setMonthTitle(new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(info.view.currentStart))}
           dateClick={(info) => setSelectedDate(info.dateStr.slice(0, 10))}
           eventClick={(info) => {
             const key = info.event.extendedProps.dateKey as string | undefined;
