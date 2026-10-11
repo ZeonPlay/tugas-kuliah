@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { supabase, supabaseConfigMissing } from "../lib/supabase";
 import { normalizeLegacyMarkdown } from "./MarkdownContent";
 import MarkdownEditor from "./MarkdownEditor";
+import AppNavigation, { type AppPage } from "./AppNavigation";
 
 type Task = {
   id: string;
@@ -27,7 +28,7 @@ type Course = {
 type AdminPanelProps = {
   tasks: Task[];
   courses: Course[];
-  onBack: () => void;
+  onNavigate: (page: AppPage) => void;
   onDataChanged: () => void;
 };
 
@@ -570,7 +571,7 @@ function AdminLogin({
   );
 }
 
-export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: AdminPanelProps) {
+export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }: AdminPanelProps) {
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [access, setAccess] = useState<AccessState>("none");
@@ -743,17 +744,12 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
 
   return (
     <main className="app-shell admin-shell">
-      <header className="app-header">
-        <a className="wordmark" href="/" onClick={(event) => { event.preventDefault(); onBack(); }} aria-label="Kembali ke agenda">
-          <span className="wordmark-symbol" aria-hidden="true">t<span>.</span></span>
-          <span className="wordmark-name">tugas kuliah</span>
-        </a>
-        <div className="admin-header-actions">
-          {sessionEmail && <span className="admin-email">{sessionEmail}</span>}
-          {sessionEmail && <button className="quiet-button" type="button" onClick={() => void signOut()}>Keluar</button>}
-          <button className="quiet-button" type="button" onClick={onBack}>Agenda</button>
-        </div>
-      </header>
+      <AppNavigation
+        currentPage="admin"
+        onNavigate={onNavigate}
+        adminEmail={sessionEmail}
+        onSignOut={sessionEmail ? () => void signOut() : undefined}
+      />
 
       {!authReady ? (
         <section className="auth-section" role="status"><span className="loading-mark" /><p>Memeriksa sesi…</p></section>
