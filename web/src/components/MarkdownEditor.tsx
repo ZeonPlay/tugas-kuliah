@@ -19,17 +19,19 @@ function EditorTool({
   label,
   active = false,
   disabled = false,
+  danger = false,
   onClick,
 }: {
   children: ReactNode;
   label: string;
   active?: boolean;
   disabled?: boolean;
+  danger?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
-      className={"tiptap-tool" + (active ? " is-active" : "")}
+      className={"tiptap-tool" + (active ? " is-active" : "") + (danger ? " is-danger" : "")}
       type="button"
       title={label}
       aria-label={label}
@@ -151,9 +153,6 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
             <EditorTool label="Miring" active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}>
               <em>I</em>
             </EditorTool>
-            <EditorTool label="Garis bawah" active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()}>
-              <span className="tool-underline">U</span>
-            </EditorTool>
             <span className="tiptap-toolbar-divider" aria-hidden="true" />
             <EditorTool label="Judul bagian" active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
               H2
@@ -168,9 +167,27 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
               “ Kutipan
             </EditorTool>
             <span className="tiptap-toolbar-divider" aria-hidden="true" />
-            <EditorTool label="Tambahkan tabel dua kolom" onClick={insertTable} disabled={selectionInTable}>
-              Tabel
-            </EditorTool>
+            {selectionInTable ? (
+              <>
+                <EditorTool label="Tabel sudah aktif" disabled onClick={() => undefined}>Sedang di tabel</EditorTool>
+                <EditorTool
+                  label="Hapus tabel yang sedang dipilih"
+                  danger
+                  onClick={() => {
+                    if (window.confirm("Hapus seluruh tabel ini? Tindakan ini bisa dibatalkan dengan Undo sebelum menyimpan.")) {
+                      editor.chain().focus().deleteTable().run();
+                      setTableNotice("Tabel dihapus dari instruksi. Perubahan belum tersimpan sampai kamu menyimpan tugas.");
+                    }
+                  }}
+                >
+                  × Hapus tabel
+                </EditorTool>
+              </>
+            ) : (
+              <EditorTool label="Tambahkan tabel dua kolom" onClick={insertTable}>
+                Tabel
+              </EditorTool>
+            )}
             <EditorTool label="Sisipkan tautan pada teks terpilih" active={editor.isActive("link")} onClick={insertLink}>
               ↗ Tautan
             </EditorTool>
