@@ -44,14 +44,26 @@ Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RL
 
 - [x] Fondasi React + Vite + TypeScript
 - [x] Koneksi Supabase melalui environment variables
-- [x] Dashboard awal membaca tabel tasks dan courses
-- [x] Pencarian dan filter dashboard
+- [x] Dashboard tugas membaca tabel tasks dan courses
+- [x] Pencarian, filter, tampilan mendatang/terlewat, dan katalog mata kuliah
+- [x] Render ketentuan sebagai Markdown dengan daftar, tautan, tabel, dan format umum
+- [x] Navigasi ke Panel Admin
+- [x] Login dan pendaftaran admin yang memeriksa allowlist tabel admin_users
+- [x] Form tambah/edit tugas dengan validasi judul, mata kuliah, deadline, URL, dan ukuran lampiran
+- [x] Toolbar Markdown dengan pratinjau instruksi
+- [x] Upload, penggantian, dan penghapusan lampiran melalui bucket task-files
+- [x] Hapus tugas dengan konfirmasi
 - [ ] Kalender interaktif
-- [ ] Login, daftar akun admin, logout, dan hak akses Super Admin
-- [ ] Form tambah/edit/hapus tugas dan editor Markdown
-- [ ] Upload dan hapus lampiran di Storage
-- [ ] Manajemen mata kuliah dan arsip modul
+- [ ] Manajemen mata kuliah
+- [ ] Arsip modul
+- [ ] Pengelolaan daftar admin oleh Super Admin
 - [ ] Kursor real-time
-- [ ] Pengujian RLS, mobile, dan deployment
+- [ ] Pengujian manual RLS dan kebijakan Storage untuk akun admin serta non-admin
+- [ ] Uji visual pada lebar 320, 375, 414, dan 768 px; deploy Cloudflare Pages
 
-Frontend ini baru tahap awal. Jangan jadikan sebagai pengganti website aktif sebelum fitur admin dan policy keamanan selesai diuji.
+## Catatan keamanan
+
+- Panel Admin memeriksa email melalui tabel `admin_users`, tetapi operasi tulis tetap wajib dilindungi oleh policy RLS Supabase.
+- Bucket `task-files` harus mengizinkan upload dan penghapusan hanya untuk akun admin yang sah. Jika upload ditolak, periksa policy Storage; jangan membuat bucket dapat ditulis publik.
+- Frontend hanya memakai publishable key (atau anon key lama). Jangan pernah menaruh service-role/secret key di frontend, file environment yang di-commit, atau variabel `VITE_*`.
+- Streamlit di root repository tetap dipertahankan dan belum digantikan. Uji akun, Storage, dan RLS sebelum menjadikan frontend ini website utama.
