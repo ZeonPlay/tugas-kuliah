@@ -4972,3 +4972,12 @@ select:focus-visible {
   .module-manager .course-edit-actions > * { justify-content: center; }
   .module-edit-row .course-edit-summary-copy small { max-width: 230px; }
 }
+
+
+@media (min-width: 701px) and (max-width: 820px) {
+  .app-primary-nav { gap: 0; }
+  .app-nav-item { padding-inline: 7px; font-size: 11px; }
+  .app-nav-connection { display: none; }
+  .app-navigation-actions { gap: 7px; }
+  .app-more-menu > summary { padding-inline: 8px; }
+}
