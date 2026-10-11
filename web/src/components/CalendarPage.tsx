@@ -4,7 +4,10 @@ import dayGridPlugin from "@fullcalendar/react/daygrid";
 import listPlugin from "@fullcalendar/react/list";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import type { ComponentRef, ReactNode } from "react";
+import pulseTheme from "@fullcalendar/react/themes/pulse";
 import "@fullcalendar/react/skeleton.css";
+import "@fullcalendar/react/themes/pulse/theme.css";
+import "@fullcalendar/react/themes/pulse/palettes/red.css";
 import MarkdownContent from "./MarkdownContent";
 
 type Task = {
@@ -111,10 +114,9 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
       end: nextDateKey(key),
       allDay: true,
       title: count + " deadline",
-      backgroundColor: "#ef4444",
-      borderColor: "#ef4444",
-      textColor: "#ffffff",
-      classNames: ["calendar-summary-event"],
+      color: "#ef4444",
+      contrastColor: "#ffffff",
+      className: "calendar-summary-event",
       extendedProps: { dateKey: key, eventKind: "summary" },
     }));
 
@@ -133,10 +135,9 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
         allDay: false,
         display: "list-item",
         title: (task.judul || "Tugas tanpa judul") + " · " + (task.mata_kuliah || "Tanpa mata kuliah"),
-        backgroundColor: taskColor,
-        borderColor: taskColor,
-        textColor: "#ffffff",
-        classNames: ["calendar-task-event"],
+        color: taskColor,
+        contrastColor: "#ffffff",
+        className: "calendar-task-event",
         extendedProps: { dateKey: key, eventKind: "task", taskId: task.id },
       }];
     });
@@ -229,8 +230,11 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
         </div>
         <FullCalendar
           ref={calendarRef}
-          plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
+          plugins={[pulseTheme, dayGridPlugin, listPlugin, interactionPlugin]}
           initialView="dayGridMonth"
+          colorScheme="dark"
+          dayCellClass="calendar-date-cell"
+          dayHeaderClass="calendar-weekday-cell"
           initialDate={todayWib()}
           headerToolbar={false}
           height={520}
