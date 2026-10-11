@@ -63,13 +63,17 @@ Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RL
 - [x] Pengelolaan daftar admin oleh Super Admin
 - [x] Kursor real-time lintas halaman melalui Supabase Realtime Presence/Broadcast
 - [x] Peringatan tugas yang baru terlewat (3 hari terakhir)
+- [ ] Jalankan `sql/super_admin_security.sql` setelah mengganti email placeholder
 - [ ] Pengujian manual RLS dan kebijakan Storage untuk akun admin serta non-admin
 - [ ] Uji visual pada lebar 320, 375, 414, dan 768 px; deploy Cloudflare Pages
 
 ## Catatan keamanan
 
-- Panel Admin memeriksa email melalui tabel `admin_users`, tetapi operasi tulis tetap wajib dilindungi oleh policy RLS Supabase.
-- `VITE_ADMIN_EMAIL` hanya dipakai untuk menampilkan bagian Super Admin; nilainya bisa dibaca dari browser dan bukan batas keamanan. RLS Supabase harus tetap mencegah admin biasa menambah/menghapus baris `admin_users`.
+- Panel Admin memeriksa email melalui tabel `admin_users`; operasi tulis tetap wajib dilindungi oleh RLS Supabase.
+- **Sebelum memakai Kelola Admin, jalankan `sql/super_admin_security.sql` di Supabase SQL Editor.** Ganti placeholder email di file itu dengan email `ADMIN_EMAIL` dari Streamlit dan `VITE_ADMIN_EMAIL` yang dipakai web.
+- Migrasi SQL membuat registry Super Admin yang tidak dapat diedit langsung dari browser dan membatasi INSERT/DELETE pada `admin_users` hanya untuk Super Admin. Ini juga menghapus policy lama yang mungkin mengizinkan semua admin mengubah allowlist.
+- `VITE_ADMIN_EMAIL` bisa dibaca dari browser dan hanya mengatur tampilan menu. Batas keamanan sesungguhnya ada di RLS/function SQL, bukan variabel frontend.
+- Untuk menjaga login Streamlit tetap berfungsi selama transisi, policy SELECT `admin_users` masih mempertahankan akses baca lama. Pertimbangkan mengubah alur autentikasi Streamlit sebelum membatasi pembacaan daftar email.
 - Bucket `task-files` harus mengizinkan upload dan penghapusan hanya untuk akun admin yang sah. Jika upload ditolak, periksa policy Storage; jangan membuat bucket dapat ditulis publik.
 - Frontend hanya memakai publishable key (atau anon key lama). Jangan pernah menaruh service-role/secret key di frontend, file environment yang di-commit, atau variabel `VITE_*`.
 - Streamlit di root repository tetap dipertahankan dan belum digantikan. Uji akun, Storage, dan RLS sebelum menjadikan frontend ini website utama.
