@@ -1574,3 +1574,254 @@ select:focus-visible {
   line-height: 1.7;
 }
 .markdown-preview-content pre { white-space: pre; }
+
+
+/* TOAST UI Editor — WYSIWYG-first, dark theme, keep the saved value as Markdown. */
+.toast-editor-shell {
+  width: 100%;
+  min-width: 0;
+}
+.toast-editor-shell .toastui-editor-defaultUI {
+  overflow: hidden;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-paper-raised);
+  font-family: var(--font-body);
+}
+.toast-editor-shell .toastui-editor-toolbar {
+  border-bottom-color: var(--color-rule);
+  background: var(--color-paper-raised);
+}
+.toast-editor-shell .toastui-editor-toolbar-group {
+  border-color: var(--color-rule);
+}
+.toast-editor-shell .toastui-editor-toolbar button {
+  border-radius: 4px;
+}
+.toast-editor-shell .toastui-editor-toolbar button:hover {
+  background-color: var(--color-paper-soft);
+}
+.toast-editor-shell .toastui-editor-main,
+.toast-editor-shell .toastui-editor-ww-container,
+.toast-editor-shell .toastui-editor-md-container,
+.toast-editor-shell .toastui-editor-md-preview {
+  background-color: var(--color-paper-raised);
+}
+.toast-editor-shell .toastui-editor-contents,
+.toast-editor-shell .ProseMirror {
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.72;
+}
+.toast-editor-shell .toastui-editor-contents p,
+.toast-editor-shell .ProseMirror p {
+  margin-block: 0.65em;
+}
+.toast-editor-shell .toastui-editor-contents a,
+.toast-editor-shell .ProseMirror a {
+  color: var(--color-accent);
+}
+.toast-editor-shell .toastui-editor-mode-switch {
+  border-top-color: var(--color-rule);
+  background-color: var(--color-paper);
+}
+.toast-editor-shell .toastui-editor-mode-switch .tab-item {
+  color: var(--color-muted);
+  background-color: var(--color-paper);
+}
+.toast-editor-shell .toastui-editor-mode-switch .tab-item.active {
+  color: var(--color-ink);
+  background-color: var(--color-paper-raised);
+}
+.toast-editor-shell .toastui-editor-md-container .CodeMirror,
+.toast-editor-shell .toastui-editor-md-container .CodeMirror-scroll {
+  background-color: var(--color-paper-raised);
+}
+.toast-editor-shell .toastui-editor-md-container .CodeMirror,
+.toast-editor-shell .toastui-editor-md-container .CodeMirror pre,
+.toast-editor-shell .toastui-editor-md-container .CodeMirror-line {
+  color: var(--color-ink-secondary);
+  font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", monospace;
+  font-size: 12px;
+}
+.toast-editor-shell .toastui-editor-md-splitter {
+  border-color: var(--color-rule);
+}
+.toast-editor-shell .toastui-editor-contents ul,
+.toast-editor-shell .toastui-editor-contents ol {
+  padding-inline-start: 1.6em;
+}
+.toast-editor-help {
+  margin-top: 8px;
+}
+
+/* Admin workflow: edit in a focused form page; keep list actions explicit. */
+.task-editor-page {
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+.back-to-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 2px;
+  border: 0;
+  color: var(--color-ink-secondary);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.back-to-list span {
+  color: var(--color-accent);
+  font-size: 19px;
+}
+.back-to-list:hover {
+  color: var(--color-accent);
+}
+.task-editor-page .admin-form-section {
+  margin-top: 14px;
+}
+.managed-task-row {
+  align-items: center;
+  gap: 22px;
+}
+.managed-task-copy {
+  flex: 1;
+}
+.managed-task-actions {
+  gap: 8px;
+}
+.edit-task-button,
+.delete-task-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 112px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-control);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--duration-quick) var(--ease-out), color var(--duration-quick) var(--ease-out), background-color var(--duration-quick) var(--ease-out);
+}
+.edit-task-button {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.edit-task-button:hover {
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+}
+.edit-task-button span {
+  font-size: 15px;
+}
+.delete-task-button {
+  border-color: oklch(55% 0.11 25 / 0.65);
+  color: var(--color-error);
+}
+.delete-task-button:hover {
+  border-color: var(--color-error);
+  background: var(--color-error-soft);
+}
+.edit-task-button:focus-visible,
+.delete-task-button:focus-visible,
+.back-to-list:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.delete-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgb(4 5 9 / 78%);
+  backdrop-filter: blur(5px);
+}
+.delete-dialog {
+  width: min(460px, 100%);
+  padding: 26px;
+  border: 1px solid var(--color-rule-strong);
+  border-top: 3px solid var(--color-error);
+  border-radius: 12px;
+  background: var(--color-paper-raised);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 42%);
+}
+.delete-dialog h2 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.055em;
+}
+.delete-dialog > p:not(.admin-eyebrow):not(.delete-dialog-error) {
+  margin: 9px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.delete-dialog > p strong {
+  color: var(--color-ink);
+}
+.delete-dialog-error {
+  margin: 14px 0 0;
+  color: var(--color-error);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.delete-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 23px;
+}
+.delete-dialog .danger-action {
+  min-height: 44px;
+  color: var(--color-ink);
+  background: var(--color-error-soft);
+}
+.delete-dialog .danger-action:hover:not(:disabled) {
+  background: oklch(32% 0.075 25);
+}
+.admin-task-list-section {
+  scroll-margin-top: 18px;
+}
+.admin-search:focus-within {
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-focus) 55%, transparent);
+}
+
+@media (max-width: 700px) {
+  .managed-task-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .managed-task-actions {
+    width: 100%;
+  }
+  .edit-task-button,
+  .delete-task-button {
+    flex: 1;
+    min-width: 0;
+  }
+  .delete-dialog {
+    padding: 21px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edit-task-button,
+  .delete-task-button {
+    transition: none;
+  }
+}
