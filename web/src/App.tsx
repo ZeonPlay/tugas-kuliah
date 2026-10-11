@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase, supabaseConfigMissing } from "./lib/supabase";
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const CalendarPage = lazy(() => import("./components/CalendarPage"));
+const ArchiveModules = lazy(() => import("./components/ArchiveModules"));
 import MarkdownContent from "./components/MarkdownContent";
 
 type Task = {
@@ -131,7 +132,7 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
 }
 
 function App() {
-  const [page, setPage] = useState<"home" | "admin" | "calendar">("home");
+  const [page, setPage] = useState<"home" | "admin" | "calendar" | "archive">("home");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -278,6 +279,27 @@ function App() {
     );
   }
 
+  if (page === "archive") {
+    return (
+      <Suspense fallback={
+        <main className="app-shell calendar-loading-page" role="status">
+          <div className="calendar-loading">
+            <span className="loading-mark" />
+            <strong>Membuka arsip modul…</strong>
+          </div>
+        </main>
+      }>
+        <ArchiveModules
+          key={refreshKey}
+          courses={courses}
+          onBack={() => setPage("home")}
+          onOpenAdmin={() => setPage("admin")}
+          onRefresh={() => setRefreshKey((key) => key + 1)}
+        />
+      </Suspense>
+    );
+  }
+
   if (page === "admin") {
     return (
       <Suspense fallback={
@@ -309,6 +331,9 @@ function App() {
         <div className="header-right">
           <button className="open-calendar-button" type="button" onClick={() => setPage("calendar")}>
             Kalender <span aria-hidden="true">↗</span>
+          </button>
+          <button className="open-archive-button" type="button" onClick={() => setPage("archive")}>
+            Arsip Modul <span aria-hidden="true">↗</span>
           </button>
           <button className="open-admin-button" type="button" onClick={() => setPage("admin")} aria-label="Buka Panel Admin">
             Panel Admin <span aria-hidden="true">↗</span>
