@@ -357,13 +357,13 @@ function TaskForm({
         <div className="form-field">
           <div className="form-label-row">
             <label htmlFor="task-instructions">Ketentuan & instruksi</label>
-            <span className="optional-label">Editor visual + Markdown</span>
+            <span className="optional-label">Editor dokumen</span>
           </div>
           <MarkdownEditor
             initialValue={draft.ketentuan}
             onChange={(value) => change("ketentuan", value)}
           />
-          <p className="field-hint">Tulis seperti dokumen biasa. Gunakan tombol di atas editor untuk membuat daftar, menebalkan teks, menambah tautan, atau tabel.</p>
+          <p className="field-hint">Gunakan tab Pratinjau untuk melihat bagaimana instruksi akan tampil di halaman mahasiswa. Toolbar mendukung judul, format teks, daftar, tautan, tabel, dan pemisah.</p>
         </div>
 
         <div className="form-two-columns">
