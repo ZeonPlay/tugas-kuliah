@@ -4,6 +4,7 @@ import { supabase, supabaseConfigMissing } from "../lib/supabase";
 import { normalizeLegacyMarkdown } from "./MarkdownContent";
 import MarkdownEditor from "./MarkdownEditor";
 import AppNavigation, { type AppPage } from "./AppNavigation";
+import CourseManager from "./CourseManager";
 
 type Task = {
   id: string;
@@ -583,6 +584,7 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
   const [sortOrder, setSortOrder] = useState("closest");
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(() => new Set());
   const searchRef = useRef<HTMLInputElement>(null);
+  const [adminSection, setAdminSection] = useState<"tasks" | "courses">("tasks");
   const [formTask, setFormTask] = useState<Task | null | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -771,7 +773,15 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
         </section>
       ) : (
         <section className="admin-workspace">
-          {formTask !== undefined ? (
+          {formTask === undefined && (
+            <div className="admin-section-switch" role="tablist" aria-label="Bagian panel admin">
+              <button type="button" role="tab" aria-selected={adminSection === "tasks"} className={adminSection === "tasks" ? "is-current" : ""} onClick={() => setAdminSection("tasks")}>Kelola tugas</button>
+              <button type="button" role="tab" aria-selected={adminSection === "courses"} className={adminSection === "courses" ? "is-current" : ""} onClick={() => setAdminSection("courses")}>Mata kuliah</button>
+            </div>
+          )}
+          {adminSection === "courses" ? (
+            <CourseManager onDataChanged={onDataChanged} />
+          ) : formTask !== undefined ? (
             <div className="task-editor-page">
               <button className="back-to-list" type="button" onClick={() => setFormTask(undefined)}>
                 <span aria-hidden="true">←</span> Kembali ke daftar tugas
