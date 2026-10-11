@@ -259,7 +259,6 @@ function TaskForm({
           <h2 id="task-form-title">{task ? "Edit tugas" : "Tambah tugas"}</h2>
           <p className="admin-section-description">Kolom bertanda wajib harus diisi. Deadline menggunakan WIB.</p>
         </div>
-        <button className="quiet-button" type="button" onClick={onCancel} disabled={saving}>Tutup</button>
       </div>
 
       {submitError && (
@@ -726,13 +725,6 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                 <p className="admin-inline-note">
                   Belum ada mata kuliah aktif. Tambahkan atau aktifkan mata kuliah sebelum membuat tugas.
                 </p>
-              )}
-
-              {deleteError && (
-                <div className="form-error-summary" role="alert">
-                  <strong>Penghapusan gagal.</strong>
-                  <p>{deleteError}</p>
-                </div>
               )}
 
               <section className="admin-task-list-section" aria-labelledby="admin-task-list-title">
