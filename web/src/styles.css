@@ -5426,3 +5426,28 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+
+/* Menu layering fix: transformed animated surfaces form new stacking contexts.
+   Keep the header and its popover above later dashboard sections so the menu
+   remains clickable while preserving the entrance animations. */
+.app-navigation-header {
+  position: relative;
+  z-index: 300;
+}
+.app-more-menu {
+  position: relative;
+  z-index: 1;
+}
+.app-more-menu[open] {
+  z-index: 2;
+}
+.app-more-popover {
+  z-index: 400;
+  pointer-events: auto;
+}
+.app-more-popover > button {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
