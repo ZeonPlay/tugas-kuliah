@@ -4302,3 +4302,236 @@ select:focus-visible {
   .archive-course-heading { gap: 8px; }
   .archive-course-title strong { font-size: 11px; }
 }
+
+
+/* Shared navigation — stable destinations on desktop, bottom bar on phones. */
+.app-navigation-header {
+  gap: clamp(10px, 1.7vw, 24px);
+}
+.app-primary-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  gap: 3px;
+  min-width: 0;
+}
+.app-nav-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--color-ink-secondary);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color var(--duration-quick) var(--ease-out), border-color var(--duration-quick) var(--ease-out), background-color var(--duration-quick) var(--ease-out);
+}
+.app-nav-item:hover {
+  color: var(--color-ink);
+  background: var(--color-paper-raised);
+}
+.app-nav-item.is-current {
+  border-color: color-mix(in oklch, var(--color-accent) 35%, var(--color-rule));
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.app-navigation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  flex: 0 0 auto;
+  gap: 9px;
+  min-width: 0;
+}
+.app-nav-connection {
+  max-width: 142px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-more-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+.app-more-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 8px;
+  color: var(--color-ink-secondary);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.app-more-menu > summary::-webkit-details-marker { display: none; }
+.app-more-menu > summary:hover,
+.app-more-menu[open] > summary {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.app-nav-icon {
+  display: block;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.app-more-menu > summary .app-nav-icon {
+  width: 16px;
+  height: 16px;
+}
+.app-more-popover {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 3px;
+  width: max-content;
+  min-width: 194px;
+  max-width: min(280px, calc(100vw - 28px));
+  padding: 6px;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 11px;
+  background: var(--color-paper-raised);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .28);
+}
+.app-more-popover > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--color-ink-secondary);
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+.app-more-popover > button:hover:not(:disabled),
+.app-more-popover > button.is-current {
+  border-color: var(--color-rule);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.app-more-item-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  flex: 0 0 auto;
+  color: var(--color-muted);
+  font-size: 15px;
+}
+.app-more-email {
+  max-width: 264px;
+  margin: 2px 4px 5px;
+  padding: 6px 5px 10px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--color-rule);
+  color: var(--color-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.app-more-popover > .app-more-refresh {
+  margin-top: 3px;
+  border-top-color: var(--color-rule);
+  border-radius: 0 0 7px 7px;
+  padding-top: 3px;
+}
+.app-bottom-nav { display: none; }
+.app-navigation-header button:focus-visible,
+.app-navigation-header summary:focus-visible,
+.app-bottom-nav button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .app-navigation-header {
+    min-height: 64px;
+    gap: 8px;
+  }
+  .app-primary-nav { display: none; }
+  .app-navigation-actions { gap: 7px; }
+  .app-nav-connection,
+  .app-navigation-header .app-nav-refresh { display: none; }
+  .app-more-menu > summary {
+    min-height: 39px;
+    padding-inline: 9px;
+  }
+  .app-more-popover {
+    top: calc(100% + 7px);
+    min-width: 190px;
+  }
+  .app-bottom-nav {
+    position: fixed;
+    z-index: 200;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 5px;
+    padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-rule-strong);
+    background: var(--color-paper);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, .12);
+  }
+  .app-bottom-nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    min-height: 50px;
+    padding: 5px 3px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: var(--color-muted);
+    background: transparent;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .app-bottom-nav-item .app-nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+  .app-bottom-nav-item.is-current {
+    border-color: color-mix(in oklch, var(--color-accent) 25%, transparent);
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+  .app-shell:has(.app-bottom-nav) {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 360px) {
+  .app-navigation-header .wordmark { gap: 6px; }
+  .app-navigation-header .wordmark-name { font-size: 11px; }
+  .app-more-menu > summary { gap: 5px; padding-inline: 7px; font-size: 11px; }
+  .app-bottom-nav { padding-right: 6px; padding-left: 6px; }
+}
