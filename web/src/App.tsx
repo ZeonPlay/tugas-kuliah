@@ -289,6 +289,15 @@ function App() {
     return counts;
   }, [tasks]);
 
+  // Keep legacy task course names filterable even if the catalog entry was deactivated.
+  const courseOptions = useMemo(() => {
+    const activeNames = courses.map((course) => course.nama);
+    const activeSet = new Set(activeNames);
+    const legacyNames = [...new Set(tasks.map((task) => task.mata_kuliah).filter(Boolean).filter((name) => !activeSet.has(name)))]
+      .sort((a, b) => a.localeCompare(b, "id-ID"));
+    return [...activeNames, ...legacyNames];
+  }, [courses, tasks]);
+
   function clearFilters() {
     setSearch("");
     setCourseFilter("all");
@@ -466,8 +475,8 @@ function App() {
               <span className="sr-only">Mata kuliah</span>
               <select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}>
                 <option value="all">Semua mata kuliah</option>
-                {courses.map((course) => (
-                  <option value={course.nama} key={course.id}>{course.nama}</option>
+                {courseOptions.map((courseName) => (
+                  <option value={courseName} key={courseName}>{courseName}</option>
                 ))}
               </select>
             </label>
@@ -537,32 +546,35 @@ function App() {
               <h2 id="course-section-title">Mata kuliah</h2>
               <p className="section-subtitle">Pilih satu untuk menyaring daftar.</p>
             </div>
-            <span className="course-total">{loading ? "…" : courses.length}</span>
+            <span className="course-total">{loading ? "…" : courseOptions.length}</span>
           </div>
 
           {loading ? (
             <p className="aside-message">Memuat mata kuliah…</p>
-          ) : courses.length === 0 ? (
-            <p className="aside-message">Belum ada mata kuliah aktif.</p>
+          ) : courseOptions.length === 0 ? (
+            <p className="aside-message">Belum ada mata kuliah yang tercatat.</p>
           ) : (
             <div className="course-list">
-              {courses
-                .filter((course) => (taskCountsByCourse.get(course.nama) ?? 0) > 0)
-                .map((course) => (
-                  <button
-                    className={"course-row" + (courseFilter === course.nama ? " is-selected" : "")}
-                    key={course.id}
-                    type="button"
-                    onClick={() => setCourseFilter(courseFilter === course.nama ? "all" : course.nama)}
-                    aria-pressed={courseFilter === course.nama}
-                  >
-                    <span className="course-row-copy">
-                      <strong>{course.nama}</strong>
-                      <small>Semester {course.semester} · {course.kategori}</small>
-                    </span>
-                    <span className="course-count">{taskCountsByCourse.get(course.nama) ?? 0}</span>
-                  </button>
-                ))}
+              {courseOptions
+                .filter((courseName) => (taskCountsByCourse.get(courseName) ?? 0) > 0)
+                .map((courseName) => {
+                  const course = courses.find((item) => item.nama === courseName);
+                  return (
+                    <button
+                      className={"course-row" + (courseFilter === courseName ? " is-selected" : "")}
+                      key={courseName}
+                      type="button"
+                      onClick={() => setCourseFilter(courseFilter === courseName ? "all" : courseName)}
+                      aria-pressed={courseFilter === courseName}
+                    >
+                      <span className="course-row-copy">
+                        <strong>{courseName}</strong>
+                        <small>{course ? `Semester ${course.semester} · ${course.kategori}` : "Di luar katalog aktif"}</small>
+                      </span>
+                      <span className="course-count">{taskCountsByCourse.get(courseName) ?? 0}</span>
+                    </button>
+                  );
+                })}
             </div>
           )}
 
