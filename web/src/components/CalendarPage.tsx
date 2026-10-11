@@ -233,7 +233,7 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
           moreLinkClick="date"
           displayEventTime={false}
           eventDisplay="block"
-          views={{ listMonth: { listDayFormat: { weekday: "long", day: "numeric", month: "long" }, listDaySideFormat: false } }}
+          views={{ listMonth: { listDayFormat: { weekday: "long", day: "numeric", month: "long" }, listDayAltFormat: false } }}
         />
         <p className="calendar-help">Tampilan Bulan menunjukkan jumlah deadline per hari. Pilih Daftar untuk melihat daftar deadline dalam bulan tersebut.</p>
       </section>}
