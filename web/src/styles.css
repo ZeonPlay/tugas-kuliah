@@ -3888,3 +3888,20 @@ select:focus-visible {
   .tiptap-view-switch button,
   .tiptap-tool { transition: none; }
 }
+
+
+/* Deadline badges turn neutral gray after their WIB calendar date has passed. */
+.calendar-surface .calendar-summary-event.is-overdue,
+.calendar-surface .calendar-summary-event.is-overdue *,
+.calendar-surface .calendar-summary-event.is-overdue .calendar-summary-event-inner {
+  background: #6b7280 !important;
+  background-color: #6b7280 !important;
+  border-color: #9ca3af !important;
+  color: #fff !important;
+  box-shadow: 0 2px 5px rgba(107, 114, 128, .18);
+}
+.calendar-surface .calendar-summary-event.is-overdue:hover {
+  background: #4b5563 !important;
+  border-color: #9ca3af !important;
+  box-shadow: 0 3px 8px rgba(107, 114, 128, .28);
+}
