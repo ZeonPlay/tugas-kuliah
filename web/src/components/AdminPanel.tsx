@@ -576,6 +576,13 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
   const [access, setAccess] = useState<AccessState>("none");
   const [accessMessage, setAccessMessage] = useState("");
   const [search, setSearch] = useState("");
+  const [courseFilter, setCourseFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [deadlineFilter, setDeadlineFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("closest");
+  const [page, setPage] = useState(1);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const formTaskAnchorRef = useRef<HTMLDivElement>(null);
   const [formTask, setFormTask] = useState<Task | null | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -622,10 +629,63 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
 
   const filteredTasks = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase("id-ID");
+    const now = Date.now();
+
     return [...tasks]
-      .filter((task) => !keyword || [task.judul, task.mata_kuliah, task.jenis].some((value) => value.toLocaleLowerCase("id-ID").includes(keyword)))
-      .sort((a, b) => a.deadline.localeCompare(b.deadline));
-  }, [tasks, search]);
+      .filter((task) => {
+        const searchable = [
+          task.judul,
+          task.mata_kuliah,
+          task.jenis,
+          normalizeLegacyMarkdown(task.ketentuan ?? ""),
+          task.link_vclass ?? "",
+          task.link_pengumpulan ?? "",
+          task.file_soal ?? "",
+        ].join(" ").toLocaleLowerCase("id-ID");
+        const matchesKeyword = !keyword || searchable.includes(keyword);
+        const matchesCourse = courseFilter === "all" || task.mata_kuliah === courseFilter;
+        const dueAt = new Date(task.deadline).getTime();
+        const matchesDeadline =
+          deadlineFilter === "all" ||
+          (deadlineFilter === "upcoming" && dueAt >= now) ||
+          (deadlineFilter === "overdue" && dueAt < now);
+        const matchesType = typeFilter === "all" || task.jenis === typeFilter;
+        return matchesKeyword && matchesCourse && matchesType && matchesDeadline;
+      })
+      .sort((a, b) => {
+        if (sortOrder === "title") return a.judul.localeCompare(b.judul, "id-ID");
+        const aDeadline = new Date(a.deadline).getTime();
+        const bDeadline = new Date(b.deadline).getTime();
+        if (sortOrder === "latest") return bDeadline - aDeadline;
+        if (sortOrder === "soonest") return aDeadline - bDeadline;
+        // Default: closest to today, so old tasks and upcoming tasks stay easy to locate.
+        return Math.abs(aDeadline - now) - Math.abs(bDeadline - now);
+      });
+  }, [tasks, search, courseFilter, typeFilter, deadlineFilter, sortOrder]);
+
+  const PAGE_SIZE = 8;
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / PAGE_SIZE));
+  const pageTasks = filteredTasks.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const filterIsActive = Boolean(search.trim()) || courseFilter !== "all" || typeFilter !== "all" || deadlineFilter !== "all";
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
+  useEffect(() => {
+    function handleSearchShortcut(event: KeyboardEvent) {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (
+        target.isContentEditable ||
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+      )) return;
+      event.preventDefault();
+      searchRef.current?.focus();
+    }
+    window.addEventListener("keydown", handleSearchShortcut);
+    return () => window.removeEventListener("keydown", handleSearchShortcut);
+  }, []);
 
   async function signOut() {
     if (!supabase) return;
@@ -728,34 +788,105 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
               )}
 
               <section className="admin-task-list-section" aria-labelledby="admin-task-list-title">
-                <div className="admin-section-heading">
+                <div className="task-list-intro">
                   <div>
                     <h2 id="admin-task-list-title">Daftar tugas</h2>
                     <p className="admin-section-description">
-                      {filteredTasks.length} tugas. Tombol Edit untuk mengubah detail; Hapus untuk menghapus permanen.
+                      {filteredTasks.length === tasks.length && !filterIsActive
+                        ? tasks.length + " tugas tersimpan."
+                        : filteredTasks.length + " dari " + tasks.length + " tugas cocok."}
                     </p>
                   </div>
-                  <label className="admin-search">
-                    <span aria-hidden="true">⌕</span>
+                </div>
+
+                <div className="task-search-panel">
+                  <label className="task-search-input">
+                    <span className="task-search-icon" aria-hidden="true">⌕</span>
                     <input
+                      ref={searchRef}
                       type="search"
                       value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Cari judul atau mata kuliah…"
-                      aria-label="Cari tugas di panel admin"
+                      onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+                      placeholder="Cari judul, mata kuliah, instruksi, atau tautan…"
+                      aria-label="Cari di seluruh data tugas"
                     />
+                    {search && (
+                      <button className="task-search-clear" type="button" onClick={() => { setSearch(""); setPage(1); searchRef.current?.focus(); }}>
+                        Hapus pencarian
+                      </button>
+                    )}
+                    {!search && <kbd className="search-shortcut">/</kbd>}
                   </label>
+                  <div className="task-filter-row">
+                    <label className="task-filter-field">
+                      <span>Mata kuliah</span>
+                      <select value={courseFilter} onChange={(event) => { setCourseFilter(event.target.value); setPage(1); }}>
+                        <option value="all">Semua mata kuliah</option>
+                        {[...new Set(tasks.map((task) => task.mata_kuliah).filter(Boolean))].sort((a, b) => a.localeCompare(b, "id-ID")).map((course) => (
+                          <option value={course} key={course}>{course}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="task-filter-field">
+                      <span>Jenis tugas</span>
+                      <select value={typeFilter} onChange={(event) => { setTypeFilter(event.target.value); setPage(1); }}>
+                        <option value="all">Semua jenis</option>
+                        {[...new Set(tasks.map((task) => task.jenis).filter(Boolean))].sort((a, b) => a.localeCompare(b, "id-ID")).map((type) => (
+                          <option value={type} key={type}>{type}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="task-filter-field">
+                      <span>Status deadline</span>
+                      <select value={deadlineFilter} onChange={(event) => { setDeadlineFilter(event.target.value); setPage(1); }}>
+                        <option value="all">Semua status</option>
+                        <option value="upcoming">Mendatang</option>
+                        <option value="overdue">Sudah lewat</option>
+                      </select>
+                    </label>
+                    <label className="task-filter-field task-sort-field">
+                      <span>Urutkan</span>
+                      <select value={sortOrder} onChange={(event) => { setSortOrder(event.target.value); setPage(1); }}>
+                        <option value="closest">Deadline terdekat dari hari ini</option>
+                        <option value="soonest">Deadline paling awal</option>
+                        <option value="latest">Deadline paling akhir</option>
+                        <option value="title">Nama tugas A–Z</option>
+                      </select>
+                    </label>
+                  </div>
+                  {filterIsActive && (
+                    <button className="reset-task-filters" type="button" onClick={() => {
+                      setSearch("");
+                      setCourseFilter("all");
+                      setTypeFilter("all");
+                      setDeadlineFilter("all");
+                      setPage(1);
+                      searchRef.current?.focus();
+                    }}>
+                      × Hapus semua filter
+                    </button>
+                  )}
                 </div>
 
                 {filteredTasks.length === 0 ? (
-                  <p className="admin-inline-note">
-                    {tasks.length === 0
-                      ? "Belum ada tugas. Tekan Tambah tugas untuk membuat yang pertama."
-                      : "Tidak ada tugas yang cocok dengan pencarian."}
-                  </p>
+                  <div className="task-search-empty">
+                    <strong>{tasks.length === 0 ? "Belum ada tugas" : "Tugas tidak ditemukan"}</strong>
+                    <p>{tasks.length === 0
+                      ? "Tekan Tambah tugas untuk membuat tugas pertama."
+                      : "Coba kata kunci yang lebih pendek, pilih Semua status, atau hapus beberapa filter."}</p>
+                    {filterIsActive && (
+                      <button className="quiet-button" type="button" onClick={() => {
+                        setSearch("");
+                        setCourseFilter("all");
+                        setTypeFilter("all");
+                        setDeadlineFilter("all");
+                        setPage(1);
+                      }}>Tampilkan semua tugas</button>
+                    )}
+                  </div>
                 ) : (
                   <div className="managed-task-list">
-                    {filteredTasks.map((task) => (
+                    {pageTasks.map((task) => (
                       <article className="managed-task-row" key={task.id}>
                         <div className="managed-task-copy">
                           <span className="managed-task-course">
@@ -791,6 +922,22 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                       </article>
                     ))}
                   </div>
+                )}
+                {filteredTasks.length > 0 && (
+                  <nav className="task-pagination" aria-label="Navigasi halaman daftar tugas">
+                    <span>
+                      Menampilkan <strong>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredTasks.length)}</strong> dari <strong>{filteredTasks.length}</strong>
+                    </span>
+                    <div className="pagination-actions">
+                      <button className="quiet-button" type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1}>
+                        ← Sebelumnya
+                      </button>
+                      <span className="pagination-page">Halaman {page} / {totalPages}</span>
+                      <button className="quiet-button" type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages}>
+                        Berikutnya →
+                      </button>
+                    </div>
+                  </nav>
                 )}
               </section>
 
