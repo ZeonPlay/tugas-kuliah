@@ -1576,85 +1576,155 @@ select:focus-visible {
 .markdown-preview-content pre { white-space: pre; }
 
 
-/* TOAST UI Editor — WYSIWYG-first, dark theme, keep the saved value as Markdown. */
-.toast-editor-shell {
+/* Tiptap WYSIWYG editor. The content is serialized to Markdown on every change. */
+.tiptap-editor-shell {
   width: 100%;
   min-width: 0;
-}
-.toast-editor-shell .toastui-editor-defaultUI {
   overflow: hidden;
   border: 1px solid var(--color-rule-strong);
   border-radius: var(--radius-control);
   background: var(--color-paper-raised);
-  font-family: var(--font-body);
 }
-.toast-editor-shell .toastui-editor-toolbar {
-  border-bottom-color: var(--color-rule);
-  background: var(--color-paper-raised);
+.tiptap-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid var(--color-rule);
+  background: var(--color-paper);
 }
-.toast-editor-shell .toastui-editor-toolbar-group {
-  border-color: var(--color-rule);
-}
-.toast-editor-shell .toastui-editor-toolbar button {
-  border-radius: 4px;
-}
-.toast-editor-shell .toastui-editor-toolbar button:hover {
-  background-color: var(--color-paper-soft);
-}
-.toast-editor-shell .toastui-editor-main,
-.toast-editor-shell .toastui-editor-ww-container,
-.toast-editor-shell .toastui-editor-md-container,
-.toast-editor-shell .toastui-editor-md-preview {
-  background-color: var(--color-paper-raised);
-}
-.toast-editor-shell .toastui-editor-contents,
-.toast-editor-shell .ProseMirror {
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.72;
-}
-.toast-editor-shell .toastui-editor-contents p,
-.toast-editor-shell .ProseMirror p {
-  margin-block: 0.65em;
-}
-.toast-editor-shell .toastui-editor-contents a,
-.toast-editor-shell .ProseMirror a {
-  color: var(--color-accent);
-}
-.toast-editor-shell .toastui-editor-mode-switch {
-  border-top-color: var(--color-rule);
-  background-color: var(--color-paper);
-}
-.toast-editor-shell .toastui-editor-mode-switch .tab-item {
-  color: var(--color-muted);
-  background-color: var(--color-paper);
-}
-.toast-editor-shell .toastui-editor-mode-switch .tab-item.active {
-  color: var(--color-ink);
-  background-color: var(--color-paper-raised);
-}
-.toast-editor-shell .toastui-editor-md-container .CodeMirror,
-.toast-editor-shell .toastui-editor-md-container .CodeMirror-scroll {
-  background-color: var(--color-paper-raised);
-}
-.toast-editor-shell .toastui-editor-md-container .CodeMirror,
-.toast-editor-shell .toastui-editor-md-container .CodeMirror pre,
-.toast-editor-shell .toastui-editor-md-container .CodeMirror-line {
+.tiptap-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 35px;
+  min-height: 35px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
   color: var(--color-ink-secondary);
-  font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", monospace;
-  font-size: 12px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-quick) var(--ease-out), color var(--duration-quick) var(--ease-out), border-color var(--duration-quick) var(--ease-out);
 }
-.toast-editor-shell .toastui-editor-md-splitter {
+.tiptap-tool:hover {
   border-color: var(--color-rule);
+  color: var(--color-ink);
+  background: var(--color-paper-soft);
 }
-.toast-editor-shell .toastui-editor-contents ul,
-.toast-editor-shell .toastui-editor-contents ol {
-  padding-inline-start: 1.6em;
+.tiptap-tool.is-active {
+  border-color: color-mix(in oklch, var(--color-accent) 55%, var(--color-rule));
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
-.toast-editor-help {
-  margin-top: 8px;
+.tiptap-tool:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
+.tool-underline { text-decoration: underline; text-underline-offset: 2px; }
+.tiptap-toolbar-divider {
+  width: 1px;
+  height: 21px;
+  margin-inline: 4px;
+  background: var(--color-rule-strong);
+}
+.tiptap-toolbar-spacer { flex: 1; }
+.tiptap-toolbar-loading {
+  padding: 8px;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+.tiptap-editor-shell .tiptap {
+  min-height: 250px;
+  padding: 13px 15px;
+  outline: none;
+  color: var(--color-ink);
+  font-size: 13px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.tiptap-editor-shell .tiptap > :first-child { margin-top: 0; }
+.tiptap-editor-shell .tiptap > :last-child { margin-bottom: 0; }
+.tiptap-editor-shell .tiptap p { margin: 0.55em 0; }
+.tiptap-editor-shell .tiptap h1,
+.tiptap-editor-shell .tiptap h2,
+.tiptap-editor-shell .tiptap h3 {
+  margin: 1em 0 0.4em;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.35;
+}
+.tiptap-editor-shell .tiptap h1 { font-size: 1.45rem; }
+.tiptap-editor-shell .tiptap h2 { font-size: 1.25rem; }
+.tiptap-editor-shell .tiptap h3 { font-size: 1.1rem; }
+.tiptap-editor-shell .tiptap strong { font-weight: 750; }
+.tiptap-editor-shell .tiptap ul,
+.tiptap-editor-shell .tiptap ol { padding-inline-start: 1.65em; }
+.tiptap-editor-shell .tiptap li { padding-inline-start: 0.15em; }
+.tiptap-editor-shell .tiptap li::marker { color: var(--color-accent); }
+.tiptap-editor-shell .tiptap blockquote {
+  margin: 0.8em 0;
+  padding-left: 0.9em;
+  border-left: 2px solid var(--color-accent);
+  color: var(--color-muted);
+}
+.tiptap-editor-shell .tiptap a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tiptap-editor-shell .tiptap hr {
+  margin: 1em 0;
+  border: 0;
+  border-top: 1px solid var(--color-rule-strong);
+}
+.tiptap-editor-shell .tiptap code {
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  background: var(--color-paper-soft);
+  font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", monospace;
+  font-size: 0.92em;
+}
+.tiptap-editor-shell .tiptap pre {
+  overflow-x: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--color-rule);
+  border-radius: 6px;
+  background: var(--color-paper);
+}
+.tiptap-editor-shell .tiptap pre code { padding: 0; background: transparent; }
+.tiptap-editor-shell .tiptap table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  overflow: hidden;
+}
+.tiptap-editor-shell .tiptap th,
+.tiptap-editor-shell .tiptap td {
+  min-width: 70px;
+  padding: 7px 9px;
+  border: 1px solid var(--color-rule-strong);
+  text-align: left;
+  vertical-align: top;
+}
+.tiptap-editor-shell .tiptap th { color: var(--color-ink); background: var(--color-paper); }
+.tiptap-editor-shell .tiptap .selectedCell { background: var(--color-accent-soft); }
+.tiptap-editor-shell .tiptap p.is-editor-empty:first-child::before {
+  float: left;
+  height: 0;
+  color: var(--color-muted);
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+.tiptap-editor-shell .tiptap:focus { outline: none; }
+.tiptap-link-error { padding: 0 12px; }
 
 /* Admin workflow: edit in a focused form page; keep list actions explicit. */
 .task-editor-page {
