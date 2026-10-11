@@ -18,11 +18,13 @@ function EditorTool({
   children,
   label,
   active = false,
+  disabled = false,
   onClick,
 }: {
   children: ReactNode;
   label: string;
   active?: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
@@ -32,6 +34,7 @@ function EditorTool({
       title={label}
       aria-label={label}
       aria-pressed={active}
+      disabled={disabled}
       onMouseDown={(event) => event.preventDefault()}
       onClick={onClick}
     >
