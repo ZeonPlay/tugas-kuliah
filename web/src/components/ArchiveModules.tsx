@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
+import AppNavigation, { type AppPage } from "./AppNavigation";
 
 type Course = { id: string; nama: string; semester: number; kategori: string; aktif: boolean };
 type ModuleFolder = { id: string; course_id: string; url: string; keterangan: string | null; aktif: boolean; created_at: string };
 
-type Props = { courses: Course[]; onBack: () => void; onOpenAdmin: () => void; onRefresh: () => void };
+type Props = { courses: Course[]; onNavigate: (page: AppPage) => void; onRefresh: () => void };
 
 function validHttpUrl(value: string): string | null {
   try {
@@ -13,7 +14,7 @@ function validHttpUrl(value: string): string | null {
   } catch { return null; }
 }
 
-export default function ArchiveModules({ courses, onBack, onOpenAdmin, onRefresh }: Props) {
+export default function ArchiveModules({ courses, onNavigate, onRefresh }: Props) {
   const [folders, setFolders] = useState<ModuleFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,16 +85,7 @@ export default function ArchiveModules({ courses, onBack, onOpenAdmin, onRefresh
 
   return (
     <main className="app-shell archive-page">
-      <header className="app-header">
-        <a className="wordmark" href="/" onClick={(event) => { event.preventDefault(); onBack(); }} aria-label="Kembali ke beranda">
-          <span className="wordmark-symbol" aria-hidden="true">t<span>.</span></span><span className="wordmark-name">tugas kuliah</span>
-        </a>
-        <div className="calendar-header-actions">
-          <button className="calendar-nav-button" type="button" onClick={onBack}>Beranda</button>
-          <button className="open-calendar-button" type="button" onClick={onRefresh}>Muat ulang <span aria-hidden="true">↻</span></button>
-          <button className="open-admin-button" type="button" onClick={onOpenAdmin}>Panel Admin <span aria-hidden="true">↗</span></button>
-        </div>
-      </header>
+      <AppNavigation currentPage="archive" onNavigate={onNavigate} onRefresh={onRefresh} />
 
       <section className="archive-heading">
         <p className="welcome-kicker">MATERI KULIAH <span aria-hidden="true">·</span> PUSAT REFERENSI</p>
