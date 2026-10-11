@@ -21,13 +21,26 @@ type Course = {
   aktif: boolean;
 };
 
+type TaskView = "upcoming" | "overdue";
+
 const DATETIME_FORMAT = new Intl.DateTimeFormat("id-ID", {
   dateStyle: "medium",
   timeStyle: "short",
   timeZone: "Asia/Jakarta",
 });
 
-const DATE_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const WEEKDAY_FORMAT = new Intl.DateTimeFormat("id-ID", {
+  weekday: "short",
+  timeZone: "Asia/Jakarta",
+});
+
+const DAY_MONTH_FORMAT = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "short",
+  timeZone: "Asia/Jakarta",
+});
+
+const FULL_DATE_FORMAT = new Intl.DateTimeFormat("id-ID", {
   weekday: "long",
   day: "numeric",
   month: "long",
@@ -37,6 +50,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat("id-ID", {
 
 function safeHttpUrl(value: string | null): string | null {
   if (!value) return null;
+
   try {
     const url = new URL(value);
     return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
@@ -47,7 +61,9 @@ function safeHttpUrl(value: string | null): string | null {
 
 function deadlineText(value: string): string {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Tanggal tidak valid" : DATETIME_FORMAT.format(date) + " WIB";
+  return Number.isNaN(date.getTime())
+    ? "Tanggal tidak valid"
+    : DATETIME_FORMAT.format(date) + " WIB";
 }
 
 function countdownText(value: string, now: number): string {
@@ -57,6 +73,7 @@ function countdownText(value: string, now: number): string {
 
   const days = Math.floor(difference / 86_400_000);
   const hours = Math.floor((difference % 86_400_000) / 3_600_000);
+
   if (days > 0) return days + " hari " + hours + " jam lagi";
   if (hours > 0) return hours + " jam lagi";
   return "Kurang dari 1 jam lagi";
@@ -64,7 +81,48 @@ function countdownText(value: string, now: number): string {
 
 function ExternalTaskLink({ href, children }: { href: string | null; children: string }) {
   if (!href) return null;
-  return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
+
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+      <span aria-hidden="true"> ↗</span>
+    </a>
+  );
+}
+
+function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boolean }) {
+  const deadlineDate = new Date(task.deadline);
+
+  return (
+    <article className={"task-row" + (overdue ? " task-row-overdue" : "")}>
+      <div className="task-date" aria-label={"Deadline " + deadlineText(task.deadline)}>
+        <span>{WEEKDAY_FORMAT.format(deadlineDate).replace(".", "")}</span>
+        <strong>{DAY_MONTH_FORMAT.format(deadlineDate)}</strong>
+      </div>
+
+      <div className="task-main">
+        <div className="task-meta">
+          <span className="task-course">{task.mata_kuliah || "Tanpa mata kuliah"}</span>
+          <span className="meta-divider" aria-hidden="true">/</span>
+          <span>{task.jenis}</span>
+        </div>
+        <h3>{task.judul || "Tugas tanpa judul"}</h3>
+        {task.ketentuan && <p className="task-description">{task.ketentuan}</p>}
+        <div className="task-links" aria-label="Tautan tugas">
+          <ExternalTaskLink href={safeHttpUrl(task.link_vclass)}>VClass</ExternalTaskLink>
+          <ExternalTaskLink href={safeHttpUrl(task.link_pengumpulan)}>Pengumpulan</ExternalTaskLink>
+          <ExternalTaskLink href={safeHttpUrl(task.file_soal)}>File soal</ExternalTaskLink>
+        </div>
+      </div>
+
+      <div className="task-timing">
+        <span className={"deadline-status" + (overdue ? " is-overdue" : "")}>
+          {countdownText(task.deadline, now)}
+        </span>
+        <span className="task-time">{deadlineText(task.deadline)}</span>
+      </div>
+    </article>
+  );
 }
 
 function App() {
@@ -75,6 +133,7 @@ function App() {
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [taskView, setTaskView] = useState<TaskView>("upcoming");
   const [refreshKey, setRefreshKey] = useState(0);
   const [now, setNow] = useState(() => Date.now());
 
@@ -132,30 +191,42 @@ function App() {
 
   const filteredTasks = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase("id-ID");
+
     return tasks.filter((task) => {
       const searchable = [task.judul, task.mata_kuliah, task.ketentuan ?? ""];
-      const matchesSearch = !keyword || searchable.some((value) =>
-        value.toLocaleLowerCase("id-ID").includes(keyword),
-      );
+      const matchesSearch =
+        !keyword ||
+        searchable.some((value) => value.toLocaleLowerCase("id-ID").includes(keyword));
       const matchesCourse = courseFilter === "all" || task.mata_kuliah === courseFilter;
       const matchesType = typeFilter === "all" || task.jenis === typeFilter;
+
       return matchesSearch && matchesCourse && matchesType;
     });
   }, [tasks, search, courseFilter, typeFilter]);
 
   const upcomingTasks = useMemo(
-    () => filteredTasks
-      .filter((task) => new Date(task.deadline).getTime() >= now)
-      .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
-      .slice(0, 5),
+    () =>
+      filteredTasks
+        .filter((task) => new Date(task.deadline).getTime() >= now)
+        .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()),
     [filteredTasks, now],
   );
 
-  const overdueCount = filteredTasks.filter((task) => new Date(task.deadline).getTime() < now).length;
-  const urgentCount = filteredTasks.filter((task) => {
+  const overdueTasks = useMemo(
+    () =>
+      filteredTasks
+        .filter((task) => new Date(task.deadline).getTime() < now)
+        .sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime()),
+    [filteredTasks, now],
+  );
+
+  const urgentCount = upcomingTasks.filter((task) => {
     const difference = new Date(task.deadline).getTime() - now;
     return difference >= 0 && difference <= 48 * 60 * 60 * 1000;
   }).length;
+
+  const selectedTasks = taskView === "upcoming" ? upcomingTasks : overdueTasks;
+  const visibleTasks = selectedTasks.slice(0, 5);
 
   const taskCountsByCourse = useMemo(() => {
     const counts = new Map<string, number>();
@@ -171,31 +242,52 @@ function App() {
     setTypeFilter("all");
   }
 
+  const connectionLabel = supabaseConfigMissing
+    ? "Belum dikonfigurasi"
+    : loading
+      ? "Menghubungkan"
+      : errorMessage
+        ? "Perlu diperiksa"
+        : "Data termuat";
+
   return (
     <main className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="/" aria-label="Tugas Kuliah - Beranda">
-          <span className="brand-mark" aria-hidden="true">T</span>
-          <span className="brand-copy">
-            <strong>Tugas Kuliah</strong>
-            <small>SI · Ruang belajar bersama</small>
-          </span>
+      <header className="app-header">
+        <a className="wordmark" href="/" aria-label="Tugas Kuliah, beranda">
+          <span className="wordmark-symbol" aria-hidden="true">t<span>.</span></span>
+          <span className="wordmark-name">tugas kuliah</span>
         </a>
-        <div className="topbar-date"><span className="live-dot" />{DATE_FORMAT.format(new Date(now))}</div>
+
+        <div className="header-context">
+          <span className="header-context-label">SISTEM INFORMASI</span>
+          <span className="header-context-divider" aria-hidden="true" />
+          <span className="connection-state">
+            <span className={"connection-dot" + (errorMessage || supabaseConfigMissing ? " connection-dot-warn" : "")} />
+            {connectionLabel}
+          </span>
+        </div>
+
+        <button
+          className="refresh-button"
+          type="button"
+          onClick={() => setRefreshKey((key) => key + 1)}
+          disabled={loading}
+          aria-label="Muat ulang data dari Supabase"
+        >
+          <span aria-hidden="true">↻</span>
+          <span>Muat ulang</span>
+        </button>
       </header>
 
-      <section className="hero">
-        <div>
-          <p className="eyebrow">DASHBOARD MAHASISWA</p>
-          <h1>Halo, selamat datang.</h1>
-          <p className="hero-description">
-            Pantau deadline tugas dan siapkan langkah berikutnya tanpa terburu-buru.
-          </p>
+      <section className="page-intro">
+        <div className="page-intro-copy">
+          <p className="kicker">RUANG KERJA AKADEMIK <span> / </span> 01</p>
+          <h1>Jangan sampai ada<br className="desktop-break" /> deadline yang kelewat.</h1>
         </div>
-        <div className="hero-decoration" aria-hidden="true">
-          <span className="decoration-ring ring-one" />
-          <span className="decoration-ring ring-two" />
-          <span className="decoration-cap">✳</span>
+        <div className="date-note">
+          <span className="date-note-label">HARI INI</span>
+          <time dateTime={new Date(now).toISOString()}>{FULL_DATE_FORMAT.format(new Date(now))}</time>
+          <p>Waktu mengikuti WIB.</p>
         </div>
       </section>
 
@@ -204,160 +296,212 @@ function App() {
           <strong>Supabase belum dikonfigurasi.</strong>
           <span>
             Salin file .env.example menjadi .env.local, lalu isi VITE_SUPABASE_URL dan
-            VITE_SUPABASE_ANON_KEY menggunakan URL serta publishable/anon key project.
+            VITE_SUPABASE_ANON_KEY dengan URL project serta publishable/anon key.
           </span>
         </section>
       )}
 
       {errorMessage && (
         <section className="notice notice-error" role="alert">
-          <strong>Gagal memuat data dari Supabase.</strong>
+          <strong>Data belum berhasil dimuat.</strong>
           <span>{errorMessage}</span>
-          <button className="button button-secondary" onClick={() => setRefreshKey((key) => key + 1)}>
-            Coba lagi
+          <button className="text-button" type="button" onClick={() => setRefreshKey((key) => key + 1)}>
+            Coba lagi <span aria-hidden="true">↗</span>
           </button>
         </section>
       )}
 
-      <section className="stats-grid" aria-label="Ringkasan tugas">
-        <article className="stat-card">
-          <span className="stat-icon icon-blue">▤</span>
-          <span className="stat-label">Tugas ditampilkan</span>
-          <strong className="stat-value">{loading ? "—" : filteredTasks.length}</strong>
-          <span className="stat-note">Sesuai filter saat ini</span>
-        </article>
-        <article className="stat-card">
-          <span className="stat-icon icon-amber">◷</span>
-          <span className="stat-label">Deadline 48 jam</span>
-          <strong className="stat-value">{loading ? "—" : urgentCount}</strong>
-          <span className="stat-note">Perlu segera diperhatikan</span>
-        </article>
-        <article className="stat-card">
-          <span className="stat-icon icon-rose">↗</span>
-          <span className="stat-label">Sudah terlewat</span>
-          <strong className="stat-value">{loading ? "—" : overdueCount}</strong>
-          <span className="stat-note">Tetap tersimpan untuk ditinjau</span>
-        </article>
+      <section className="summary-strip" aria-label="Ringkasan tugas">
+        <div className="summary-item">
+          <span className="summary-label">TUGAS TERSARING</span>
+          <strong>{loading ? "—" : filteredTasks.length.toString().padStart(2, "0")}</strong>
+        </div>
+        <div className="summary-item">
+          <span className="summary-label">DEADLINE ≤ 48 JAM</span>
+          <strong>{loading ? "—" : urgentCount.toString().padStart(2, "0")}</strong>
+        </div>
+        <button
+          className={"summary-item summary-item-action" + (taskView === "overdue" ? " is-active" : "")}
+          type="button"
+          onClick={() => setTaskView("overdue")}
+          aria-pressed={taskView === "overdue"}
+        >
+          <span className="summary-label">SUDAH TERLEWAT</span>
+          <strong>{loading ? "—" : overdueTasks.length.toString().padStart(2, "0")}</strong>
+        </button>
       </section>
 
-      <div className="content-grid">
-        <section className="panel task-panel">
-          <div className="panel-heading">
+      <div className="workspace-grid">
+        <section className="task-section" aria-labelledby="task-section-title">
+          <div className="section-heading">
             <div>
-              <p className="eyebrow">YANG PERLU DIKERJAKAN</p>
-              <h2>Deadline terdekat</h2>
+              <p className="section-index">01 <span>/</span> DAFTAR</p>
+              <h2 id="task-section-title">{taskView === "upcoming" ? "Yang perlu dikerjakan" : "Yang sudah terlewat"}</h2>
             </div>
-            <button className="icon-button" type="button" onClick={() => setRefreshKey((key) => key + 1)}
-              aria-label="Muat ulang data" title="Muat ulang data">↻</button>
+            <span className="result-count">
+              {loading ? "…" : String(selectedTasks.length).padStart(2, "0")} <span>tugas</span>
+            </span>
+          </div>
+
+          <div className="task-tabs" role="group" aria-label="Tampilan tugas">
+            <button
+              type="button"
+              className={taskView === "upcoming" ? "task-tab is-current" : "task-tab"}
+              onClick={() => setTaskView("upcoming")}
+              aria-pressed={taskView === "upcoming"}
+            >
+              Mendatang <span>{loading ? "—" : upcomingTasks.length}</span>
+            </button>
+            <button
+              type="button"
+              className={taskView === "overdue" ? "task-tab is-current" : "task-tab"}
+              onClick={() => setTaskView("overdue")}
+              aria-pressed={taskView === "overdue"}
+            >
+              Terlewat <span>{loading ? "—" : overdueTasks.length}</span>
+            </button>
           </div>
 
           <div className="filters">
-            <label className="search-box">
-              <span aria-hidden="true">⌕</span>
-              <input value={search} onChange={(event) => setSearch(event.target.value)}
-                placeholder="Cari judul, mata kuliah, ketentuan..." aria-label="Cari tugas" />
+            <label className="search-field">
+              <span className="search-symbol" aria-hidden="true">⌕</span>
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Cari tugas atau mata kuliah"
+                aria-label="Cari tugas atau mata kuliah"
+              />
+              {search && (
+                <button type="button" className="clear-search" onClick={() => setSearch("")} aria-label="Hapus pencarian">
+                  ×
+                </button>
+              )}
             </label>
-            <div className="filter-row">
-              <label className="filter-control">
-                <span>Mata kuliah</span>
-                <select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}>
-                  <option value="all">Semua mata kuliah</option>
-                  {courses.map((course) => <option value={course.nama} key={course.id}>{course.nama}</option>)}
-                </select>
-              </label>
-              <label className="filter-control">
-                <span>Jenis tugas</span>
-                <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
-                  <option value="all">Semua jenis</option>
-                  <option value="Teori">Teori</option>
-                  <option value="Praktikum">Praktikum</option>
-                  <option value="Quiz">Quiz</option>
-                  <option value="Ujian">Ujian</option>
-                </select>
-              </label>
-            </div>
+
+            <label className="select-field">
+              <span className="sr-only">Mata kuliah</span>
+              <select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}>
+                <option value="all">Semua mata kuliah</option>
+                {courses.map((course) => (
+                  <option value={course.nama} key={course.id}>{course.nama}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="select-field">
+              <span className="sr-only">Jenis tugas</span>
+              <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+                <option value="all">Semua jenis</option>
+                <option value="Teori">Teori</option>
+                <option value="Praktikum">Praktikum</option>
+                <option value="Quiz">Quiz</option>
+                <option value="Ujian">Ujian</option>
+              </select>
+            </label>
           </div>
 
           {loading ? (
-            <div className="empty-state"><span className="loading-spinner" /><strong>Memuat tugas...</strong><span>Menghubungkan dashboard ke Supabase.</span></div>
-          ) : upcomingTasks.length > 0 ? (
+            <div className="empty-state" role="status">
+              <span className="loading-mark" aria-hidden="true" />
+              <strong>Mengambil data tugas</strong>
+              <span>Menghubungkan ke Supabase…</span>
+            </div>
+          ) : visibleTasks.length > 0 ? (
             <div className="task-list">
-              {upcomingTasks.map((task) => (
-                <article className="task-card" key={task.id}>
-                  <div className="task-meta">
-                    <span className="course-pill">{task.mata_kuliah || "Tanpa mata kuliah"}</span>
-                    <span className="type-label">{task.jenis}</span>
-                  </div>
-                  <h3>{task.judul || "Tugas tanpa judul"}</h3>
-                  {task.ketentuan && <p className="task-description">{task.ketentuan}</p>}
-                  <div className="deadline-line">
-                    <span aria-hidden="true">◷</span>
-                    <span>{deadlineText(task.deadline)}</span>
-                    <span className="countdown">{countdownText(task.deadline, now)}</span>
-                  </div>
-                  <div className="task-links">
-                    <ExternalTaskLink href={safeHttpUrl(task.link_vclass)}>Buka VClass ↗</ExternalTaskLink>
-                    <ExternalTaskLink href={safeHttpUrl(task.link_pengumpulan)}>Pengumpulan ↗</ExternalTaskLink>
-                    <ExternalTaskLink href={safeHttpUrl(task.file_soal)}>File soal ↗</ExternalTaskLink>
-                  </div>
-                </article>
+              {visibleTasks.map((task) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  now={now}
+                  overdue={taskView === "overdue"}
+                />
               ))}
             </div>
           ) : (
             <div className="empty-state">
-              <span className="empty-icon">✓</span>
-              <strong>{filteredTasks.length === 0 ? "Belum ada tugas yang cocok" : "Tidak ada deadline mendatang"}</strong>
-              <span>{filteredTasks.length === 0 ? "Coba ubah kata kunci atau filter mata kuliah." : "Untuk sementara, kamu bisa bernapas lega."}</span>
-              <button className="button button-secondary" type="button" onClick={clearFilters}>Reset filter</button>
+              <span className="empty-mark" aria-hidden="true">{taskView === "upcoming" ? "—" : "✓"}</span>
+              <strong>
+                {filteredTasks.length === 0
+                  ? "Tidak ada tugas yang cocok"
+                  : taskView === "upcoming"
+                    ? "Tidak ada deadline mendatang"
+                    : "Tidak ada tugas yang terlewat"}
+              </strong>
+              <span>
+                {filteredTasks.length === 0
+                  ? "Coba kata kunci atau filter mata kuliah yang lain."
+                  : taskView === "upcoming"
+                    ? "Bagus. Untuk sekarang, tidak ada yang harus dikejar."
+                    : "Semua tugas yang tercatat masih dalam tenggat."}
+              </span>
+              {(search || courseFilter !== "all" || typeFilter !== "all") && (
+                <button className="text-button" type="button" onClick={clearFilters}>Bersihkan filter</button>
+              )}
             </div>
           )}
 
-          {!loading && filteredTasks.length > upcomingTasks.length && (
-            <p className="panel-footnote">
-              Menampilkan {upcomingTasks.length} deadline mendatang dari {filteredTasks.length} tugas.
-              {overdueCount > 0 ? " Ada " + overdueCount + " tugas yang sudah lewat." : ""}
+          {!loading && selectedTasks.length > visibleTasks.length && (
+            <p className="list-footnote">
+              Menampilkan {visibleTasks.length} dari {selectedTasks.length} tugas.
             </p>
           )}
         </section>
 
-        <aside className="panel course-panel">
-          <div className="panel-heading">
+        <aside className="course-section" aria-labelledby="course-section-title">
+          <div className="section-heading course-heading">
             <div>
-              <p className="eyebrow">KATALOG AKADEMIK</p>
-              <h2>Mata kuliah</h2>
+              <p className="section-index">02 <span>/</span> KATALOG</p>
+              <h2 id="course-section-title">Mata kuliah</h2>
             </div>
-            <span className="heading-count">{courses.length}</span>
+            <span className="result-count">{loading ? "…" : String(courses.length).padStart(2, "0")}</span>
           </div>
+
+          <p className="course-hint">Pilih mata kuliah untuk menyaring daftar tugas.</p>
+
           {loading ? (
-            <p className="muted-text">Memuat katalog...</p>
+            <p className="aside-message">Memuat katalog…</p>
           ) : courses.length === 0 ? (
-            <p className="muted-text">Belum ada mata kuliah aktif di katalog.</p>
+            <p className="aside-message">Belum ada mata kuliah aktif di katalog.</p>
           ) : (
             <div className="course-list">
-              {courses.filter((course) => (taskCountsByCourse.get(course.nama) ?? 0) > 0).map((course, index) => (
-                <button
-                  className={"course-row" + (courseFilter === course.nama ? " is-selected" : "")}
-                  key={course.id}
-                  type="button"
-                  onClick={() => setCourseFilter(courseFilter === course.nama ? "all" : course.nama)}
-                >
-                  <span className={"course-marker marker-" + (index % 5)} />
-                  <span className="course-row-name">
-                    <strong>{course.nama}</strong>
-                    <small>Semester {course.semester} · {course.kategori}</small>
-                  </span>
-                  <span className="course-count">{taskCountsByCourse.get(course.nama) ?? 0}</span>
-                </button>
-              ))}
+              {courses
+                .filter((course) => (taskCountsByCourse.get(course.nama) ?? 0) > 0)
+                .map((course) => (
+                  <button
+                    className={"course-row" + (courseFilter === course.nama ? " is-selected" : "")}
+                    key={course.id}
+                    type="button"
+                    onClick={() => setCourseFilter(courseFilter === course.nama ? "all" : course.nama)}
+                    aria-pressed={courseFilter === course.nama}
+                  >
+                    <span className="course-row-copy">
+                      <strong>{course.nama}</strong>
+                      <small>Semester {course.semester} · {course.kategori}</small>
+                    </span>
+                    <span className="course-count">{taskCountsByCourse.get(course.nama) ?? 0}</span>
+                  </button>
+                ))}
             </div>
           )}
-          <div className="course-panel-footer"><span className="live-dot" /><span>Data tersimpan di Supabase</span></div>
+
+          {courseFilter !== "all" && (
+            <button className="text-button clear-course-filter" type="button" onClick={() => setCourseFilter("all")}>
+              Tampilkan semua mata kuliah <span aria-hidden="true">↗</span>
+            </button>
+          )}
+
+          <div className="aside-note">
+            <span className="aside-note-mark" aria-hidden="true">i</span>
+            <p>Deadline ditampilkan dalam Waktu Indonesia Barat (WIB).</p>
+          </div>
         </aside>
       </div>
 
-      <footer className="page-footer">
-        <span>© {new Date(now).getFullYear()} Tugas Kuliah</span>
-        <span>Dibuat untuk membantu kuliah terasa lebih teratur.</span>
+      <footer className="app-footer">
+        <span className="footer-wordmark">tugas kuliah<span>.</span></span>
+        <span>Ruang kerja akademik · {new Date(now).getFullYear()}</span>
+        <span className="footer-status"><span className="connection-dot" />{connectionLabel}</span>
       </footer>
     </main>
   );
