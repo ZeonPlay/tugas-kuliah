@@ -109,8 +109,10 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
     // Month view intentionally contains ONLY one red count badge per date.
     // Individual task titles are exclusively supplied to the List view.
     const summaries = [...counts.entries()].map(([key, count]) => {
-      // A date is overdue only after the whole deadline day has passed in WIB.
-      const overdue = key < todayWib();
+      // Gray out the date badge once at least one deadline on that date has passed.
+      const overdue = filteredTasks.some((task) =>
+        dateKey(task.deadline) === key && new Date(task.deadline).getTime() < now
+      );
       return {
         id: "summary-" + key,
         start: key,
