@@ -613,10 +613,12 @@ select:focus-visible {
   display: inline-flex;
   align-items: center;
   min-height: 34px;
-  color: var(--color-muted);
+  color: var(--color-ink-secondary);
   font-size: 10px;
   font-weight: 600;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: var(--color-rule-strong);
+  text-underline-offset: 4px;
   white-space: nowrap;
 }
 
@@ -1525,3 +1527,40 @@ select:focus-visible {
   .danger-action,
   .refresh-button { transition: none; }
 }
+
+
+/* Interaction and preview refinements. */
+.course-row:hover .course-row-copy strong,
+.course-row:focus-visible .course-row-copy strong {
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-underline-offset: 3px;
+}
+.markdown-preview {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--color-rule);
+}
+.markdown-preview summary { display: none; }
+.preview-toggle {
+  width: fit-content;
+  min-height: 38px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-rule-strong);
+  color: var(--color-accent);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.preview-toggle:hover { border-bottom-color: var(--color-accent); color: var(--color-ink); }
+.markdown-preview-content {
+  padding: 7px 0 2px;
+  color: var(--color-ink-secondary);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.markdown-preview-content pre { white-space: pre; }
