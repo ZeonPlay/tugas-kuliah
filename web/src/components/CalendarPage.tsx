@@ -115,7 +115,6 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
     const details = filteredTasks.flatMap((task) => {
       const key = dateKey(task.deadline);
       if (!key) return [];
-      const color = key < today ? "#94a3b8" : "#ef4444";
       const remaining = new Date(task.deadline).getTime() - now;
       const taskColor = remaining < 0 || remaining < 86_400_000
         ? "#ef4444"
