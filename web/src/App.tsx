@@ -4,6 +4,7 @@ const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const CalendarPage = lazy(() => import("./components/CalendarPage"));
 const ArchiveModules = lazy(() => import("./components/ArchiveModules"));
 import MarkdownContent from "./components/MarkdownContent";
+import AppNavigation, { type AppPage } from "./components/AppNavigation";
 
 type Task = {
   id: string;
@@ -132,7 +133,7 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
 }
 
 function App() {
-  const [page, setPage] = useState<"home" | "admin" | "calendar" | "archive">("home");
+  const [page, setPage] = useState<AppPage>("home");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -271,8 +272,7 @@ function App() {
           tasks={tasks}
           loading={loading}
           errorMessage={errorMessage}
-          onBack={() => setPage("home")}
-          onOpenAdmin={() => setPage("admin")}
+          onNavigate={setPage}
           onRefresh={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
@@ -292,8 +292,7 @@ function App() {
         <ArchiveModules
           key={refreshKey}
           courses={courses}
-          onBack={() => setPage("home")}
-          onOpenAdmin={() => setPage("admin")}
+          onNavigate={setPage}
           onRefresh={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
@@ -313,7 +312,7 @@ function App() {
         <AdminPanel
           tasks={tasks}
           courses={courses}
-          onBack={() => setPage("home")}
+          onNavigate={setPage}
           onDataChanged={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
@@ -322,38 +321,14 @@ function App() {
 
   return (
     <main className="app-shell">
-      <header className="app-header">
-        <a className="wordmark" href="/" aria-label="Tugas Kuliah, beranda">
-          <span className="wordmark-symbol" aria-hidden="true">t<span>.</span></span>
-          <span className="wordmark-name">tugas kuliah</span>
-        </a>
-
-        <div className="header-right">
-          <button className="open-calendar-button" type="button" onClick={() => setPage("calendar")}>
-            Kalender <span aria-hidden="true">↗</span>
-          </button>
-          <button className="open-archive-button" type="button" onClick={() => setPage("archive")}>
-            Arsip Modul <span aria-hidden="true">↗</span>
-          </button>
-          <button className="open-admin-button" type="button" onClick={() => setPage("admin")} aria-label="Buka Panel Admin">
-            Panel Admin <span aria-hidden="true">↗</span>
-          </button>
-          <span className={"connection-state" + (errorMessage || supabaseConfigMissing ? " is-warning" : "")}>
-            <span className="connection-dot" aria-hidden="true" />
-            {connectionLabel}
-          </span>
-          <button
-            className="refresh-button"
-            type="button"
-            onClick={() => setRefreshKey((key) => key + 1)}
-            disabled={loading}
-            aria-label="Muat ulang data dari Supabase"
-            title="Muat ulang"
-          >
-            ↻
-          </button>
-        </div>
-      </header>
+      <AppNavigation
+        currentPage="home"
+        onNavigate={setPage}
+        connectionLabel={connectionLabel}
+        connectionWarning={Boolean(errorMessage || supabaseConfigMissing)}
+        onRefresh={() => setRefreshKey((key) => key + 1)}
+        refreshDisabled={loading}
+      />
 
       <section className="welcome">
         <div>
