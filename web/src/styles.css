@@ -1617,6 +1617,21 @@ select:focus-visible {
   color: var(--color-ink);
   background: var(--color-paper-soft);
 }
+.tiptap-tool:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+.tiptap-editor-shell .tiptap .tableWrapper {
+  width: 100%;
+  max-width: 100%;
+  margin-block: 9px;
+  overflow-x: auto;
+}
+.tiptap-editor-shell .tiptap .tableWrapper table {
+  width: 100%;
+  min-width: 320px;
+  table-layout: auto;
+}
 .tiptap-tool.is-active {
   border-color: color-mix(in oklch, var(--color-accent) 55%, var(--color-rule));
   color: var(--color-accent);
