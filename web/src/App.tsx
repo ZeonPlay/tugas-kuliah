@@ -261,10 +261,6 @@ function App() {
         </a>
 
         <div className="header-right">
-          <div className="today-label">
-            <span className="today-label-caption">Hari ini</span>
-            <time dateTime={new Date(now).toISOString()}>{FULL_DATE_FORMAT.format(new Date(now))}</time>
-          </div>
           <span className={"connection-state" + (errorMessage || supabaseConfigMissing ? " is-warning" : "")}>
             <span className="connection-dot" aria-hidden="true" />
             {connectionLabel}
@@ -284,7 +280,7 @@ function App() {
 
       <section className="welcome">
         <div>
-          <p className="welcome-kicker">AGENDA KULIAH</p>
+          <p className="welcome-kicker">AGENDA KULIAH <span aria-hidden="true">·</span> {FULL_DATE_FORMAT.format(new Date(now))}</p>
           <h1>Tugas kuliah,<br className="wide-break" /> satu per satu.</h1>
           <p className="welcome-copy">Lihat yang paling dekat, pilih langkah berikutnya, lalu mulai dari sana.</p>
         </div>
