@@ -3905,3 +3905,400 @@ select:focus-visible {
   border-color: #9ca3af !important;
   box-shadow: 0 3px 8px rgba(107, 114, 128, .28);
 }
+
+
+/* Archive Modules — searchable course groups with responsive touch targets. */
+.open-archive-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in oklch, var(--color-accent) 35%, var(--color-rule-strong));
+  border-radius: 7px;
+  color: var(--color-ink);
+  background: var(--color-accent-soft);
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background-color var(--duration-quick) var(--ease-out), border-color var(--duration-quick) var(--ease-out);
+}
+.open-archive-button:hover {
+  border-color: var(--color-accent);
+  background: color-mix(in oklch, var(--color-accent-soft) 70%, var(--color-paper-raised));
+}
+.open-archive-button:focus-visible,
+.archive-page button:focus-visible,
+.archive-page a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.archive-heading {
+  padding: 36px 0 24px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.archive-heading h1 {
+  margin: 8px 0 7px;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 750;
+  line-height: 1.12;
+  letter-spacing: -.055em;
+}
+.archive-heading > p:last-of-type {
+  max-width: 560px;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.archive-summary {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  margin-top: 20px;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+.archive-summary strong {
+  color: var(--color-ink);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.archive-summary-divider {
+  width: 1px;
+  height: 15px;
+  margin: 0 7px;
+  background: var(--color-rule-strong);
+  align-self: center;
+}
+.archive-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 20px 0 12px;
+}
+.archive-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1 1 280px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 11px;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 7px;
+  color: var(--color-muted);
+  background: var(--color-paper-raised);
+}
+.archive-search:focus-within {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--color-focus) 18%, transparent);
+}
+.archive-search > span { font-size: 22px; line-height: 1; }
+.archive-search input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--color-ink);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+}
+.archive-search input::placeholder { color: var(--color-muted); }
+.archive-search button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--color-muted);
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+.archive-search button:hover { color: var(--color-ink); background: var(--color-paper-soft); }
+.archive-filter-toggle,
+.archive-expand-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 7px;
+  color: var(--color-ink-secondary);
+  background: var(--color-paper-raised);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.archive-filter-toggle:hover,
+.archive-expand-toggle:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-ink);
+  background: var(--color-paper-soft);
+}
+.archive-filter-toggle.is-active {
+  border-color: color-mix(in oklch, var(--color-accent) 55%, var(--color-rule-strong));
+  color: var(--color-ink);
+  background: var(--color-accent-soft);
+}
+.archive-filter-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 5px;
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+  font-size: 10px;
+}
+.archive-expand-toggle:disabled { opacity: .45; cursor: not-allowed; }
+.archive-course-filter {
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 8px;
+  background: var(--color-paper-raised);
+}
+.archive-course-filter legend {
+  padding: 0 5px;
+  color: var(--color-ink-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+.archive-course-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.archive-course-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 5px 9px;
+  border: 1px solid var(--color-rule);
+  border-radius: 6px;
+  color: var(--color-ink-secondary);
+  background: var(--color-paper);
+  font-size: 11px;
+  cursor: pointer;
+}
+.archive-course-option:has(input:checked) {
+  border-color: color-mix(in oklch, var(--color-accent) 45%, var(--color-rule));
+  color: var(--color-ink);
+  background: var(--color-accent-soft);
+}
+.archive-course-option input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+.archive-groups {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 28px;
+}
+.archive-course-group {
+  overflow: hidden;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 9px;
+  background: var(--color-paper-raised);
+  box-shadow: 0 3px 12px rgba(0,0,0,.06);
+}
+.archive-course-group.is-expanded {
+  border-color: color-mix(in oklch, var(--color-accent) 28%, var(--color-rule-strong));
+}
+.archive-course-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 72px;
+  padding: 12px 15px;
+  border: 0;
+  color: var(--color-ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.archive-course-heading:hover { background: var(--color-paper-soft); }
+.archive-course-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in oklch, var(--color-accent) 32%, var(--color-rule));
+  border-radius: 7px;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  font-size: 19px;
+}
+.archive-course-title {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.archive-course-title strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 700;
+}
+.archive-course-title small {
+  color: var(--color-muted);
+  font-size: 10px;
+}
+.archive-folder-count {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid var(--color-rule);
+  border-radius: 5px;
+  color: var(--color-muted);
+  background: var(--color-paper);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.archive-chevron {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-rule);
+  border-radius: 6px;
+  color: var(--color-ink-secondary);
+  background: var(--color-paper);
+  font-size: 16px;
+}
+.archive-folder-list {
+  padding: 0 14px 12px;
+  border-top: 1px solid var(--color-rule);
+}
+.archive-folder-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.archive-folder-row:last-child { border-bottom: 0; }
+.archive-folder-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-rule);
+  border-radius: 6px;
+  color: var(--color-muted);
+  background: var(--color-paper);
+  font-size: 15px;
+}
+.archive-folder-copy {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.archive-folder-copy strong {
+  overflow-wrap: anywhere;
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.archive-folder-copy span {
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.archive-open-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  border: 1px solid color-mix(in oklch, var(--color-accent) 40%, var(--color-rule));
+  border-radius: 6px;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.archive-open-link:hover {
+  border-color: var(--color-accent);
+  background: color-mix(in oklch, var(--color-accent-soft) 65%, var(--color-paper-raised));
+}
+.archive-invalid-link { color: var(--color-error); font-size: 10px; }
+.archive-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  margin: 18px 0 30px;
+  padding: 40px 18px;
+  border: 1px dashed var(--color-rule-strong);
+  border-radius: 9px;
+  color: var(--color-muted);
+  background: var(--color-paper-raised);
+  text-align: center;
+}
+.archive-empty strong { color: var(--color-ink); font-size: 13px; }
+.archive-empty > span:not(.loading-mark):not(.empty-mark) {
+  max-width: 430px;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.archive-empty .empty-mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  color: var(--color-muted);
+  background: var(--color-paper);
+  font-size: 22px;
+}
+.archive-empty .text-button { margin-top: 4px; }
+@media (max-width: 640px) {
+  .open-archive-button { min-height: 40px; padding-inline: 9px; font-size: 10px; }
+  .archive-heading { padding: 25px 0 18px; }
+  .archive-tools { align-items: stretch; }
+  .archive-search { flex-basis: 100%; }
+  .archive-filter-toggle, .archive-expand-toggle { flex: 1; min-height: 42px; }
+  .archive-course-heading { gap: 9px; padding: 11px; }
+  .archive-course-icon { width: 34px; height: 34px; }
+  .archive-course-title strong { font-size: 12px; }
+  .archive-folder-list { padding-inline: 10px; }
+  .archive-folder-row { gap: 8px; flex-wrap: wrap; }
+  .archive-folder-copy { flex-basis: calc(100% - 45px); }
+  .archive-open-link { margin-left: 40px; }
+  .archive-folder-count { font-size: 9px; padding-inline: 6px; }
+}
+@media (max-width: 390px) {
+  .archive-folder-count { display: none; }
+  .archive-course-heading { gap: 8px; }
+  .archive-course-title strong { font-size: 11px; }
+}
