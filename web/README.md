@@ -5,6 +5,7 @@ Frontend baru untuk menggantikan Streamlit secara bertahap. Aplikasi Streamlit d
 ## Teknologi
 
 - React + TypeScript + Vite
+- Tiptap WYSIWYG editor with Markdown serialization
 - Supabase JS Client
 - Cloudflare Pages untuk hosting frontend statis
 
@@ -50,7 +51,8 @@ Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RL
 - [x] Navigasi ke Panel Admin
 - [x] Login dan pendaftaran admin yang memeriksa allowlist tabel admin_users
 - [x] Form tambah/edit tugas dengan validasi judul, mata kuliah, deadline, URL, dan ukuran lampiran
-- [x] Toolbar Markdown dengan pratinjau instruksi
+- [x] Editor visual Tiptap dengan toolbar, format Markdown, tautan, daftar, dan tabel
+- [x] Alur admin terpisah: daftar tugas → form edit/tambah; hapus menggunakan dialog konfirmasi
 - [x] Upload, penggantian, dan penghapusan lampiran melalui bucket task-files
 - [x] Hapus tugas dengan konfirmasi
 - [ ] Kalender interaktif
