@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, RealtimeChannel } from "@supabase/supabase-js";
+import type {} from "react";
 import { supabase } from "../lib/supabase";
 
 type RemoteCursor = {
@@ -88,7 +89,7 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
     let lastSentAt = 0;
     let sendTimer: number | null = null;
     let latestPosition: Position | null = null;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let channel: RealtimeChannel | null = null;
     let identity = {
       display_name: "Pelajar Anonim",
       role: "anonymous",
