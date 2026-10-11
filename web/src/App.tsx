@@ -132,6 +132,30 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
   );
 }
 
+function DashboardMetrics({ taskCount, nearCount, overdueCount, loading }: {
+  taskCount: number;
+  nearCount: number;
+  overdueCount: number;
+  loading: boolean;
+}) {
+  const metrics = [
+    { label: "Tugas ditampilkan", value: taskCount },
+    { label: "Deadline dekat", value: nearCount },
+    { label: "Sudah lewat", value: overdueCount },
+  ];
+
+  return (
+    <section className="dashboard-metrics" aria-label="Ringkasan deadline">
+      {metrics.map((metric) => (
+        <div className="dashboard-metric" key={metric.label}>
+          <strong>{loading ? "—" : metric.value}</strong>
+          <span>{metric.label}</span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function NewlyOverdueNotice({ tasks }: { tasks: Task[] }) {
   if (tasks.length === 0) return null;
 
@@ -278,6 +302,12 @@ function App() {
     return difference >= 0 && difference <= 48 * 60 * 60 * 1000;
   }).length;
 
+  // Mirror Streamlit: count near deadlines only in the five nearest upcoming tasks.
+  const nearDeadlineCount = upcomingTasks.slice(0, 5).filter((task) => {
+    const difference = new Date(task.deadline).getTime() - now;
+    return difference >= 0 && difference < 3 * 24 * 60 * 60 * 1000;
+  }).length;
+
   const selectedTasks = taskView === "upcoming" ? upcomingTasks : overdueTasks;
   const visibleTasks = selectedTasks.slice(0, 5);
 
@@ -418,6 +448,13 @@ function App() {
           </button>
         </section>
       )}
+
+      <DashboardMetrics
+        taskCount={filteredTasks.length}
+        nearCount={nearDeadlineCount}
+        overdueCount={overdueTasks.length}
+        loading={loading}
+      />
 
       <NewlyOverdueNotice tasks={newlyOverdueTasks} />
 
