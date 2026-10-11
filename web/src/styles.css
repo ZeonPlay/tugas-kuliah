@@ -3342,3 +3342,110 @@ select:focus-visible {
   font-size: 10px;
   font-weight: 750;
 }
+
+
+/* FullCalendar v7: use explicit theme hooks; legacy .fc-* selectors no longer style the new DOM. */
+.calendar-surface {
+  border: 1px solid rgba(148, 163, 184, .25) !important;
+  border-radius: 13px !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.035), transparent 42%),
+    var(--color-paper-raised) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255,255,255,.035);
+}
+.calendar-surface .calendar-date-cell {
+  min-height: 72px;
+  margin: 2px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, .24) !important;
+  border-radius: 6px;
+  background-color: rgba(255,255,255,.012);
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+.calendar-surface .calendar-date-cell:hover {
+  border-color: rgba(239, 68, 68, .55) !important;
+  background-color: rgba(239, 68, 68, .055);
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, .08);
+}
+.calendar-surface .calendar-weekday-cell {
+  color: var(--color-ink-secondary);
+  background: rgba(148, 163, 184, .075);
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+.calendar-surface .calendar-summary-event {
+  display: block !important;
+  min-height: 23px;
+  margin: 4px 3px 2px !important;
+  padding: 0 !important;
+  overflow: hidden;
+  border: 1px solid #fb5656 !important;
+  border-radius: 5px !important;
+  background: #ef4444 !important;
+  color: #fff !important;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, .25);
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  line-height: 1.35;
+}
+.calendar-surface .calendar-summary-event,
+.calendar-surface .calendar-summary-event *,
+.calendar-surface .calendar-summary-event-inner {
+  background-color: #ef4444 !important;
+  color: #fff !important;
+}
+.calendar-surface .calendar-summary-event {
+  --fc-event-color: #ef4444;
+  --fc-event-contrast-color: #ffffff;
+}
+.calendar-surface .calendar-summary-event:hover {
+  background: #dc2626 !important;
+  border-color: #ff7777 !important;
+  box-shadow: 0 3px 9px rgba(239, 68, 68, .36);
+}
+.calendar-surface .calendar-summary-event-inner {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 6px;
+  color: #fff !important;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.calendar-surface [data-date] {
+  outline-offset: -2px;
+}
+.calendar-surface .calendar-date-cell:focus-within {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+.calendar-surface .calendar-today-cell {
+  border-color: rgba(245, 158, 11, .7) !important;
+  background-color: rgba(245, 158, 11, .07);
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, .13);
+}
+.calendar-surface .calendar-count-number {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.calendar-surface .calendar-task-event {
+  --fc-event-color: #ef4444;
+  --fc-event-contrast-color: #ffffff;
+}
+@media (max-width: 760px) {
+  .calendar-surface .calendar-date-cell {
+    min-height: 58px;
+    margin: 1px;
+  }
+  .calendar-surface .calendar-summary-event {
+    min-height: 20px;
+    margin: 3px 1px 1px !important;
+    font-size: 9px !important;
+  }
+  .calendar-surface .calendar-summary-event-inner {
+    min-height: 19px;
+    padding-inline: 3px;
+    font-size: 9px;
+  }
+}
