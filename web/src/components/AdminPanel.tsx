@@ -6,6 +6,7 @@ import MarkdownEditor from "./MarkdownEditor";
 import AppNavigation, { type AppPage } from "./AppNavigation";
 import CourseManager from "./CourseManager";
 import ModuleManager from "./ModuleManager";
+import AdminUsersManager from "./AdminUsersManager";
 
 type Task = {
   id: string;
@@ -50,6 +51,7 @@ type TaskDraft = {
 };
 
 const TASK_TYPES = ["Teori", "Praktikum", "Quiz", "Ujian"];
+const SUPER_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase() ?? "";
 const ALLOWED_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "docx", "zip"];
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -585,7 +587,7 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
   const [sortOrder, setSortOrder] = useState("closest");
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(() => new Set());
   const searchRef = useRef<HTMLInputElement>(null);
-  const [adminSection, setAdminSection] = useState<"tasks" | "courses" | "modules">("tasks");
+  const [adminSection, setAdminSection] = useState<"tasks" | "courses" | "modules" | "admins">("tasks");
   const [formTask, setFormTask] = useState<Task | null | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -779,9 +781,14 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
               <button type="button" aria-pressed={adminSection === "tasks"} className={adminSection === "tasks" ? "is-current" : ""} onClick={() => setAdminSection("tasks")}>Kelola tugas</button>
               <button type="button" aria-pressed={adminSection === "courses"} className={adminSection === "courses" ? "is-current" : ""} onClick={() => setAdminSection("courses")}>Mata kuliah</button>
               <button type="button" aria-pressed={adminSection === "modules"} className={adminSection === "modules" ? "is-current" : ""} onClick={() => setAdminSection("modules")}>Arsip Modul</button>
+              {SUPER_ADMIN_EMAIL && sessionEmail?.trim().toLowerCase() === SUPER_ADMIN_EMAIL && (
+                <button type="button" aria-pressed={adminSection === "admins"} className={adminSection === "admins" ? "is-current" : ""} onClick={() => setAdminSection("admins")}>Kelola Admin</button>
+              )}
             </div>
           )}
-          {adminSection === "courses" ? (
+          {adminSection === "admins" ? (
+            <AdminUsersManager currentEmail={sessionEmail ?? ""} superAdminEmail={SUPER_ADMIN_EMAIL} />
+          ) : adminSection === "courses" ? (
             <CourseManager onDataChanged={onDataChanged} />
           ) : adminSection === "modules" ? (
             <ModuleManager onDataChanged={onDataChanged} />
