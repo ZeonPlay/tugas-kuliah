@@ -239,7 +239,7 @@ export default function ModuleManager({ onDataChanged }: { onDataChanged: () => 
 
       <div className="module-manager-tools">
         <label className="task-search-input"><span className="task-search-icon" aria-hidden="true">⌕</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari keterangan, URL, atau mata kuliah…" aria-label="Cari folder arsip" />{search && <button className="task-search-clear" type="button" onClick={() => setSearch("")}>Hapus</button>}</label>
-        <label className="course-status-select"><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">Semua</option><option value="active">Aktif saja</option><option value="inactive">Nonaktif saja</option></select></label>
+        <label className="course-status-select"><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}><option value="all">Semua</option><option value="active">Aktif saja</option><option value="inactive">Nonaktif saja</option></select></label>
         <label className="course-status-select module-course-filter"><span>Kuliah</span><select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}><option value="all">Semua mata kuliah</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.nama}</option>)}</select></label>
       </div>
       <p className="course-manager-count">{loading ? "Memuat folder…" : visibleFolders.length + " dari " + folders.length + " folder"}</p>
