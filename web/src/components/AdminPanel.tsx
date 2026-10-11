@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { supabase, supabaseConfigMissing } from "../lib/supabase";
-import MarkdownContent from "./MarkdownContent";
+import { normalizeLegacyMarkdown } from "./MarkdownContent";
+import MarkdownEditor from "./MarkdownEditor";
 
 type Task = {
   id: string;
@@ -80,7 +81,7 @@ function initialDraft(task: Task | null, courses: Course[]): TaskDraft {
     jenis: task?.jenis ?? "Teori",
     deadlineDate: wibDateInput(task?.deadline),
     deadlineTime: task ? wibTimeInput(task.deadline) : "23:59",
-    ketentuan: task?.ketentuan ?? "",
+    ketentuan: normalizeLegacyMarkdown(task?.ketentuan ?? ""),
     link_vclass: task?.link_vclass ?? "",
     link_pengumpulan: task?.link_pengumpulan ?? "",
     file: null,
@@ -128,22 +129,6 @@ async function checkAdminAllowlist(email: string): Promise<{ allowed: boolean; e
   return { allowed: Boolean(data), error: null };
 }
 
-function MarkdownToolbarButton({
-  label,
-  children,
-  onClick,
-}: {
-  label: string;
-  children: string;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" className="markdown-tool" aria-label={label} title={label} onClick={onClick}>
-      {children}
-    </button>
-  );
-}
-
 function TaskForm({
   task,
   courses,
@@ -159,8 +144,6 @@ function TaskForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(true);
-  const markdownRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
   function change<K extends keyof TaskDraft>(key: K, value: TaskDraft[K]) {
@@ -171,38 +154,6 @@ function TaskForm({
       return next;
     });
     setSubmitError("");
-  }
-
-  function insertAroundSelection(before: string, after = before) {
-    const input = markdownRef.current;
-    if (!input) return;
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const selected = draft.ketentuan.slice(start, end);
-    const next = draft.ketentuan.slice(0, start) + before + selected + after + draft.ketentuan.slice(end);
-    change("ketentuan", next);
-    window.requestAnimationFrame(() => {
-      input.focus();
-      input.setSelectionRange(start + before.length, start + before.length + selected.length);
-    });
-  }
-
-  function prefixSelectedLines(prefix: string) {
-    const input = markdownRef.current;
-    if (!input) return;
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const lineStart = draft.ketentuan.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
-    const foundLineEnd = draft.ketentuan.indexOf("\n", end);
-    const lineEnd = foundLineEnd === -1 ? draft.ketentuan.length : foundLineEnd;
-    const selection = draft.ketentuan.slice(lineStart, lineEnd);
-    const replaced = selection.split("\n").map((line) => prefix + line).join("\n");
-    const next = draft.ketentuan.slice(0, lineStart) + replaced + draft.ketentuan.slice(lineEnd);
-    change("ketentuan", next);
-    window.requestAnimationFrame(() => {
-      input.focus();
-      input.setSelectionRange(lineStart, lineStart + replaced.length);
-    });
   }
 
   function validate(): Record<string, string> {
@@ -407,43 +358,13 @@ function TaskForm({
         <div className="form-field">
           <div className="form-label-row">
             <label htmlFor="task-instructions">Ketentuan & instruksi</label>
-            <span className="optional-label">Markdown didukung</span>
+            <span className="optional-label">Editor visual + Markdown</span>
           </div>
-          <div className="markdown-editor">
-            <div className="markdown-toolbar" role="toolbar" aria-label="Pemformatan instruksi">
-              <MarkdownToolbarButton label="Tebal" onClick={() => insertAroundSelection("**")}>B</MarkdownToolbarButton>
-              <MarkdownToolbarButton label="Miring" onClick={() => insertAroundSelection("*")}>I</MarkdownToolbarButton>
-              <span className="toolbar-divider" />
-              <MarkdownToolbarButton label="Judul kecil" onClick={() => prefixSelectedLines("### ")}>H</MarkdownToolbarButton>
-              <MarkdownToolbarButton label="Daftar bullet" onClick={() => prefixSelectedLines("- ")}>•</MarkdownToolbarButton>
-              <MarkdownToolbarButton label="Daftar bernomor" onClick={() => prefixSelectedLines("1. ")}>1.</MarkdownToolbarButton>
-              <span className="toolbar-divider" />
-              <MarkdownToolbarButton label="Sisipkan tautan" onClick={() => insertAroundSelection("[", "](https://example.com)")}>↗</MarkdownToolbarButton>
-            </div>
-            <textarea
-              ref={markdownRef}
-              id="task-instructions"
-              rows={8}
-              value={draft.ketentuan}
-              onChange={(event) => change("ketentuan", event.target.value)}
-              placeholder={"Contoh:\n**Ketentuan pengumpulan**\n\n1. Kerjakan secara individu.\n2. Unggah dalam format PDF.\n\n- Gunakan nama file sesuai format."}
-              aria-label="Ketentuan dan instruksi dalam Markdown"
-            />
-          </div>
-          <p className="field-hint">Pilih teks lalu gunakan tombol pemformatan. Format dan daftar akan dirender pada pratinjau.</p>
-          {draft.ketentuan.trim() && (
-            <section className="markdown-preview" aria-label="Pratinjau instruksi">
-              <button
-                className="preview-toggle"
-                type="button"
-                aria-expanded={previewOpen}
-                onClick={() => setPreviewOpen((open) => !open)}
-              >
-                {previewOpen ? "Sembunyikan pratinjau" : "Lihat pratinjau"}
-              </button>
-              {previewOpen && <MarkdownContent className="markdown-preview-content" content={draft.ketentuan} />}
-            </section>
-          )}
+          <MarkdownEditor
+            initialValue={draft.ketentuan}
+            onChange={(value) => change("ketentuan", value)}
+          />
+          <p className="field-hint">Tulis seperti dokumen biasa. Gunakan tombol di atas editor untuk membuat daftar, menebalkan teks, menambah tautan, atau tabel.</p>
         </div>
 
         <div className="form-two-columns">
