@@ -108,7 +108,8 @@ export default function CourseManager({ onDataChanged }: { onDataChanged: () => 
     if (!supabase) return;
     setSaveError("");
     setBusyId("new");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const nama = String(form.get("nama") ?? "").trim();
     const kode = String(form.get("kode") ?? "").trim().toLocaleUpperCase("id-ID");
     const semester = Number(form.get("semester"));
@@ -135,7 +136,7 @@ export default function CourseManager({ onDataChanged }: { onDataChanged: () => 
       setBusyId(null);
       return;
     }
-    event.currentTarget.reset();
+    formElement.reset();
     await loadCourses();
     setBusyId(null);
     onDataChanged();
@@ -190,10 +191,10 @@ export default function CourseManager({ onDataChanged }: { onDataChanged: () => 
         <summary><span aria-hidden="true">＋</span><span>Tambah mata kuliah</span></summary>
         <form className="course-create-form" onSubmit={(event) => void createCourse(event)}>
           <div className="course-form-grid">
-            <label className="admin-field course-name-field"><span>Nama mata kuliah <b aria-hidden="true">*</b></span><input name="nama" required maxLength={120} placeholder="Contoh: Data Mining" /></label>
-            <label className="admin-field"><span>Kode (opsional)</span><input name="kode" maxLength={24} placeholder="Contoh: SI401" /></label>
-            <label className="admin-field"><span>Semester</span><select name="semester" defaultValue="4">{Array.from({ length: 8 }, (_, index) => index + 1).map((semester) => <option key={semester} value={semester}>{semester}</option>)}</select></label>
-            <label className="admin-field"><span>Kategori</span><select name="kategori" defaultValue="Wajib">{CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label>
+            <label className="form-field admin-field course-name-field"><span>Nama mata kuliah <b aria-hidden="true">*</b></span><input name="nama" required maxLength={120} placeholder="Contoh: Data Mining" /></label>
+            <label className="form-field admin-field"><span>Kode (opsional)</span><input name="kode" maxLength={24} placeholder="Contoh: SI401" /></label>
+            <label className="form-field admin-field"><span>Semester</span><select name="semester" defaultValue="4">{Array.from({ length: 8 }, (_, index) => index + 1).map((semester) => <option key={semester} value={semester}>{semester}</option>)}</select></label>
+            <label className="form-field admin-field"><span>Kategori</span><select name="kategori" defaultValue="Wajib">{CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label>
           </div>
           <p className="course-form-note">Nama harus unik. Setelah ditambahkan, mata kuliah langsung aktif dan bisa dipilih saat membuat tugas.</p>
           <button className="primary-action" type="submit" disabled={busyId !== null}>{busyId === "new" ? "Menyimpan…" : "Simpan mata kuliah"}</button>
@@ -228,11 +229,11 @@ export default function CourseManager({ onDataChanged }: { onDataChanged: () => 
                     <span className="course-edit-chevron" aria-hidden="true">›</span>
                   </summary>
                   <form className="course-edit-form" onSubmit={(event) => void updateCourse(event, course)}>
-                    <label className="admin-field"><span>Nama mata kuliah</span><input value={course.nama} readOnly disabled /></label>
+                    <label className="form-field admin-field"><span>Nama mata kuliah</span><input value={course.nama} readOnly disabled /></label>
                     <div className="course-form-grid course-edit-grid">
-                      <label className="admin-field"><span>Kode (opsional)</span><input name="kode" maxLength={24} defaultValue={course.kode ?? ""} placeholder="Contoh: SI401" /></label>
-                      <label className="admin-field"><span>Semester</span><select name="semester" defaultValue={String(course.semester)}>{Array.from({ length: 8 }, (_, index) => index + 1).map((number) => <option value={number} key={number}>{number}</option>)}</select></label>
-                      <label className="admin-field"><span>Kategori</span><select name="kategori" defaultValue={course.kategori}>{CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label>
+                      <label className="form-field admin-field"><span>Kode (opsional)</span><input name="kode" maxLength={24} defaultValue={course.kode ?? ""} placeholder="Contoh: SI401" /></label>
+                      <label className="form-field admin-field"><span>Semester</span><select name="semester" defaultValue={String(course.semester)}>{Array.from({ length: 8 }, (_, index) => index + 1).map((number) => <option value={number} key={number}>{number}</option>)}</select></label>
+                      <label className="form-field admin-field"><span>Kategori</span><select name="kategori" defaultValue={course.kategori}>{CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label>
                       <label className="course-active-control"><input type="checkbox" name="aktif" defaultChecked={course.aktif} /><span><strong>Aktif</strong><small>Nonaktifkan jika tidak digunakan lagi.</small></span></label>
                     </div>
                     <div className="course-edit-actions"><button className="primary-action" type="submit" disabled={busyId !== null}>{busyId === course.id ? "Menyimpan…" : "Simpan perubahan"}</button><button className="quiet-button" type="button" onClick={() => void loadCourses()} disabled={busyId !== null}>Muat ulang</button></div>
