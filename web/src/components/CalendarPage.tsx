@@ -90,6 +90,12 @@ export default function CalendarPage({ tasks, loading, errorMessage, onNavigate,
     return () => window.clearInterval(timer);
   }, []);
 
+  // Streamlit refreshes the calendar from Supabase every 30 seconds; keep this page in sync too.
+  useEffect(() => {
+    const timer = window.setInterval(() => onRefresh(), 30_000);
+    return () => window.clearInterval(timer);
+  }, [onRefresh]);
+
   const types = useMemo(() => [...new Set([...KNOWN_TYPES, ...tasks.map((task) => task.jenis).filter(Boolean)])].sort((a,b) => a.localeCompare(b, "id-ID")), [tasks]);
   const courses = useMemo(() => [...new Set(tasks.map((task) => task.mata_kuliah).filter(Boolean))].sort((a,b) => a.localeCompare(b, "id-ID")), [tasks]);
   const filteredTasks = useMemo(() => tasks.filter((task) =>
