@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 export type AppPage = "home" | "calendar" | "archive" | "admin";
 
@@ -46,7 +46,7 @@ export default function AppNavigation({
   onSignOut,
   trailingActions,
 }: Props) {
-  function refreshFromMenu(event: React.MouseEvent<HTMLButtonElement>) {
+  function refreshFromMenu(event: MouseEvent<HTMLButtonElement>) {
     onRefresh?.();
     event.currentTarget.closest("details")?.removeAttribute("open");
   }
