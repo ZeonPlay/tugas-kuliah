@@ -4847,3 +4847,128 @@ select:focus-visible {
   .admin-section-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
   .admin-section-switch button { padding-inline: 7px; font-size: 10px; }
 }
+
+
+/* Module archive management — mirrors the course catalog interaction patterns. */
+.module-manager { min-width: 0; padding-top: 12px; }
+.module-manager-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 23px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.module-manager-heading h1 {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -.065em;
+}
+.module-manager-heading .admin-section-description { max-width: 620px; }
+.module-manager-stat {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  flex: 0 0 auto;
+  color: var(--color-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.module-manager-stat strong {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: 650;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.module-manager .admin-field { display: grid; align-content: start; gap: 7px; min-width: 0; }
+.module-manager .admin-field > span { color: var(--color-ink-secondary); font-size: 11px; font-weight: 650; }
+.module-manager .admin-field b { color: var(--color-accent); }
+.module-manager .admin-field input:not([type="checkbox"]),
+.module-manager .admin-field select,
+.module-manager .admin-field textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  padding: 9px 11px;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 7px;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.module-manager .admin-field textarea { min-height: 78px; resize: vertical; }
+.module-manager .admin-field input:focus,
+.module-manager .admin-field select:focus,
+.module-manager .admin-field textarea:focus {
+  border-color: var(--color-focus);
+  outline: 2px solid color-mix(in oklch, var(--color-focus) 24%, transparent);
+  outline-offset: 1px;
+}
+.module-create-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr);
+  gap: 12px;
+}
+.module-no-courses {
+  margin: 0;
+  padding: 16px;
+  color: var(--color-warning);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.module-manager-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, .24fr) minmax(190px, .36fr);
+  gap: 10px;
+  margin-top: 22px;
+}
+.module-manager-tools > * { min-width: 0; }
+.module-course-filter select { overflow: hidden; text-overflow: ellipsis; }
+.module-course-group > summary { gap: 12px; }
+.module-manager-rows { padding-bottom: 7px; }
+.module-edit-row > summary { padding-inline: 10px; }
+.module-edit-row .course-edit-summary-copy { flex: 1 1 auto; }
+.module-edit-row .course-edit-summary-copy small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.module-edit-form { display: grid; gap: 13px; padding: 12px 10px 17px; }
+.module-edit-form > .form-field { max-width: 780px; }
+.module-edit-form .course-active-control { max-width: 390px; }
+.module-edit-form .course-edit-actions { align-items: center; }
+.module-preview-link { min-height: 42px; }
+.module-manager .course-edit-row.is-inactive .course-edit-summary-copy small { color: var(--color-warning); }
+.module-manager button:focus-visible,
+.module-manager summary:focus-visible,
+.module-manager input:focus-visible,
+.module-manager select:focus-visible,
+.module-manager textarea:focus-visible,
+.module-manager a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .module-manager-tools { grid-template-columns: minmax(0, 1fr) minmax(0, .75fr); }
+  .module-manager-tools .task-search-input { grid-column: 1 / -1; }
+  .module-create-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .module-manager-heading { gap: 10px; }
+  .module-manager-heading h1 { font-size: 1.8rem; }
+  .module-manager-heading .admin-section-description { font-size: 11px; }
+  .module-manager-tools { grid-template-columns: minmax(0, 1fr); }
+  .module-manager-tools .task-search-input { grid-column: auto; }
+  .module-manager .course-edit-actions { align-items: stretch; flex-direction: column; }
+  .module-manager .course-edit-actions > * { justify-content: center; }
+  .module-edit-row .course-edit-summary-copy small { max-width: 230px; }
+}
