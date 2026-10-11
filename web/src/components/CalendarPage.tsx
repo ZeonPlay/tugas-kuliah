@@ -116,15 +116,21 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
       const key = dateKey(task.deadline);
       if (!key) return [];
       const color = key < today ? "#94a3b8" : "#ef4444";
+      const remaining = new Date(task.deadline).getTime() - now;
+      const taskColor = remaining < 0 || remaining < 86_400_000
+        ? "#ef4444"
+        : remaining < 3 * 86_400_000
+          ? "#f59e0b"
+          : "#94a3b8";
       return [{
         id: "task-" + task.id, start: task.deadline, allDay: false, display: "list-item",
         title: (task.judul || "Tugas tanpa judul") + " · " + (task.mata_kuliah || "Tanpa mata kuliah"),
-        backgroundColor: color, borderColor: color, textColor: "#ffffff",
+        backgroundColor: taskColor, borderColor: taskColor, textColor: "#ffffff",
         classNames: ["calendar-task-event"], extendedProps: { dateKey: key, eventKind: "task", taskId: task.id },
       }];
     });
     return [...summaries, ...details];
-  }, [filteredTasks, counts]);
+  }, [filteredTasks, counts, now]);
 
   const selectedTasks = useMemo(() => selectedDate
     ? filteredTasks.filter((task) => dateKey(task.deadline) === selectedDate).sort((a,b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
@@ -223,6 +229,7 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
           timeZone="Asia/Jakarta"
           events={events}
           datesSet={(info) => setMonthTitle(new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(info.view.currentStart))}
+          dayHeaderContent={(info) => new Intl.DateTimeFormat("id-ID", { weekday: "short", timeZone: "Asia/Jakarta" }).format(info.date).replace(/\./g, "")}
           dateClick={(info) => setSelectedDate(info.dateStr.slice(0, 10))}
           eventClick={(info) => {
             const key = info.event.extendedProps.dateKey as string | undefined;
