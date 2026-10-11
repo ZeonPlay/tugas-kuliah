@@ -4535,3 +4535,32 @@ select:focus-visible {
   .app-more-menu > summary { gap: 5px; padding-inline: 7px; font-size: 11px; }
   .app-bottom-nav { padding-right: 6px; padding-left: 6px; }
 }
+
+
+/* The desktop navigation is centered relative to the viewport, independent of status text. */
+.app-navigation-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: clamp(12px, 1.7vw, 24px);
+}
+.app-navigation-header > .wordmark {
+  grid-column: 1;
+  justify-self: start;
+  min-width: 0;
+}
+.app-primary-nav {
+  grid-column: 2;
+  justify-self: center;
+  flex: initial;
+}
+.app-navigation-actions {
+  grid-column: 3;
+  justify-self: end;
+}
+@media (max-width: 700px) {
+  .app-navigation-header {
+    display: flex;
+  }
+  .app-navigation-header > .wordmark { flex: 0 1 auto; }
+  .app-navigation-actions { margin-left: auto; }
+}
