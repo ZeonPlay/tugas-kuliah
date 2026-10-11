@@ -3317,3 +3317,28 @@ select:focus-visible {
   .calendar-view-switch button,
   .calendar-filter > summary::after { transition: none; }
 }
+
+/* Explicit selectors keep individual task names out of the monthly grid, even as FullCalendar updates its markup. */
+.calendar-surface .fc-daygrid-event.calendar-task-event,
+.calendar-surface .fc-daygrid .fc-event.calendar-task-event {
+  display: none !important;
+}
+.calendar-surface .fc-list-event.calendar-summary-event,
+.calendar-surface .fc-list .fc-event.calendar-summary-event {
+  display: none !important;
+}
+.calendar-surface .fc-daygrid-day,
+.calendar-surface .fc-daygrid-day-frame {
+  outline-offset: -1px;
+}
+.calendar-surface .fc-daygrid-day {
+  border: 1px solid rgba(150, 150, 150, .24) !important;
+}
+.calendar-surface .fc-daygrid-event.calendar-summary-event {
+  display: block;
+}
+.calendar-surface .fc-daygrid-event.calendar-summary-event .fc-event-main {
+  color: #fff !important;
+  font-size: 10px;
+  font-weight: 750;
+}
