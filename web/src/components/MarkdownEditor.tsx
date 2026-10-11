@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
@@ -165,8 +165,7 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
     setLinkPanelOpen((open) => !open);
   }
 
-  function saveLink(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function saveLink() {
     if (!editor) return;
 
     const range = linkSelectionRef.current;
@@ -378,7 +377,7 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
           </div>
 
           {linkPanelOpen && (
-            <form className="tiptap-link-panel" onSubmit={saveLink}>
+            <div className="tiptap-link-panel" role="group" aria-label="Pengaturan tautan">
               <div className="tiptap-link-fields">
                 <label>
                   Alamat tautan
@@ -389,6 +388,12 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
                     placeholder="https://contoh.com"
                     value={linkUrl}
                     onChange={(event) => setLinkUrl(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        saveLink();
+                      }
+                    }}
                     aria-invalid={Boolean(linkError)}
                   />
                 </label>
@@ -400,6 +405,12 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
                       placeholder="Buka materi"
                       value={linkText}
                       onChange={(event) => setLinkText(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          saveLink();
+                        }
+                      }}
                     />
                   </label>
                 )}
@@ -407,10 +418,10 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
               {linkError && <p className="tiptap-link-error-message" role="alert">{linkError}</p>}
               <div className="tiptap-link-actions">
                 <button type="button" className="tiptap-secondary-action" onClick={() => setLinkPanelOpen(false)}>Batal</button>
-                <button type="submit" className="tiptap-primary-action">Terapkan tautan</button>
+                <button type="button" className="tiptap-primary-action" onClick={saveLink}>Terapkan tautan</button>
               </div>
               <p className="tiptap-link-note">URL harus memakai http:// atau https://. Kosongkan URL untuk menghapus tautan dari teks terpilih.</p>
-            </form>
+            </div>
           )}
 
           {selectionInTable && (
