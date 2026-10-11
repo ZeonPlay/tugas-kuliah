@@ -582,7 +582,6 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
   const [sortOrder, setSortOrder] = useState("closest");
   const [page, setPage] = useState(1);
   const searchRef = useRef<HTMLInputElement>(null);
-  const formTaskAnchorRef = useRef<HTMLDivElement>(null);
   const [formTask, setFormTask] = useState<Task | null | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState(false);
