@@ -188,6 +188,7 @@ drop policy if exists modules_insert_admin on public.module_folders;
 drop policy if exists modules_update_admin on public.module_folders;
 drop policy if exists modules_delete_admin on public.module_folders;
 drop policy if exists module_folders_select_public on public.module_folders;
+drop policy if exists module_folders_select_admin on public.module_folders;
 drop policy if exists module_folders_insert_admin on public.module_folders;
 drop policy if exists module_folders_update_admin on public.module_folders;
 drop policy if exists module_folders_delete_admin on public.module_folders;
@@ -197,6 +198,19 @@ create policy module_folders_select_public
     for select
     to anon, authenticated
     using (aktif = true);
+
+-- Admin perlu melihat folder nonaktif agar dapat mengaktifkan atau menghapusnya.
+create policy module_folders_select_admin
+    on public.module_folders
+    for select
+    to authenticated
+    using (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
 
 create policy module_folders_insert_admin
     on public.module_folders
