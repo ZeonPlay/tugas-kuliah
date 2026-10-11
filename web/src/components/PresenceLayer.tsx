@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { CSSProperties, RealtimeChannel } from "@supabase/supabase-js";
-import type {} from "react";
+import type { CSSProperties } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 
 type RemoteCursor = {
