@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
 import { supabase } from "../lib/supabase";
 
 type Course = { id: string; nama: string; semester: number; kategori: string; aktif: boolean };
