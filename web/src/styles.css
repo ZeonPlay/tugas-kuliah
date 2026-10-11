@@ -1114,9 +1114,19 @@ select:focus-visible {
   white-space: nowrap;
   transition: color var(--duration-quick) var(--ease-out), background-color var(--duration-quick) var(--ease-out), border-color var(--duration-quick) var(--ease-out);
 }
-.open-admin-button { min-height: 38px; padding-inline: 12px; }
-.open-admin-button span { color: var(--color-accent); }
-.open-admin-button:hover,
+.open-admin-button {
+  min-height: 40px;
+  padding-inline: 14px;
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+}
+.open-admin-button span { color: var(--color-accent-ink); }
+.open-admin-button:hover {
+  border-color: oklch(84% 0.12 78);
+  color: var(--color-accent-ink);
+  background: oklch(84% 0.12 78);
+}
 .quiet-button:hover:not(:disabled) {
   border-color: var(--color-ink-secondary);
   color: var(--color-ink);
