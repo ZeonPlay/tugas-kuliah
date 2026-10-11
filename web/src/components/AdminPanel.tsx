@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { supabase, supabaseConfigMissing } from "../lib/supabase";
 import MarkdownContent from "./MarkdownContent";
 
