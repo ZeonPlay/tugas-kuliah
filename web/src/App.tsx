@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase, supabaseConfigMissing } from "./lib/supabase";
+import AdminPanel from "./components/AdminPanel";
+import MarkdownContent from "./components/MarkdownContent";
 
 type Task = {
   id: string;
@@ -108,7 +110,7 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
           <span>{task.jenis}</span>
         </div>
         <h3>{task.judul || "Tugas tanpa judul"}</h3>
-        {task.ketentuan && <p className="task-description">{task.ketentuan}</p>}
+        {task.ketentuan && <MarkdownContent className="task-description" content={task.ketentuan} />}
         <div className="task-links" aria-label="Tautan tugas">
           <ExternalTaskLink href={safeHttpUrl(task.link_vclass)}>VClass</ExternalTaskLink>
           <ExternalTaskLink href={safeHttpUrl(task.link_pengumpulan)}>Pengumpulan</ExternalTaskLink>
@@ -128,6 +130,7 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
 }
 
 function App() {
+  const [page, setPage] = useState<"home" | "admin">("home");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -252,6 +255,17 @@ function App() {
         ? "Koneksi bermasalah"
         : "Tersinkron";
 
+  if (page === "admin") {
+    return (
+      <AdminPanel
+        tasks={tasks}
+        courses={courses}
+        onBack={() => setPage("home")}
+        onDataChanged={() => setRefreshKey((key) => key + 1)}
+      />
+    );
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -261,6 +275,9 @@ function App() {
         </a>
 
         <div className="header-right">
+          <button className="open-admin-button" type="button" onClick={() => setPage("admin")}>
+            Panel admin <span aria-hidden="true">↗</span>
+          </button>
           <span className={"connection-state" + (errorMessage || supabaseConfigMissing ? " is-warning" : "")}>
             <span className="connection-dot" aria-hidden="true" />
             {connectionLabel}
