@@ -47,6 +47,8 @@ function EditorTool({
 export default function MarkdownEditor({ initialValue, onChange }: MarkdownEditorProps) {
   const onChangeRef = useRef(onChange);
   const [linkError, setLinkError] = useState("");
+  const [selectionInTable, setSelectionInTable] = useState(false);
+  const [tableNotice, setTableNotice] = useState("");
   onChangeRef.current = onChange;
 
   const editor = useEditor({
@@ -82,8 +84,23 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
     onUpdate: ({ editor: currentEditor }) => {
       onChangeRef.current(currentEditor.getMarkdown());
       setLinkError("");
+      setSelectionInTable(currentEditor.isActive("table"));
+    },
+    onSelectionUpdate: ({ editor: currentEditor }) => {
+      setSelectionInTable(currentEditor.isActive("table"));
     },
   });
+
+  function insertTable() {
+    if (!editor) return;
+    setTableNotice("");
+    if (editor.isActive("table")) {
+      setTableNotice("Kursor sedang berada di dalam tabel. Pindahkan kursor ke area teks di luar tabel sebelum menambahkan tabel baru.");
+      return;
+    }
+    editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run();
+    setTableNotice("Tabel 2 kolom ditambahkan. Klik sel untuk mengetik; gunakan Tab untuk berpindah ke sel berikutnya.");
+  }
 
   function insertLink() {
     if (!editor) return;
@@ -148,7 +165,7 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
               “ Kutipan
             </EditorTool>
             <span className="tiptap-toolbar-divider" aria-hidden="true" />
-            <EditorTool label="Tambah tabel 2 kolom" onClick={() => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run()}>
+            <EditorTool label="Tambahkan tabel dua kolom" onClick={insertTable} disabled={selectionInTable}>
               Tabel
             </EditorTool>
             <EditorTool label="Sisipkan tautan pada teks terpilih" active={editor.isActive("link")} onClick={insertLink}>
@@ -165,6 +182,8 @@ export default function MarkdownEditor({ initialValue, onChange }: MarkdownEdito
         )}
       </div>
       <EditorContent editor={editor} />
+      {tableNotice && <p className="field-hint tiptap-link-error" role="status">{tableNotice}</p>}
+      {selectionInTable && <p className="field-hint tiptap-link-error" role="status">Sedang mengedit tabel. Gunakan Tab untuk pindah sel. Tombol Tabel dinonaktifkan agar tidak membuat tabel bersarang.</p>}
       {linkError && <p className="field-hint field-error tiptap-link-error" role="status">{linkError}</p>}
       <p className="field-hint tiptap-editor-help">
         Ketik seperti dokumen biasa. Format tersimpan sebagai Markdown dan bisa dipakai kembali di aplikasi lama.
