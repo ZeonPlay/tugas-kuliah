@@ -5063,3 +5063,46 @@ select:focus-visible {
   .admin-users-remove { padding-inline: 7px; }
   .admin-users-protected { font-size: 9px; white-space: normal; text-align: right; }
 }
+
+
+/* Compact dashboard totals: quick context without turning the summary into three cards. */
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 0 24px;
+  padding-block: 12px;
+  border-top: 1px solid var(--color-rule);
+  border-bottom: 1px solid var(--color-rule);
+}
+.dashboard-metric {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  min-width: 0;
+  padding: 2px 18px;
+  border-right: 1px solid var(--color-rule);
+}
+.dashboard-metric:first-child { padding-left: 0; }
+.dashboard-metric:last-child { padding-right: 0; border-right: 0; }
+.dashboard-metric strong {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -.055em;
+  font-variant-numeric: tabular-nums;
+}
+.dashboard-metric span { color: var(--color-muted); font-size: 10px; line-height: 1.5; }
+
+@media (max-width: 600px) {
+  .dashboard-metrics { margin-bottom: 19px; }
+  .dashboard-metric { align-items: start; flex-direction: column; gap: 2px; padding-inline: 10px; }
+  .dashboard-metric strong { font-size: 21px; }
+  .dashboard-metric span { font-size: 9px; }
+}
+@media (max-width: 360px) {
+  .dashboard-metric { padding-inline: 7px; }
+  .dashboard-metric strong { font-size: 19px; }
+  .dashboard-metric span { font-size: 8px; }
+}
