@@ -774,9 +774,9 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
       ) : (
         <section className="admin-workspace">
           {formTask === undefined && (
-            <div className="admin-section-switch" role="tablist" aria-label="Bagian panel admin">
-              <button type="button" role="tab" aria-selected={adminSection === "tasks"} className={adminSection === "tasks" ? "is-current" : ""} onClick={() => setAdminSection("tasks")}>Kelola tugas</button>
-              <button type="button" role="tab" aria-selected={adminSection === "courses"} className={adminSection === "courses" ? "is-current" : ""} onClick={() => setAdminSection("courses")}>Mata kuliah</button>
+            <div className="admin-section-switch" role="group" aria-label="Bagian panel admin">
+              <button type="button" aria-pressed={adminSection === "tasks"} className={adminSection === "tasks" ? "is-current" : ""} onClick={() => setAdminSection("tasks")}>Kelola tugas</button>
+              <button type="button" aria-pressed={adminSection === "courses"} className={adminSection === "courses" ? "is-current" : ""} onClick={() => setAdminSection("courses")}>Mata kuliah</button>
             </div>
           )}
           {adminSection === "courses" ? (
