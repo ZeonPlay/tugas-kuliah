@@ -92,18 +92,19 @@ function ExternalTaskLink({ href, children }: { href: string | null; children: s
 
 function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boolean }) {
   const deadlineDate = new Date(task.deadline);
+  const safeDate = Number.isNaN(deadlineDate.getTime()) ? new Date(now) : deadlineDate;
 
   return (
     <article className={"task-row" + (overdue ? " task-row-overdue" : "")}>
-      <div className="task-date" aria-label={"Deadline " + deadlineText(task.deadline)}>
-        <span>{WEEKDAY_FORMAT.format(deadlineDate).replace(".", "")}</span>
-        <strong>{DAY_MONTH_FORMAT.format(deadlineDate)}</strong>
-      </div>
+      <time className="task-date" dateTime={task.deadline}>
+        <span>{WEEKDAY_FORMAT.format(safeDate).replace(".", "")}</span>
+        <strong>{DAY_MONTH_FORMAT.format(safeDate)}</strong>
+      </time>
 
       <div className="task-main">
         <div className="task-meta">
           <span className="task-course">{task.mata_kuliah || "Tanpa mata kuliah"}</span>
-          <span className="meta-divider" aria-hidden="true">/</span>
+          <span className="meta-divider" aria-hidden="true">·</span>
           <span>{task.jenis}</span>
         </div>
         <h3>{task.judul || "Tugas tanpa judul"}</h3>
@@ -117,6 +118,7 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
 
       <div className="task-timing">
         <span className={"deadline-status" + (overdue ? " is-overdue" : "")}>
+          <span className="status-dot" aria-hidden="true" />
           {countdownText(task.deadline, now)}
         </span>
         <span className="task-time">{deadlineText(task.deadline)}</span>
@@ -243,12 +245,12 @@ function App() {
   }
 
   const connectionLabel = supabaseConfigMissing
-    ? "Belum dikonfigurasi"
+    ? "Supabase belum diatur"
     : loading
-      ? "Menghubungkan"
+      ? "Memuat data"
       : errorMessage
-        ? "Perlu diperiksa"
-        : "Data termuat";
+        ? "Koneksi bermasalah"
+        : "Tersinkron";
 
   return (
     <main className="app-shell">
@@ -258,37 +260,41 @@ function App() {
           <span className="wordmark-name">tugas kuliah</span>
         </a>
 
-        <div className="header-context">
-          <span className="header-context-label">SISTEM INFORMASI</span>
-          <span className="header-context-divider" aria-hidden="true" />
-          <span className="connection-state">
-            <span className={"connection-dot" + (errorMessage || supabaseConfigMissing ? " connection-dot-warn" : "")} />
+        <div className="header-right">
+          <div className="today-label">
+            <span className="today-label-caption">Hari ini</span>
+            <time dateTime={new Date(now).toISOString()}>{FULL_DATE_FORMAT.format(new Date(now))}</time>
+          </div>
+          <span className={"connection-state" + (errorMessage || supabaseConfigMissing ? " is-warning" : "")}>
+            <span className="connection-dot" aria-hidden="true" />
             {connectionLabel}
           </span>
+          <button
+            className="refresh-button"
+            type="button"
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={loading}
+            aria-label="Muat ulang data dari Supabase"
+            title="Muat ulang"
+          >
+            ↻
+          </button>
         </div>
-
-        <button
-          className="refresh-button"
-          type="button"
-          onClick={() => setRefreshKey((key) => key + 1)}
-          disabled={loading}
-          aria-label="Muat ulang data dari Supabase"
-        >
-          <span aria-hidden="true">↻</span>
-          <span>Muat ulang</span>
-        </button>
       </header>
 
-      <section className="page-intro">
-        <div className="page-intro-copy">
-          <p className="kicker">RUANG KERJA AKADEMIK <span> / </span> 01</p>
-          <h1>Jangan sampai ada<br className="desktop-break" /> deadline yang kelewat.</h1>
+      <section className="welcome">
+        <div>
+          <p className="welcome-kicker">AGENDA KULIAH</p>
+          <h1>Tugas kuliah,<br className="wide-break" /> satu per satu.</h1>
+          <p className="welcome-copy">Lihat yang paling dekat, pilih langkah berikutnya, lalu mulai dari sana.</p>
         </div>
-        <div className="date-note">
-          <span className="date-note-label">HARI INI</span>
-          <time dateTime={new Date(now).toISOString()}>{FULL_DATE_FORMAT.format(new Date(now))}</time>
-          <p>Waktu mengikuti WIB.</p>
-        </div>
+        <p className="welcome-note">
+          {loading
+            ? "Menyiapkan daftar kamu…"
+            : urgentCount > 0
+              ? urgentCount + " deadline dalam 48 jam ke depan."
+              : "Tidak ada deadline mendesak dalam 48 jam."}
+        </p>
       </section>
 
       {supabaseConfigMissing && (
@@ -303,44 +309,26 @@ function App() {
 
       {errorMessage && (
         <section className="notice notice-error" role="alert">
-          <strong>Data belum berhasil dimuat.</strong>
-          <span>{errorMessage}</span>
+          <strong>Data tugas belum berhasil dimuat.</strong>
+          <span>{errorMessage}. Periksa koneksi Supabase dan kebijakan akses tabel, lalu coba lagi.</span>
           <button className="text-button" type="button" onClick={() => setRefreshKey((key) => key + 1)}>
-            Coba lagi <span aria-hidden="true">↗</span>
+            Coba lagi
           </button>
         </section>
       )}
-
-      <section className="summary-strip" aria-label="Ringkasan tugas">
-        <div className="summary-item">
-          <span className="summary-label">TUGAS TERSARING</span>
-          <strong>{loading ? "—" : filteredTasks.length.toString().padStart(2, "0")}</strong>
-        </div>
-        <div className="summary-item">
-          <span className="summary-label">DEADLINE ≤ 48 JAM</span>
-          <strong>{loading ? "—" : urgentCount.toString().padStart(2, "0")}</strong>
-        </div>
-        <button
-          className={"summary-item summary-item-action" + (taskView === "overdue" ? " is-active" : "")}
-          type="button"
-          onClick={() => setTaskView("overdue")}
-          aria-pressed={taskView === "overdue"}
-        >
-          <span className="summary-label">SUDAH TERLEWAT</span>
-          <strong>{loading ? "—" : overdueTasks.length.toString().padStart(2, "0")}</strong>
-        </button>
-      </section>
 
       <div className="workspace-grid">
         <section className="task-section" aria-labelledby="task-section-title">
           <div className="section-heading">
             <div>
-              <p className="section-index">01 <span>/</span> DAFTAR</p>
-              <h2 id="task-section-title">{taskView === "upcoming" ? "Yang perlu dikerjakan" : "Yang sudah terlewat"}</h2>
+              <h2 id="task-section-title">{taskView === "upcoming" ? "Yang akan datang" : "Sudah lewat"}</h2>
+              <p className="section-subtitle">
+                {taskView === "upcoming"
+                  ? "Urut berdasarkan deadline terdekat."
+                  : "Tugas yang tenggatnya sudah berlalu."}
+              </p>
             </div>
-            <span className="result-count">
-              {loading ? "…" : String(selectedTasks.length).padStart(2, "0")} <span>tugas</span>
-            </span>
+            <span className="result-count">{loading ? "…" : selectedTasks.length} tugas</span>
           </div>
 
           <div className="task-tabs" role="group" aria-label="Tampilan tugas">
@@ -404,8 +392,8 @@ function App() {
           {loading ? (
             <div className="empty-state" role="status">
               <span className="loading-mark" aria-hidden="true" />
-              <strong>Mengambil data tugas</strong>
-              <span>Menghubungkan ke Supabase…</span>
+              <strong>Memuat tugas</strong>
+              <span>Sebentar, daftar kamu sedang disiapkan.</span>
             </div>
           ) : visibleTasks.length > 0 ? (
             <div className="task-list">
@@ -430,10 +418,10 @@ function App() {
               </strong>
               <span>
                 {filteredTasks.length === 0
-                  ? "Coba kata kunci atau filter mata kuliah yang lain."
+                  ? "Coba kata kunci atau filter yang lain."
                   : taskView === "upcoming"
-                    ? "Bagus. Untuk sekarang, tidak ada yang harus dikejar."
-                    : "Semua tugas yang tercatat masih dalam tenggat."}
+                    ? "Bagus, tidak ada tenggat yang perlu dikejar sekarang."
+                    : "Semua tugas masih berada dalam tenggat."}
               </span>
               {(search || courseFilter !== "all" || typeFilter !== "all") && (
                 <button className="text-button" type="button" onClick={clearFilters}>Bersihkan filter</button>
@@ -449,20 +437,18 @@ function App() {
         </section>
 
         <aside className="course-section" aria-labelledby="course-section-title">
-          <div className="section-heading course-heading">
+          <div className="course-heading">
             <div>
-              <p className="section-index">02 <span>/</span> KATALOG</p>
               <h2 id="course-section-title">Mata kuliah</h2>
+              <p className="section-subtitle">Pilih satu untuk menyaring daftar.</p>
             </div>
-            <span className="result-count">{loading ? "…" : String(courses.length).padStart(2, "0")}</span>
+            <span className="course-total">{loading ? "…" : courses.length}</span>
           </div>
 
-          <p className="course-hint">Pilih mata kuliah untuk menyaring daftar tugas.</p>
-
           {loading ? (
-            <p className="aside-message">Memuat katalog…</p>
+            <p className="aside-message">Memuat mata kuliah…</p>
           ) : courses.length === 0 ? (
-            <p className="aside-message">Belum ada mata kuliah aktif di katalog.</p>
+            <p className="aside-message">Belum ada mata kuliah aktif.</p>
           ) : (
             <div className="course-list">
               {courses
@@ -487,21 +473,19 @@ function App() {
 
           {courseFilter !== "all" && (
             <button className="text-button clear-course-filter" type="button" onClick={() => setCourseFilter("all")}>
-              Tampilkan semua mata kuliah <span aria-hidden="true">↗</span>
+              Tampilkan semua mata kuliah
             </button>
           )}
-
-          <div className="aside-note">
-            <span className="aside-note-mark" aria-hidden="true">i</span>
-            <p>Deadline ditampilkan dalam Waktu Indonesia Barat (WIB).</p>
-          </div>
         </aside>
       </div>
 
       <footer className="app-footer">
         <span className="footer-wordmark">tugas kuliah<span>.</span></span>
-        <span>Ruang kerja akademik · {new Date(now).getFullYear()}</span>
-        <span className="footer-status"><span className="connection-dot" />{connectionLabel}</span>
+        <span>Semoga kuliahmu hari ini lancar.</span>
+        <span className="footer-status">
+          <span className="connection-dot" aria-hidden="true" />
+          {connectionLabel}
+        </span>
       </footer>
     </main>
   );
