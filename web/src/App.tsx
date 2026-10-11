@@ -275,8 +275,8 @@ function App() {
         </a>
 
         <div className="header-right">
-          <button className="open-admin-button" type="button" onClick={() => setPage("admin")}>
-            Panel admin <span aria-hidden="true">↗</span>
+          <button className="open-admin-button" type="button" onClick={() => setPage("admin")} aria-label="Buka Panel Admin">
+            Panel Admin <span aria-hidden="true">↗</span>
           </button>
           <span className={"connection-state" + (errorMessage || supabaseConfigMissing ? " is-warning" : "")}>
             <span className="connection-dot" aria-hidden="true" />
