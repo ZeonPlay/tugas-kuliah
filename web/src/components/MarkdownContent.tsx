@@ -6,8 +6,21 @@ type MarkdownContentProps = {
   className?: string;
 };
 
+/**
+ * Old instructions were sometimes stored with Markdown punctuation escaped
+ * (for example, `**UTS\\_NAMA\\_KELAS.pdf**`). Those slashes stop the Markdown
+ * syntax from behaving as intended. Normalize only common Markdown markers
+ * before parsing; ReactMarkdown still renders HTML as text rather than trusting it.
+ */
+function normalizeLegacyMarkdown(value: string): string {
+  return value
+    .replace(/\\([*_~])/g, "$1")
+    .replace(/\r\n?/g, "\n")
+    .trim();
+}
+
 export default function MarkdownContent({ content, className }: MarkdownContentProps) {
-  const source = content.trim();
+  const source = normalizeLegacyMarkdown(content);
 
   if (!source) return null;
 
