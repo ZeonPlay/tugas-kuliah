@@ -132,6 +132,41 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
   );
 }
 
+function NewlyOverdueNotice({ tasks }: { tasks: Task[] }) {
+  if (tasks.length === 0) return null;
+
+  const visibleTasks = tasks.slice(0, 3);
+  const remaining = tasks.length - visibleTasks.length;
+
+  return (
+    <section className="recent-overdue" aria-labelledby="recent-overdue-heading">
+      <div className="recent-overdue-heading">
+        <span className="recent-overdue-mark" aria-hidden="true">!</span>
+        <div>
+          <h2 id="recent-overdue-heading">Baru terlewat</h2>
+          <p>Deadline yang lewat dalam 3 hari terakhir. Buka tautan langsung untuk segera menindaklanjutinya.</p>
+        </div>
+      </div>
+      <div className="recent-overdue-list">
+        {visibleTasks.map((task) => (
+          <article className="recent-overdue-item" key={task.id}>
+            <div className="recent-overdue-copy">
+              <strong>{task.judul || "Tugas tanpa judul"}</strong>
+              <span>{task.mata_kuliah || "Tanpa mata kuliah"} · Deadline {deadlineText(task.deadline)}</span>
+            </div>
+            <div className="recent-overdue-links" aria-label={"Tautan " + (task.judul || "tugas")}>
+              <ExternalTaskLink href={safeHttpUrl(task.link_vclass)}>VClass</ExternalTaskLink>
+              <ExternalTaskLink href={safeHttpUrl(task.link_pengumpulan)}>Pengumpulan</ExternalTaskLink>
+              <ExternalTaskLink href={safeHttpUrl(task.file_soal)}>File soal</ExternalTaskLink>
+            </div>
+          </article>
+        ))}
+      </div>
+      {remaining > 0 && <p className="recent-overdue-more">Dan {remaining} tugas baru terlewat lainnya ada di daftar tugas.</p>}
+    </section>
+  );
+}
+
 function App() {
   const [page, setPage] = useState<AppPage>("home");
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -227,6 +262,16 @@ function App() {
         .sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime()),
     [filteredTasks, now],
   );
+
+  const newlyOverdueTasks = useMemo(() => {
+    const cutoff = now - 3 * 24 * 60 * 60 * 1000;
+    return filteredTasks
+      .filter((task) => {
+        const deadline = new Date(task.deadline).getTime();
+        return deadline < now && deadline >= cutoff;
+      })
+      .sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime());
+  }, [filteredTasks, now]);
 
   const urgentCount = upcomingTasks.filter((task) => {
     const difference = new Date(task.deadline).getTime() - now;
@@ -364,6 +409,8 @@ function App() {
           </button>
         </section>
       )}
+
+      <NewlyOverdueNotice tasks={newlyOverdueTasks} />
 
       <div className="workspace-grid">
         <section className="task-section" aria-labelledby="task-section-title">
