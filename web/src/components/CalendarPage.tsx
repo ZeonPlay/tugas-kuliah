@@ -1,191 +1,147 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/react/daygrid";
+import listPlugin from "@fullcalendar/react/list";
 import interactionPlugin from "@fullcalendar/react/interaction";
-import type { ComponentRef } from "react";
-import type { ReactNode } from "react";
+import type { ComponentRef, ReactNode } from "react";
 import "@fullcalendar/react/skeleton.css";
 
 type Task = {
-  id: string;
-  judul: string;
-  mata_kuliah: string;
-  jenis: string;
-  deadline: string;
-  ketentuan: string | null;
-  link_vclass: string | null;
-  link_pengumpulan: string | null;
-  file_soal: string | null;
+  id: string; judul: string; mata_kuliah: string; jenis: string; deadline: string;
+  ketentuan: string | null; link_vclass: string | null; link_pengumpulan: string | null; file_soal: string | null;
 };
-
-type CalendarPageProps = {
-  tasks: Task[];
-  loading: boolean;
-  errorMessage: string;
-  onBack: () => void;
-  onOpenAdmin: () => void;
-  onRefresh: () => void;
+type Props = {
+  tasks: Task[]; loading: boolean; errorMessage: string;
+  onBack: () => void; onOpenAdmin: () => void; onRefresh: () => void;
 };
+type CalendarView = "dayGridMonth" | "listMonth";
 
 const DATE_FORMAT = new Intl.DateTimeFormat("id-ID", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: "Asia/Jakarta",
+  weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta",
 });
-
 const DEADLINE_FORMAT = new Intl.DateTimeFormat("id-ID", {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Asia/Jakarta",
-  hourCycle: "h23",
+  hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta", hourCycle: "h23",
 });
+const KNOWN_TYPES = ["Praktikum", "Teori", "Quiz", "Ujian"];
 
-const WEEKDAY_LABELS = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-
-function wibDateKey(value: string | Date): string {
+function dateKey(value: string | Date): string {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
+    timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit",
   }).formatToParts(date);
   const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
   return get("year") + "-" + get("month") + "-" + get("day");
 }
-
-function todayWib(): string {
-  return wibDateKey(new Date());
+function todayWib(): string { return dateKey(new Date()); }
+function nextDateKey(key: string): string {
+  const [year, month, day] = key.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + 1));
+  return [date.getUTCFullYear(), String(date.getUTCMonth() + 1).padStart(2, "0"), String(date.getUTCDate()).padStart(2, "0")].join("-");
 }
-
-function formatMonth(value: Date): string {
-  return new Intl.DateTimeFormat("id-ID", {
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Jakarta",
-  }).format(value);
-}
-
-function safeHttpUrl(value: string | null): string | null {
+function safeUrl(value: string | null): string | null {
   if (!value) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
-  } catch {
-    return null;
-  }
+  try { const url = new URL(value); return url.protocol === "http:" || url.protocol === "https:" ? url.href : null; }
+  catch { return null; }
 }
-
-function OutboundLink({ href, children }: { href: string | null; children: ReactNode }) {
-  if (!href) return null;
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer">
-      {children} <span aria-hidden="true">↗</span>
-    </a>
-  );
+function Link({ href, children }: { href: string | null; children: ReactNode }) {
+  return href ? <a href={href} target="_blank" rel="noopener noreferrer">{children} <span aria-hidden="true">↗</span></a> : null;
 }
 
 function CalendarTask({ task, now }: { task: Task; now: number }) {
   const overdue = new Date(task.deadline).getTime() < now;
-  const deadline = new Date(task.deadline);
-
   return (
-    <article className={"calendar-task" + (overdue ? " is-overdue" : "")}>
-      <div className="calendar-task-time">
-        <strong>{DEADLINE_FORMAT.format(deadline)}</strong>
-        <span>WIB</span>
+    <article className={"calendar-task-card" + (overdue ? " is-overdue" : "")}>
+      <div className="calendar-task-card-heading">
+        <div>
+          <p className="calendar-task-meta"><span>{task.mata_kuliah || "Tanpa mata kuliah"}</span><span aria-hidden="true">·</span><span>{task.jenis}</span></p>
+          <h3>{task.judul || "Tugas tanpa judul"}</h3>
+        </div>
+        <time dateTime={task.deadline}>{DEADLINE_FORMAT.format(new Date(task.deadline))} WIB</time>
       </div>
-      <div className="calendar-task-copy">
-        <div className="calendar-task-meta">
-          <span>{task.mata_kuliah || "Tanpa mata kuliah"}</span>
-          <span aria-hidden="true">·</span>
-          <span>{task.jenis}</span>
-        </div>
-        <h3>{task.judul || "Tugas tanpa judul"}</h3>
-        {overdue && <span className="calendar-overdue-label">Deadline terlewat</span>}
-        <div className="calendar-task-links">
-          <OutboundLink href={safeHttpUrl(task.link_vclass)}>VClass</OutboundLink>
-          <OutboundLink href={safeHttpUrl(task.link_pengumpulan)}>Pengumpulan</OutboundLink>
-          <OutboundLink href={safeHttpUrl(task.file_soal)}>File soal</OutboundLink>
-        </div>
+      {overdue && <p className="calendar-overdue-label">Deadline sudah lewat</p>}
+      {task.ketentuan && <p className="calendar-task-instructions">{task.ketentuan}</p>}
+      <div className="calendar-task-links">
+        <Link href={safeUrl(task.link_vclass)}>VClass</Link>
+        <Link href={safeUrl(task.link_pengumpulan)}>Pengumpulan</Link>
+        <Link href={safeUrl(task.file_soal)}>File soal</Link>
       </div>
     </article>
   );
 }
 
-export default function CalendarPage({
-  tasks,
-  loading,
-  errorMessage,
-  onBack,
-  onOpenAdmin,
-  onRefresh,
-}: CalendarPageProps) {
+export default function CalendarPage({ tasks, loading, errorMessage, onBack, onOpenAdmin, onRefresh }: Props) {
   const calendarRef = useRef<ComponentRef<typeof FullCalendar> | null>(null);
-  const [selectedDate, setSelectedDate] = useState(todayWib);
-  const [monthTitle, setMonthTitle] = useState(() => formatMonth(new Date()));
-  const [now, setNow] = useState(() => Date.now());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [view, setView] = useState<CalendarView>("dayGridMonth");
+  const [selectedTypes, setSelectedTypes] = useState<string[] | null>(null);
+  const [selectedCourses, setSelectedCourses] = useState<string[] | null>(null);
+  const [now, setNow] = useState(Date.now);
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  const countsByDate = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const task of tasks) {
-      const key = wibDateKey(task.deadline);
-      if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const types = useMemo(() => [...new Set([...KNOWN_TYPES, ...tasks.map((task) => task.jenis).filter(Boolean)])].sort((a,b) => a.localeCompare(b, "id-ID")), [tasks]);
+  const courses = useMemo(() => [...new Set(tasks.map((task) => task.mata_kuliah).filter(Boolean))].sort((a,b) => a.localeCompare(b, "id-ID")), [tasks]);
+  const filteredTasks = useMemo(() => tasks.filter((task) =>
+    (selectedTypes === null || selectedTypes.includes(task.jenis)) &&
+    (selectedCourses === null || selectedCourses.includes(task.mata_kuliah))
+  ), [tasks, selectedTypes, selectedCourses]);
+
+  const counts = useMemo(() => {
+    const result = new Map<string, number>();
+    for (const task of filteredTasks) {
+      const key = dateKey(task.deadline);
+      if (key) result.set(key, (result.get(key) ?? 0) + 1);
     }
-    return counts;
-  }, [tasks]);
+    return result;
+  }, [filteredTasks]);
 
-  const calendarEvents = useMemo(
-    () =>
-      tasks.flatMap((task) => {
-        const date = wibDateKey(task.deadline);
-        if (!date) return [];
-        return [{
-          id: task.id,
-          title: task.judul || "Tugas tanpa judul",
-          start: date,
-          allDay: true,
-          extendedProps: { task },
-        }];
-      }),
-    [tasks],
-  );
-
-  const selectedTasks = useMemo(
-    () =>
-      tasks
-        .filter((task) => wibDateKey(task.deadline) === selectedDate)
-        .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()),
-    [tasks, selectedDate],
-  );
-
-  function selectDate(value: string) {
-    setSelectedDate(value.slice(0, 10));
-  }
-
-  function goToToday() {
+  const events = useMemo(() => {
     const today = todayWib();
-    setSelectedDate(today);
-    calendarRef.current?.getApi().today();
-  }
+    const summaries = [...counts.entries()].map(([key, count]) => {
+      const color = key < today ? "#94a3b8" : "#ef4444";
+      return {
+        id: "summary-" + key, start: key, end: nextDateKey(key), allDay: true,
+        title: count + " deadline", backgroundColor: color, borderColor: color, textColor: "#ffffff",
+        classNames: ["calendar-summary-event"], extendedProps: { dateKey: key, eventKind: "summary" },
+      };
+    });
+    const details = filteredTasks.flatMap((task) => {
+      const key = dateKey(task.deadline);
+      if (!key) return [];
+      const color = key < today ? "#94a3b8" : "#ef4444";
+      return [{
+        id: "task-" + task.id, start: task.deadline, allDay: false, display: "list-item",
+        title: (task.judul || "Tugas tanpa judul") + " · " + (task.mata_kuliah || "Tanpa mata kuliah"),
+        backgroundColor: color, borderColor: color, textColor: "#ffffff",
+        classNames: ["calendar-task-event"], extendedProps: { dateKey: key, eventKind: "task", taskId: task.id },
+      }];
+    });
+    return [...summaries, ...details];
+  }, [filteredTasks, counts]);
 
-  function moveMonth(direction: "previous" | "next") {
-    const api = calendarRef.current?.getApi();
-    if (!api) return;
-    if (direction === "previous") api.prev();
-    else api.next();
+  const selectedTasks = useMemo(() => selectedDate
+    ? filteredTasks.filter((task) => dateKey(task.deadline) === selectedDate).sort((a,b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+    : [], [filteredTasks, selectedDate]);
+  const filtersActive = selectedTypes !== null || selectedCourses !== null;
+
+  function toggleOption(option: string, options: string[], selected: string[] | null, update: (value: string[] | null) => void) {
+    const current = selected ?? options;
+    const next = current.includes(option) ? current.filter((item) => item !== option) : [...current, option];
+    update(next.length === options.length ? null : next);
   }
+  function resetFilters() { setSelectedTypes(null); setSelectedCourses(null); }
+  function changeView(next: CalendarView) { calendarRef.current?.getApi().changeView(next); setView(next); }
 
   return (
     <main className="app-shell calendar-page">
       <header className="app-header">
         <a className="wordmark" href="/" onClick={(event) => { event.preventDefault(); onBack(); }} aria-label="Kembali ke beranda">
-          <span className="wordmark-symbol" aria-hidden="true">t<span>.</span></span>
-          <span className="wordmark-name">tugas kuliah</span>
+          <span className="wordmark-symbol" aria-hidden="true">t<span>.</span></span><span className="wordmark-name">tugas kuliah</span>
         </a>
         <div className="calendar-header-actions">
           <button className="calendar-nav-button" type="button" onClick={onBack}>Beranda</button>
@@ -194,125 +150,81 @@ export default function CalendarPage({
         </div>
       </header>
 
-      <section className="calendar-welcome">
-        <div>
-          <p className="welcome-kicker">AGENDA KULIAH <span aria-hidden="true">·</span> KALENDER</p>
-          <h1>Semua deadline,<br className="calendar-wide-break" /> kelihatan jelas.</h1>
-          <p className="welcome-copy">Pilih tanggal untuk melihat tugas yang harus dikumpulkan. Semua jam menggunakan WIB.</p>
-        </div>
-        <div className="calendar-summary-note" aria-live="polite">
-          <strong>{tasks.length}</strong>
-          <span>tugas tercatat</span>
-          <span className="calendar-summary-divider" />
-          <strong>{countsByDate.size}</strong>
-          <span>hari dengan deadline</span>
-        </div>
+      <section className="calendar-page-heading">
+        <h1>Kalender Tugas</h1>
+        <p>Klik tanggal yang memiliki deadline untuk melihat detail tugas.</p>
       </section>
 
-      {errorMessage && (
-        <section className="notice notice-error" role="alert">
-          <strong>Data kalender belum berhasil dimuat.</strong>
-          <span>{errorMessage}</span>
-          <button className="text-button" type="button" onClick={onRefresh}>Coba lagi</button>
+      {errorMessage && <section className="notice notice-error" role="alert"><strong>Data kalender belum berhasil dimuat.</strong><span>{errorMessage}</span><button className="text-button" type="button" onClick={onRefresh}>Coba lagi</button></section>}
+
+      <details className="calendar-filter" open={filterOpen} onToggle={(event) => setFilterOpen(event.currentTarget.open)}>
+        <summary>🔎 Filter kalender{filtersActive ? " · Filter aktif" : ""}</summary>
+        <div className="calendar-filter-content">
+          <fieldset className="calendar-filter-fieldset">
+            <legend>Jenis</legend>
+            <div className="calendar-filter-options">
+              {types.map((type) => <label className="calendar-filter-option" key={type}>
+                <input type="checkbox" checked={selectedTypes === null || selectedTypes.includes(type)} onChange={() => toggleOption(type, types, selectedTypes, setSelectedTypes)} />
+                <span>{type}</span>
+              </label>)}
+            </div>
+          </fieldset>
+          <fieldset className="calendar-filter-fieldset">
+            <legend>Mata kuliah</legend>
+            <div className="calendar-filter-options calendar-course-filter-options">
+              {courses.map((course) => <label className="calendar-filter-option" key={course}>
+                <input type="checkbox" checked={selectedCourses === null || selectedCourses.includes(course)} onChange={() => toggleOption(course, courses, selectedCourses, setSelectedCourses)} />
+                <span>{course}</span>
+              </label>)}
+            </div>
+          </fieldset>
+          {filtersActive && <button className="calendar-filter-reset" type="button" onClick={resetFilters}>Reset filter</button>}
+        </div>
+      </details>
+
+      {loading ? <div className="calendar-loading" role="status"><span className="loading-mark" /><strong>Memuat deadline…</strong></div>
+      : filteredTasks.length === 0 ? <div className="calendar-empty-result" role="status"><strong>{tasks.length === 0 ? "Belum ada tugas yang tercatat." : "Filter saat ini tidak menemukan tugas."}</strong>{tasks.length > 0 && <button className="quiet-button" type="button" onClick={resetFilters}>Tampilkan semua tugas</button>}</div>
+      : <section className="calendar-surface" aria-label="Kalender deadline">
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          initialDate={todayWib()}
+          headerToolbar={false}
+          height={520}
+          contentHeight={520}
+          expandRows
+          fixedWeekCount={false}
+          firstDay={1}
+          timeZone="Asia/Jakarta"
+          events={events}
+          dateClick={(info) => setSelectedDate(info.dateStr.slice(0, 10))}
+          eventClick={(info) => {
+            const key = info.event.extendedProps.dateKey as string | undefined;
+            if (key) setSelectedDate(key);
+          }}
+          dayMaxEvents={3}
+          moreLinkContent={(info) => "+" + info.num + " lagi"}
+          moreLinkClick="date"
+          displayEventTime={false}
+          eventDisplay="block"
+          views={{ listMonth: { listDayFormat: { weekday: "long", day: "numeric", month: "long" }, listDaySideFormat: false } }}
+        />
+        <p className="calendar-help">Tampilan Bulan menunjukkan jumlah deadline per hari. Pilih Daftar untuk melihat daftar deadline dalam bulan tersebut.</p>
+      </section>}
+
+      {!selectedDate ? <p className="calendar-selection-hint">Pilih tanggal yang memiliki deadline untuk melihat detail.</p> : (
+        <section className="calendar-selected-day" aria-labelledby="selected-day-heading">
+          <div className="calendar-selected-day-heading">
+            <div><p className="calendar-section-kicker">AGENDA HARIAN</p><h2 id="selected-day-heading">Tugas pada {DATE_FORMAT.format(new Date(selectedDate + "T12:00:00+07:00"))}</h2><p>{selectedTasks.length} tugas jatuh tempo</p></div>
+            <button className="calendar-nav-button" type="button" onClick={() => setSelectedDate(null)}>Tutup</button>
+          </div>
+          {selectedTasks.length === 0 ? <p className="calendar-no-tasks">Tidak ada tugas pada tanggal tersebut dengan filter saat ini.</p> : <div className="calendar-selected-task-list">{selectedTasks.map((task) => <CalendarTask key={task.id} task={task} now={now} />)}</div>}
         </section>
       )}
 
-      <section className="calendar-workspace" aria-label="Kalender dan daftar tugas">
-        <div className="calendar-main">
-          <div className="calendar-toolbar">
-            <div>
-              <p className="calendar-section-kicker">KALENDER AKADEMIK</p>
-              <h2>{monthTitle}</h2>
-            </div>
-            <div className="calendar-toolbar-actions">
-              <button type="button" className="calendar-nav-button calendar-today-button" onClick={goToToday}>Hari ini</button>
-              <button type="button" className="calendar-arrow-button" onClick={() => moveMonth("previous")} aria-label="Bulan sebelumnya" title="Bulan sebelumnya">‹</button>
-              <button type="button" className="calendar-arrow-button" onClick={() => moveMonth("next")} aria-label="Bulan berikutnya" title="Bulan berikutnya">›</button>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="calendar-loading" role="status">
-              <span className="loading-mark" />
-              <strong>Memuat deadline…</strong>
-            </div>
-          ) : (
-            <div className="planner-calendar">
-              <FullCalendar
-                ref={calendarRef}
-                plugins={[dayGridPlugin, interactionPlugin]}
-                initialView="dayGridMonth"
-                initialDate={selectedDate}
-                headerToolbar={false}
-                height="auto"
-                contentHeight="auto"
-                fixedWeekCount={false}
-                firstDay={1}
-                timeZone="Asia/Jakarta"
-                events={calendarEvents}
-                dateClick={(info) => selectDate(info.dateStr)}
-                eventClick={(info) => {
-                  const task = info.event.extendedProps.task as Task | undefined;
-                  if (task) selectDate(wibDateKey(task.deadline));
-                }}
-                datesSet={(info) => setMonthTitle(formatMonth(info.view.currentStart))}
-                dayHeaderContent={(info) => WEEKDAY_LABELS[info.date.getDay()]}
-                dayCellTopContent={(info) => {
-                  const key = wibDateKey(info.date);
-                  const count = countsByDate.get(key) ?? 0;
-                  return (
-                    <span className="calendar-day-top">
-                      <span className="calendar-day-number">{info.dayNumberText}</span>
-                      {count > 0 && <span className="calendar-day-count">{count}</span>}
-                    </span>
-                  );
-                }}
-                eventContent={(info) => (
-                  <span className="calendar-event-content" title={info.event.title}>
-                    <span className="calendar-event-dot" aria-hidden="true" />
-                    <span>{info.event.title}</span>
-                  </span>
-                )}
-                dayMaxEvents={3}
-                moreLinkContent={(info) => "+" + info.num + " lagi"}
-                moreLinkClick="date"
-                eventDisplay="block"
-                displayEventTime={false}
-                navLinks={false}
-                selectable={false}
-              />
-              <p className="calendar-help">Klik tanggal atau nama tugas di kalender untuk melihat rincian deadline di samping.</p>
-            </div>
-          )}
-        </div>
-
-        <aside className="calendar-day-panel" aria-labelledby="selected-day-heading">
-          <div className="selected-day-heading">
-            <p className="calendar-section-kicker">AGENDA HARIAN</p>
-            <h2 id="selected-day-heading">{DATE_FORMAT.format(new Date(selectedDate + "T12:00:00+07:00"))}</h2>
-            <p>{selectedTasks.length === 1 ? "1 tugas jatuh tempo" : selectedTasks.length + " tugas jatuh tempo"}</p>
-          </div>
-
-          {loading ? (
-            <div className="calendar-day-empty"><span className="loading-mark" /><span>Memuat daftar tugas…</span></div>
-          ) : selectedTasks.length > 0 ? (
-            <div className="calendar-day-tasks">
-              {selectedTasks.map((task) => <CalendarTask key={task.id} task={task} now={now} />)}
-            </div>
-          ) : (
-            <div className="calendar-day-empty">
-              <span className="calendar-empty-mark" aria-hidden="true">✳</span>
-              <strong>Belum ada deadline</strong>
-              <span>Tanggal ini kosong. Pilih hari lain atau nikmati waktu luangmu.</span>
-            </div>
-          )}
-          <button className="calendar-today-link" type="button" onClick={goToToday}>Lihat agenda hari ini <span aria-hidden="true">→</span></button>
-        </aside>
-      </section>
-
       <footer className="app-footer">
-        <span className="footer-wordmark">tugas kuliah<span>.</span></span>
-        <span>Kalender akademik · Semua jam dalam WIB</span>
+        <span className="footer-wordmark">tugas kuliah<span>.</span></span><span>Kalender akademik · Semua jam dalam WIB</span>
         <span className="footer-status"><span className="connection-dot" />{errorMessage ? "Koneksi bermasalah" : loading ? "Memuat data" : "Data tersinkron"}</span>
       </footer>
     </main>
