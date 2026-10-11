@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase, supabaseConfigMissing } from "./lib/supabase";
 import AdminPanel from "./components/AdminPanel";
-import CalendarPage from "./components/CalendarPage";
+const CalendarPage = lazy(() => import("./components/CalendarPage"));
 import MarkdownContent from "./components/MarkdownContent";
 
 type Task = {
@@ -258,14 +258,23 @@ function App() {
 
   if (page === "calendar") {
     return (
-      <CalendarPage
-        tasks={tasks}
-        loading={loading}
-        errorMessage={errorMessage}
-        onBack={() => setPage("home")}
-        onOpenAdmin={() => setPage("admin")}
-        onRefresh={() => setRefreshKey((key) => key + 1)}
-      />
+      <Suspense fallback={
+        <main className="app-shell calendar-loading-page" role="status">
+          <div className="calendar-loading">
+            <span className="loading-mark" />
+            <strong>Membuka kalender…</strong>
+          </div>
+        </main>
+      }>
+        <CalendarPage
+          tasks={tasks}
+          loading={loading}
+          errorMessage={errorMessage}
+          onBack={() => setPage("home")}
+          onOpenAdmin={() => setPage("admin")}
+          onRefresh={() => setRefreshKey((key) => key + 1)}
+        />
+      </Suspense>
     );
   }
 
