@@ -4981,3 +4981,85 @@ select:focus-visible {
   .app-navigation-actions { gap: 7px; }
   .app-more-menu > summary { padding-inline: 8px; }
 }
+
+
+/* Streamlit parity: recent overdue tasks without adding another dashboard card grid. */
+.recent-overdue {
+  margin: 0 0 26px;
+  padding: 15px 18px 11px;
+  border: 1px solid color-mix(in oklch, var(--color-warning) 30%, var(--color-rule));
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--color-warning-soft) 68%, transparent);
+}
+.recent-overdue-heading { display: flex; align-items: start; gap: 11px; }
+.recent-overdue-mark {
+  display: grid; place-items: center; flex: 0 0 auto;
+  width: 25px; height: 25px; margin-top: 1px;
+  border: 1px solid color-mix(in oklch, var(--color-warning) 45%, transparent);
+  border-radius: 50%; color: var(--color-warning); font-size: 13px; font-weight: 800;
+}
+.recent-overdue-heading h2 { margin: 0; color: var(--color-warning); font-family: var(--font-display); font-size: 13px; font-weight: 750; }
+.recent-overdue-heading p { margin: 3px 0 0; color: var(--color-ink-secondary); font-size: 11px; line-height: 1.7; }
+.recent-overdue-list { margin-top: 10px; }
+.recent-overdue-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 10px 0; border-top: 1px solid color-mix(in oklch, var(--color-warning) 17%, var(--color-rule));
+}
+.recent-overdue-copy { display: grid; gap: 2px; min-width: 0; }
+.recent-overdue-copy strong { color: var(--color-ink); font-size: 12px; font-weight: 650; overflow-wrap: anywhere; }
+.recent-overdue-copy span { color: var(--color-muted); font-size: 10px; line-height: 1.5; }
+.recent-overdue-links { display: flex; flex: 0 0 auto; align-items: center; justify-content: end; flex-wrap: wrap; gap: 10px; }
+.recent-overdue-links a { color: var(--color-ink-secondary); font-size: 10px; text-decoration-color: var(--color-rule-strong); text-underline-offset: 3px; }
+.recent-overdue-links a:hover { color: var(--color-warning); }
+.recent-overdue-more { margin: 5px 0 0; padding-top: 9px; border-top: 1px solid color-mix(in oklch, var(--color-warning) 17%, var(--color-rule)); color: var(--color-muted); font-size: 10px; }
+
+/* Super Admin: manage the allowlist that controls access to the admin panel. */
+.admin-users-section { min-width: 0; padding-top: 12px; }
+.admin-users-section .admin-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 22px; padding-bottom: 22px; border-bottom: 1px solid var(--color-rule); }
+.admin-users-section .admin-section-heading h1 { margin: 0; color: var(--color-ink); font-family: var(--font-display); font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 650; letter-spacing: -.055em; }
+.admin-users-count { color: var(--color-muted); font-size: 11px; white-space: nowrap; }
+.admin-users-add-form { display: grid; grid-template-columns: minmax(190px, .85fr) minmax(0, 1.3fr); gap: 22px; align-items: end; padding: 21px 0; border-bottom: 1px solid var(--color-rule); }
+.admin-users-add-copy label { display: block; margin-bottom: 4px; color: var(--color-ink); font-size: 12px; font-weight: 650; }
+.admin-users-add-copy p { margin: 0; color: var(--color-muted); font-size: 10px; line-height: 1.75; }
+.admin-users-add-controls { display: flex; align-items: center; gap: 8px; }
+.admin-users-add-controls input { width: 100%; min-width: 0; min-height: 42px; padding: 0 12px; border: 1px solid var(--color-rule-strong); border-radius: var(--radius-control); background: var(--color-paper-raised); font-size: 12px; }
+.admin-users-add-controls .primary-action { flex: 0 0 auto; white-space: nowrap; }
+.admin-users-feedback { margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-users-feedback.is-error { border: 1px solid color-mix(in oklch, var(--color-error) 35%, transparent); color: var(--color-error); background: var(--color-error-soft); }
+.admin-users-feedback.is-success { border: 1px solid color-mix(in oklch, var(--color-success) 35%, transparent); color: var(--color-success); background: var(--color-success-soft); }
+.admin-users-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; }
+.admin-users-list-heading h2 { margin: 0; color: var(--color-ink); font-family: var(--font-display); font-size: 14px; font-weight: 650; }
+.admin-users-list { margin: 8px 0 0; padding: 0; list-style: none; }
+.admin-users-row { display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 10px 0; border-bottom: 1px solid var(--color-rule); }
+.admin-users-avatar { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border: 1px solid var(--color-rule-strong); border-radius: 50%; color: var(--color-accent); background: var(--color-paper-raised); font-size: 12px; font-weight: 750; }
+.admin-users-email { display: grid; flex: 1 1 auto; min-width: 0; gap: 2px; }
+.admin-users-email strong { color: var(--color-ink); font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.admin-users-email small { color: var(--color-muted); font-size: 10px; }
+.admin-users-protected { color: var(--color-muted); font-size: 10px; white-space: nowrap; }
+.admin-users-remove { min-height: 34px; padding: 0 10px; border: 1px solid color-mix(in oklch, var(--color-error) 38%, var(--color-rule)); border-radius: 7px; color: var(--color-error); background: transparent; font-size: 10px; white-space: nowrap; }
+.admin-users-remove:hover { background: var(--color-error-soft); }
+.admin-users-confirm { display: flex; align-items: center; justify-content: end; flex-wrap: wrap; gap: 8px; color: var(--color-warning); font-size: 10px; }
+.admin-users-confirm-delete { min-height: 33px; padding-inline: 9px; border: 1px solid var(--color-error); border-radius: 7px; color: var(--color-error); background: var(--color-error-soft); font-size: 10px; font-weight: 650; }
+.admin-users-empty { display: flex; align-items: center; gap: 10px; padding: 25px 0; color: var(--color-muted); font-size: 12px; }
+.admin-users-empty .loading-mark { flex: 0 0 auto; }
+.admin-users-security-note { margin: 20px 0 0; color: var(--color-muted); font-size: 10px; line-height: 1.7; }
+.admin-users-section input:focus-visible,
+.admin-users-section button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+@media (max-width: 700px) {
+  .recent-overdue { padding: 13px 13px 8px; }
+  .recent-overdue-item { align-items: start; flex-direction: column; gap: 8px; }
+  .recent-overdue-links { justify-content: start; }
+  .admin-users-add-form { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .admin-users-add-controls { align-items: stretch; flex-direction: column; }
+  .admin-users-add-controls .primary-action { width: 100%; justify-content: center; }
+  .admin-users-row { align-items: start; gap: 9px; }
+  .admin-users-avatar { width: 30px; height: 30px; }
+  .admin-users-confirm { justify-content: start; }
+}
+@media (max-width: 420px) {
+  .admin-section-switch:has(button:nth-child(4)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .admin-section-switch:has(button:nth-child(4)) button { padding-inline: 7px; font-size: 10px; }
+  .admin-users-remove { padding-inline: 7px; }
+  .admin-users-protected { font-size: 9px; white-space: normal; text-align: right; }
+}
