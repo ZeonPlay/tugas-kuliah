@@ -81,7 +81,8 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
   const [cursors, setCursors] = useState<RemoteCursor[]>([]);
 
   useEffect(() => {
-    if (!supabase) return;
+    const client = supabase;
+    if (!client) return;
 
     let alive = true;
     let ready = false;
@@ -121,7 +122,7 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
       let isAdmin = false;
       if (normalizedEmail) {
         try {
-          const { data, error } = await supabase
+          const { data, error } = await client
             .from("admin_users")
             .select("email")
             .eq("email", normalizedEmail)
@@ -182,7 +183,7 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
       publishCursor();
     };
 
-    channel = supabase.channel("zeon-site-presence-v1", {
+    channel = client.channel("zeon-site-presence-v1", {
       config: {
         broadcast: { self: false },
         presence: { key: sessionId },
@@ -232,14 +233,14 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
         updatePeerCount();
       });
 
-    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription: authSubscription } } = client.auth.onAuthStateChange((_event, session) => {
       // Defer network work until after Supabase has released its auth lock.
       window.setTimeout(() => {
         void refreshIdentity(session?.user.email);
       }, 0);
     });
 
-    void supabase.auth.getSession().then(({ data, error }) => {
+    void client.auth.getSession().then(({ data, error }) => {
       if (alive) void refreshIdentity(error ? null : data.session?.user.email);
     });
 
@@ -256,7 +257,7 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
       authSubscription.unsubscribe();
       window.clearInterval(pruneTimer);
       if (sendTimer !== null) window.clearTimeout(sendTimer);
-      if (channel && supabase) void supabase.removeChannel(channel);
+      if (channel) void client.removeChannel(channel);
       setCursors([]);
     };
   }, [page, sessionId]);
