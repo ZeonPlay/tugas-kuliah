@@ -12,7 +12,7 @@ type MarkdownContentProps = {
  * syntax from behaving as intended. Normalize only common Markdown markers
  * before parsing; ReactMarkdown still renders HTML as text rather than trusting it.
  */
-function normalizeLegacyMarkdown(value: string): string {
+export function normalizeLegacyMarkdown(value: string): string {
   return value
     .replace(/\\([*_~])/g, "$1")
     .replace(/\r\n?/g, "\n")
