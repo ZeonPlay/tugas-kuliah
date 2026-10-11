@@ -9,6 +9,7 @@ import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/pulse/theme.css";
 import "@fullcalendar/react/themes/pulse/palettes/red.css";
 import MarkdownContent from "./MarkdownContent";
+import AppNavigation, { type AppPage } from "./AppNavigation";
 
 type Task = {
   id: string; judul: string; mata_kuliah: string; jenis: string; deadline: string;
@@ -16,7 +17,7 @@ type Task = {
 };
 type Props = {
   tasks: Task[]; loading: boolean; errorMessage: string;
-  onBack: () => void; onOpenAdmin: () => void; onRefresh: () => void;
+  onNavigate: (page: AppPage) => void; onRefresh: () => void;
 };
 type CalendarView = "dayGridMonth" | "listMonth";
 
@@ -74,7 +75,7 @@ function CalendarTask({ task, now }: { task: Task; now: number }) {
   );
 }
 
-export default function CalendarPage({ tasks, loading, errorMessage, onBack, onOpenAdmin, onRefresh }: Props) {
+export default function CalendarPage({ tasks, loading, errorMessage, onNavigate, onRefresh }: Props) {
   const calendarRef = useRef<ComponentRef<typeof FullCalendar> | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [view, setView] = useState<CalendarView>("dayGridMonth");
@@ -176,16 +177,7 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
 
   return (
     <main className="app-shell calendar-page">
-      <header className="app-header">
-        <a className="wordmark" href="/" onClick={(event) => { event.preventDefault(); onBack(); }} aria-label="Kembali ke beranda">
-          <span className="wordmark-symbol" aria-hidden="true">t<span>.</span></span><span className="wordmark-name">tugas kuliah</span>
-        </a>
-        <div className="calendar-header-actions">
-          <button className="calendar-nav-button" type="button" onClick={onBack}>Beranda</button>
-          <button className="open-admin-button" type="button" onClick={onOpenAdmin}>Panel Admin <span aria-hidden="true">↗</span></button>
-          <button className="refresh-button" type="button" onClick={() => { onRefresh(); setNow(Date.now()); }} aria-label="Muat ulang data" title="Muat ulang">↻</button>
-        </div>
-      </header>
+      <AppNavigation currentPage="calendar" onNavigate={onNavigate} onRefresh={onRefresh} />
 
       <section className="calendar-page-heading">
         <h1>Kalender Tugas</h1>
