@@ -5,6 +5,7 @@ import { normalizeLegacyMarkdown } from "./MarkdownContent";
 import MarkdownEditor from "./MarkdownEditor";
 import AppNavigation, { type AppPage } from "./AppNavigation";
 import CourseManager from "./CourseManager";
+import ModuleManager from "./ModuleManager";
 
 type Task = {
   id: string;
@@ -584,7 +585,7 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
   const [sortOrder, setSortOrder] = useState("closest");
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(() => new Set());
   const searchRef = useRef<HTMLInputElement>(null);
-  const [adminSection, setAdminSection] = useState<"tasks" | "courses">("tasks");
+  const [adminSection, setAdminSection] = useState<"tasks" | "courses" | "modules">("tasks");
   const [formTask, setFormTask] = useState<Task | null | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -777,10 +778,13 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
             <div className="admin-section-switch" role="group" aria-label="Bagian panel admin">
               <button type="button" aria-pressed={adminSection === "tasks"} className={adminSection === "tasks" ? "is-current" : ""} onClick={() => setAdminSection("tasks")}>Kelola tugas</button>
               <button type="button" aria-pressed={adminSection === "courses"} className={adminSection === "courses" ? "is-current" : ""} onClick={() => setAdminSection("courses")}>Mata kuliah</button>
+              <button type="button" aria-pressed={adminSection === "modules"} className={adminSection === "modules" ? "is-current" : ""} onClick={() => setAdminSection("modules")}>Arsip Modul</button>
             </div>
           )}
           {adminSection === "courses" ? (
             <CourseManager onDataChanged={onDataChanged} />
+          ) : adminSection === "modules" ? (
+            <ModuleManager onDataChanged={onDataChanged} />
           ) : formTask !== undefined ? (
             <div className="task-editor-page">
               <button className="back-to-list" type="button" onClick={() => setFormTask(undefined)}>
