@@ -22,6 +22,7 @@ Isi file .env.local dengan URL project dan publishable key / anon key dari Supab
 
     VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
     VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
+    VITE_ADMIN_EMAIL=your-admin@email.com
 
 Kemudian:
 
@@ -37,7 +38,7 @@ Untuk menguji build produksi:
 - Root directory: web
 - Build command: npm run build
 - Build output directory: dist
-- Environment variables: VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY
+- Environment variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, dan VITE_ADMIN_EMAIL
 - Gunakan Node.js 22 atau versi LTS yang didukung Vite untuk build.
 
 Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RLS Supabase yang benar. Jangan pernah menaruh service-role/secret key di frontend, file environment yang di-commit, atau variabel VITE_*.
@@ -57,16 +58,18 @@ Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RL
 - [x] Upload, penggantian, dan penghapusan lampiran melalui bucket task-files
 - [x] Hapus tugas dengan konfirmasi
 - [x] Kalender bulanan dengan deadline per tanggal, agenda harian, navigasi bulan, dan dukungan WIB
-- [ ] Manajemen mata kuliah
-- [ ] Arsip modul
-- [ ] Pengelolaan daftar admin oleh Super Admin
-- [ ] Kursor real-time
+- [x] Manajemen mata kuliah dan status aktif/nonaktif
+- [x] Arsip modul per mata kuliah, termasuk pencarian/filter dan pengelolaan folder
+- [x] Pengelolaan daftar admin oleh Super Admin
+- [x] Kursor real-time lintas halaman melalui Supabase Realtime Presence/Broadcast
+- [x] Peringatan tugas yang baru terlewat (3 hari terakhir)
 - [ ] Pengujian manual RLS dan kebijakan Storage untuk akun admin serta non-admin
 - [ ] Uji visual pada lebar 320, 375, 414, dan 768 px; deploy Cloudflare Pages
 
 ## Catatan keamanan
 
 - Panel Admin memeriksa email melalui tabel `admin_users`, tetapi operasi tulis tetap wajib dilindungi oleh policy RLS Supabase.
+- `VITE_ADMIN_EMAIL` hanya dipakai untuk menampilkan bagian Super Admin; nilainya bisa dibaca dari browser dan bukan batas keamanan. RLS Supabase harus tetap mencegah admin biasa menambah/menghapus baris `admin_users`.
 - Bucket `task-files` harus mengizinkan upload dan penghapusan hanya untuk akun admin yang sah. Jika upload ditolak, periksa policy Storage; jangan membuat bucket dapat ditulis publik.
 - Frontend hanya memakai publishable key (atau anon key lama). Jangan pernah menaruh service-role/secret key di frontend, file environment yang di-commit, atau variabel `VITE_*`.
 - Streamlit di root repository tetap dipertahankan dan belum digantikan. Uji akun, Storage, dan RLS sebelum menjadikan frontend ini website utama.
