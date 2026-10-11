@@ -103,15 +103,21 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
   }, [filteredTasks]);
 
   const events = useMemo(() => {
-    const today = todayWib();
-    const summaries = [...counts.entries()].map(([key, count]) => {
-      const color = key < today ? "#94a3b8" : "#ef4444";
-      return {
-        id: "summary-" + key, start: key, end: nextDateKey(key), allDay: true,
-        title: count + " deadline", backgroundColor: color, borderColor: color, textColor: "#ffffff",
-        classNames: ["calendar-summary-event"], extendedProps: { dateKey: key, eventKind: "summary" },
-      };
-    });
+    // Month view intentionally contains ONLY one red count badge per date.
+    // Individual task titles are exclusively supplied to the List view.
+    const summaries = [...counts.entries()].map(([key, count]) => ({
+      id: "summary-" + key,
+      start: key,
+      end: nextDateKey(key),
+      allDay: true,
+      title: count + " deadline",
+      backgroundColor: "#ef4444",
+      borderColor: "#ef4444",
+      textColor: "#ffffff",
+      classNames: ["calendar-summary-event"],
+      extendedProps: { dateKey: key, eventKind: "summary" },
+    }));
+
     const details = filteredTasks.flatMap((task) => {
       const key = dateKey(task.deadline);
       if (!key) return [];
@@ -122,13 +128,20 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
           ? "#f59e0b"
           : "#94a3b8";
       return [{
-        id: "task-" + task.id, start: task.deadline, allDay: false, display: "list-item",
+        id: "task-" + task.id,
+        start: task.deadline,
+        allDay: false,
+        display: "list-item",
         title: (task.judul || "Tugas tanpa judul") + " · " + (task.mata_kuliah || "Tanpa mata kuliah"),
-        backgroundColor: taskColor, borderColor: taskColor, textColor: "#ffffff",
-        classNames: ["calendar-task-event"], extendedProps: { dateKey: key, eventKind: "task", taskId: task.id },
+        backgroundColor: taskColor,
+        borderColor: taskColor,
+        textColor: "#ffffff",
+        classNames: ["calendar-task-event"],
+        extendedProps: { dateKey: key, eventKind: "task", taskId: task.id },
       }];
     });
-    return [...summaries, ...details];
+
+    return { month: summaries, list: details };
   }, [filteredTasks, counts, now]);
 
   const selectedTasks = useMemo(() => selectedDate
@@ -226,7 +239,7 @@ export default function CalendarPage({ tasks, loading, errorMessage, onBack, onO
           fixedWeekCount={false}
           firstDay={1}
           timeZone="Asia/Jakarta"
-          events={events}
+          events={view === "dayGridMonth" ? events.month : events.list}
           datesSet={(info) => setMonthTitle(new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(info.view.currentStart))}
           dayHeaderContent={(info) => new Intl.DateTimeFormat("id-ID", { weekday: "short", timeZone: "Asia/Jakarta" }).format(info.date).replace(/\./g, "")}
           dateClick={(info) => setSelectedDate(info.dateStr.slice(0, 10))}
