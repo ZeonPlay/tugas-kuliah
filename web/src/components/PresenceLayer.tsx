@@ -12,6 +12,7 @@ type RemoteCursor = {
   y: number;
   color: string;
   receivedAt: number;
+  page: string;
 };
 
 type Position = { x: number; y: number; device: string };
@@ -216,6 +217,7 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
             y: Math.max(0, Math.min(1, y)),
             color: String(payload.color || cursorColor(id)),
             receivedAt: Date.now(),
+            page: String(payload.page || payload.route || ""),
           };
           return [...current.filter((cursor) => cursor.session_id !== id), next];
         });
@@ -276,7 +278,7 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
           } as CSSProperties;
           return (
             <div
-              className={"web-presence-cursor" + (stale ? " is-stale" : "")}
+              className={"web-presence-cursor" + (stale ? " is-stale" : "") + (cursor.page && cursor.page !== PAGE_LABELS[page] ? " is-other-page" : "")}
               key={cursor.session_id}
               style={style}
             >
