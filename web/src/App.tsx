@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase, supabaseConfigMissing } from "./lib/supabase";
 import AdminPanel from "./components/AdminPanel";
+import CalendarPage from "./components/CalendarPage";
 import MarkdownContent from "./components/MarkdownContent";
 
 type Task = {
@@ -130,7 +131,7 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
 }
 
 function App() {
-  const [page, setPage] = useState<"home" | "admin">("home");
+  const [page, setPage] = useState<"home" | "admin" | "calendar">("home");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -255,6 +256,19 @@ function App() {
         ? "Koneksi bermasalah"
         : "Tersinkron";
 
+  if (page === "calendar") {
+    return (
+      <CalendarPage
+        tasks={tasks}
+        loading={loading}
+        errorMessage={errorMessage}
+        onBack={() => setPage("home")}
+        onOpenAdmin={() => setPage("admin")}
+        onRefresh={() => setRefreshKey((key) => key + 1)}
+      />
+    );
+  }
+
   if (page === "admin") {
     return (
       <AdminPanel
@@ -275,6 +289,9 @@ function App() {
         </a>
 
         <div className="header-right">
+          <button className="open-calendar-button" type="button" onClick={() => setPage("calendar")}>
+            Kalender <span aria-hidden="true">↗</span>
+          </button>
           <button className="open-admin-button" type="button" onClick={() => setPage("admin")} aria-label="Buka Panel Admin">
             Panel Admin <span aria-hidden="true">↗</span>
           </button>
