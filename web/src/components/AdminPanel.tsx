@@ -580,7 +580,7 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
   const [typeFilter, setTypeFilter] = useState("all");
   const [deadlineFilter, setDeadlineFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("closest");
-  const [page, setPage] = useState(1);
+  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(() => new Set());
   const searchRef = useRef<HTMLInputElement>(null);
   const [formTask, setFormTask] = useState<Task | null | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
@@ -662,14 +662,45 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
       });
   }, [tasks, search, courseFilter, typeFilter, deadlineFilter, sortOrder]);
 
-  const PAGE_SIZE = 8;
-  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / PAGE_SIZE));
-  const pageTasks = filteredTasks.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const filterIsActive = Boolean(search.trim()) || courseFilter !== "all" || typeFilter !== "all" || deadlineFilter !== "all";
 
+  const groupedTasks = useMemo(() => {
+    const groups = new Map<string, Task[]>();
+    for (const task of filteredTasks) {
+      const courseName = task.mata_kuliah?.trim() || "Tanpa mata kuliah";
+      const current = groups.get(courseName) ?? [];
+      current.push(task);
+      groups.set(courseName, current);
+    }
+    return [...groups.entries()]
+      .map(([courseName, groupTasks]) => ({ courseName, tasks: groupTasks }))
+      .sort((a, b) => a.courseName.localeCompare(b.courseName, "id-ID"));
+  }, [filteredTasks]);
+
   useEffect(() => {
-    setPage((current) => Math.min(current, totalPages));
-  }, [totalPages]);
+    if (filterIsActive) {
+      setExpandedCourses(new Set(groupedTasks.map((group) => group.courseName)));
+    } else {
+      setExpandedCourses(new Set());
+    }
+  }, [filterIsActive, groupedTasks]);
+
+  function toggleCourse(courseName: string) {
+    setExpandedCourses((current) => {
+      const next = new Set(current);
+      if (next.has(courseName)) next.delete(courseName);
+      else next.add(courseName);
+      return next;
+    });
+  }
+
+  function expandAllCourses() {
+    setExpandedCourses(new Set(groupedTasks.map((group) => group.courseName)));
+  }
+
+  function collapseAllCourses() {
+    setExpandedCourses(new Set());
+  }
 
   useEffect(() => {
     function handleSearchShortcut(event: KeyboardEvent) {
@@ -805,12 +836,12 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                       ref={searchRef}
                       type="search"
                       value={search}
-                      onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+                      onChange={(event) => { setSearch(event.target.value);  }}
                       placeholder="Cari judul, mata kuliah, instruksi, atau tautan…"
                       aria-label="Cari di seluruh data tugas"
                     />
                     {search && (
-                      <button className="task-search-clear" type="button" onClick={() => { setSearch(""); setPage(1); searchRef.current?.focus(); }}>
+                      <button className="task-search-clear" type="button" onClick={() => { setSearch("");  searchRef.current?.focus(); }}>
                         Hapus pencarian
                       </button>
                     )}
@@ -819,7 +850,7 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                   <div className="task-filter-row">
                     <label className="task-filter-field">
                       <span>Mata kuliah</span>
-                      <select value={courseFilter} onChange={(event) => { setCourseFilter(event.target.value); setPage(1); }}>
+                      <select value={courseFilter} onChange={(event) => { setCourseFilter(event.target.value);  }}>
                         <option value="all">Semua mata kuliah</option>
                         {[...new Set(tasks.map((task) => task.mata_kuliah).filter(Boolean))].sort((a, b) => a.localeCompare(b, "id-ID")).map((course) => (
                           <option value={course} key={course}>{course}</option>
@@ -828,7 +859,7 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                     </label>
                     <label className="task-filter-field">
                       <span>Jenis tugas</span>
-                      <select value={typeFilter} onChange={(event) => { setTypeFilter(event.target.value); setPage(1); }}>
+                      <select value={typeFilter} onChange={(event) => { setTypeFilter(event.target.value);  }}>
                         <option value="all">Semua jenis</option>
                         {[...new Set(tasks.map((task) => task.jenis).filter(Boolean))].sort((a, b) => a.localeCompare(b, "id-ID")).map((type) => (
                           <option value={type} key={type}>{type}</option>
@@ -837,7 +868,7 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                     </label>
                     <label className="task-filter-field">
                       <span>Status deadline</span>
-                      <select value={deadlineFilter} onChange={(event) => { setDeadlineFilter(event.target.value); setPage(1); }}>
+                      <select value={deadlineFilter} onChange={(event) => { setDeadlineFilter(event.target.value);  }}>
                         <option value="all">Semua status</option>
                         <option value="upcoming">Mendatang</option>
                         <option value="overdue">Sudah lewat</option>
@@ -845,7 +876,7 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                     </label>
                     <label className="task-filter-field task-sort-field">
                       <span>Urutkan</span>
-                      <select value={sortOrder} onChange={(event) => { setSortOrder(event.target.value); setPage(1); }}>
+                      <select value={sortOrder} onChange={(event) => { setSortOrder(event.target.value);  }}>
                         <option value="closest">Deadline terdekat dari hari ini</option>
                         <option value="soonest">Deadline paling awal</option>
                         <option value="latest">Deadline paling akhir</option>
@@ -859,7 +890,7 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                       setCourseFilter("all");
                       setTypeFilter("all");
                       setDeadlineFilter("all");
-                      setPage(1);
+                      
                       searchRef.current?.focus();
                     }}>
                       × Hapus semua filter
@@ -879,64 +910,85 @@ export default function AdminPanel({ tasks, courses, onBack, onDataChanged }: Ad
                         setCourseFilter("all");
                         setTypeFilter("all");
                         setDeadlineFilter("all");
-                        setPage(1);
+                        
                       }}>Tampilkan semua tugas</button>
                     )}
                   </div>
                 ) : (
-                  <div className="managed-task-list">
-                    {pageTasks.map((task) => (
-                      <article className="managed-task-row" key={task.id}>
-                        <div className="managed-task-copy">
-                          <span className="managed-task-course">
-                            {task.mata_kuliah} <span aria-hidden="true">·</span> {task.jenis}
-                          </span>
-                          <h3>{task.judul}</h3>
-                          <p>
-                            Deadline: {new Intl.DateTimeFormat("id-ID", {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                              timeZone: "Asia/Jakarta",
-                            }).format(new Date(task.deadline))} WIB
-                          </p>
-                        </div>
-                        <div className="managed-task-actions">
-                          <button
-                            className="edit-task-button"
-                            type="button"
-                            onClick={() => setFormTask(task)}
-                            aria-label={"Edit tugas " + task.judul}
-                          >
-                            <span aria-hidden="true">✎</span> Edit tugas
-                          </button>
-                          <button
-                            className="delete-task-button"
-                            type="button"
-                            onClick={() => { setDeleteTarget(task); setDeleteError(""); }}
-                            aria-label={"Hapus tugas " + task.judul}
-                          >
-                            <span aria-hidden="true">×</span> Hapus
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                )}
-                {filteredTasks.length > 0 && (
-                  <nav className="task-pagination" aria-label="Navigasi halaman daftar tugas">
-                    <span>
-                      Menampilkan <strong>{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredTasks.length)}</strong> dari <strong>{filteredTasks.length}</strong>
-                    </span>
-                    <div className="pagination-actions">
-                      <button className="quiet-button" type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1}>
-                        ← Sebelumnya
-                      </button>
-                      <span className="pagination-page">Halaman {page} / {totalPages}</span>
-                      <button className="quiet-button" type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages}>
-                        Berikutnya →
-                      </button>
+                  <div className="course-task-groups">
+                    <div className="course-group-tools">
+                      <span>
+                        {groupedTasks.length} mata kuliah <span aria-hidden="true">·</span> {filteredTasks.length} tugas
+                      </span>
+                      <div>
+                        <button type="button" className="group-tool-button" onClick={expandAllCourses}>Buka semua</button>
+                        <button type="button" className="group-tool-button" onClick={collapseAllCourses}>Tutup semua</button>
+                      </div>
                     </div>
-                  </nav>
+                    {groupedTasks.map((group) => {
+                      const isExpanded = expandedCourses.has(group.courseName);
+                      const totalForCourse = tasks.filter(
+                        (task) => (task.mata_kuliah?.trim() || "Tanpa mata kuliah") === group.courseName,
+                      ).length;
+                      return (
+                        <section className={"course-task-group" + (isExpanded ? " is-expanded" : "")} key={group.courseName}>
+                          <button
+                            type="button"
+                            className="course-group-toggle"
+                            onClick={() => toggleCourse(group.courseName)}
+                            aria-expanded={isExpanded}
+                          >
+                            <span className="course-group-chevron" aria-hidden="true">›</span>
+                            <span className="course-group-name">{group.courseName}</span>
+                            <span className="course-group-count">
+                              {filterIsActive && group.tasks.length !== totalForCourse
+                                ? group.tasks.length + " / " + totalForCourse + " tugas"
+                                : group.tasks.length + (group.tasks.length === 1 ? " tugas" : " tugas")}
+                            </span>
+                          </button>
+                          {isExpanded && (
+                            <div className="course-group-tasks">
+                              {group.tasks.map((task) => (
+                                <article className="managed-task-row" key={task.id}>
+                                  <div className="managed-task-copy">
+                                    <span className="managed-task-course">
+                                      {task.jenis}
+                                    </span>
+                                    <h3>{task.judul}</h3>
+                                    <p>
+                                      Deadline: {new Intl.DateTimeFormat("id-ID", {
+                                        dateStyle: "medium",
+                                        timeStyle: "short",
+                                        timeZone: "Asia/Jakarta",
+                                      }).format(new Date(task.deadline))} WIB
+                                    </p>
+                                  </div>
+                                  <div className="managed-task-actions">
+                                    <button
+                                      className="edit-task-button"
+                                      type="button"
+                                      onClick={() => setFormTask(task)}
+                                      aria-label={"Edit tugas " + task.judul}
+                                    >
+                                      <span aria-hidden="true">✎</span> Edit tugas
+                                    </button>
+                                    <button
+                                      className="delete-task-button"
+                                      type="button"
+                                      onClick={() => { setDeleteTarget(task); setDeleteError(""); }}
+                                      aria-label={"Hapus tugas " + task.judul}
+                                    >
+                                      <span aria-hidden="true">×</span> Hapus
+                                    </button>
+                                  </div>
+                                </article>
+                              ))}
+                            </div>
+                          )}
+                        </section>
+                      );
+                    })}
+                  </div>
                 )}
               </section>
 
