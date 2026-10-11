@@ -5,6 +5,7 @@ Frontend baru untuk menggantikan Streamlit secara bertahap. Aplikasi Streamlit d
 ## Teknologi
 
 - React + TypeScript + Vite
+- FullCalendar React 7.1.1 for the academic calendar
 - Tiptap WYSIWYG editor with Markdown serialization
 - Supabase JS Client
 - Cloudflare Pages untuk hosting frontend statis
@@ -55,7 +56,7 @@ Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RL
 - [x] Alur admin terpisah: daftar tugas → form edit/tambah; hapus menggunakan dialog konfirmasi
 - [x] Upload, penggantian, dan penghapusan lampiran melalui bucket task-files
 - [x] Hapus tugas dengan konfirmasi
-- [ ] Kalender interaktif
+- [x] Kalender bulanan dengan deadline per tanggal, agenda harian, navigasi bulan, dan dukungan WIB
 - [ ] Manajemen mata kuliah
 - [ ] Arsip modul
 - [ ] Pengelolaan daftar admin oleh Super Admin
