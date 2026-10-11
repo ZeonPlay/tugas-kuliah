@@ -159,6 +159,7 @@ function TaskForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(true);
   const markdownRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -431,10 +432,17 @@ function TaskForm({
           </div>
           <p className="field-hint">Pilih teks lalu gunakan tombol pemformatan. Format dan daftar akan dirender pada pratinjau.</p>
           {draft.ketentuan.trim() && (
-            <details className="markdown-preview" open>
-              <summary>Pratinjau instruksi</summary>
-              <MarkdownContent content={draft.ketentuan} />
-            </details>
+            <section className="markdown-preview" aria-label="Pratinjau instruksi">
+              <button
+                className="preview-toggle"
+                type="button"
+                aria-expanded={previewOpen}
+                onClick={() => setPreviewOpen((open) => !open)}
+              >
+                {previewOpen ? "Sembunyikan pratinjau" : "Lihat pratinjau"}
+              </button>
+              {previewOpen && <MarkdownContent className="markdown-preview-content" content={draft.ketentuan} />}
+            </section>
           )}
         </div>
 
@@ -503,7 +511,7 @@ function TaskForm({
         </div>
 
         <div className="form-actions">
-          <button className="primary-action" type="submit" disabled={saving || courses.length === 0}>
+          <button className="primary-action" type="submit" disabled={saving || (courses.length === 0 && !task)}>
             {saving ? "Menyimpan…" : task ? "Simpan perubahan" : "Simpan tugas"}
           </button>
           <button className="quiet-button" type="button" onClick={onCancel} disabled={saving}>Batal</button>
