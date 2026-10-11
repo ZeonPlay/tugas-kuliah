@@ -49,6 +49,8 @@ Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RL
 - [x] Koneksi Supabase melalui environment variables
 - [x] Dashboard tugas membaca tabel tasks dan courses
 - [x] Pencarian, filter, tampilan mendatang/terlewat, dan katalog mata kuliah
+- [x] Ringkasan jumlah tugas, deadline dekat, dan tugas yang sudah lewat
+- [x] Peringatan tugas yang baru terlewat dalam tiga hari terakhir, termasuk tautan VClass/pengumpulan/lampiran
 - [x] Render ketentuan sebagai Markdown dengan daftar, tautan, tabel, dan format umum
 - [x] Navigasi ke Panel Admin
 - [x] Login dan pendaftaran admin yang memeriksa allowlist tabel admin_users
@@ -57,12 +59,11 @@ Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RL
 - [x] Alur admin terpisah: daftar tugas → form edit/tambah; hapus menggunakan dialog konfirmasi
 - [x] Upload, penggantian, dan penghapusan lampiran melalui bucket task-files
 - [x] Hapus tugas dengan konfirmasi
-- [x] Kalender bulanan dengan deadline per tanggal, agenda harian, navigasi bulan, dan dukungan WIB
+- [x] Kalender bulanan dengan deadline per tanggal, agenda harian, navigasi bulan, dukungan WIB, dan refresh data 30 detik
 - [x] Manajemen mata kuliah dan status aktif/nonaktif
 - [x] Arsip modul per mata kuliah, termasuk pencarian/filter dan pengelolaan folder
 - [x] Pengelolaan daftar admin oleh Super Admin
 - [x] Kursor real-time lintas halaman melalui Supabase Realtime Presence/Broadcast
-- [x] Peringatan tugas yang baru terlewat (3 hari terakhir)
 - [ ] Jalankan `sql/super_admin_security.sql` setelah mengganti email placeholder
 - [ ] Pengujian manual RLS dan kebijakan Storage untuk akun admin serta non-admin
 - [ ] Uji visual pada lebar 320, 375, 414, dan 768 px; deploy Cloudflare Pages
