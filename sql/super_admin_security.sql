@@ -66,11 +66,11 @@ grant execute on function public.is_protected_super_admin(text) to authenticated
 -- before running the script; it is intentionally a placeholder in Git.
 do $block$
 declare
-    v_super_admin_email text := lower(trim('replace-with-your-admin-email@example.com'));
+    v_super_admin_email text := lower(trim('zeonplaychannel@gmail.com'));
 begin
     if v_super_admin_email is null
        or v_super_admin_email = ''
-       or v_super_admin_email = 'replace-with-your-admin-email@example.com'
+       or v_super_admin_email = 'zeonplaychannel@gmail.com'
        or position('@' in v_super_admin_email) = 0 then
         raise exception 'Edit super_admin_security.sql and replace the Super Admin email placeholder before running.';
     end if;
