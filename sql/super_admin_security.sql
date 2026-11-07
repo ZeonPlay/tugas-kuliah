@@ -62,17 +62,16 @@ revoke all on function public.is_protected_super_admin(text) from public, anon;
 grant execute on function public.is_protected_super_admin(text) to authenticated;
 
 -- Register the original server-side Super Admin in a protected table and
--- ensure that identity remains an allowed admin account. Change this value
--- before running the script; it is intentionally a placeholder in Git.
+-- ensure that identity remains an allowed admin account. Set this value
+-- to the intended Super Admin login email before running the script.
 do $block$
 declare
     v_super_admin_email text := lower(trim('zeonplaychannel@gmail.com'));
 begin
     if v_super_admin_email is null
        or v_super_admin_email = ''
-       or v_super_admin_email = 'zeonplaychannel@gmail.com'
-       or position('@' in v_super_admin_email) = 0 then
-        raise exception 'Edit super_admin_security.sql and replace the Super Admin email placeholder before running.';
+       or v_super_admin_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' then
+        raise exception 'Set a valid Super Admin email in sql/super_admin_security.sql before running.';
     end if;
 
     insert into public.super_admins (email)
