@@ -630,12 +630,15 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
       setAccess(result.error ? "error" : result.allowed ? "allowed" : "denied");
     });
     // Ask the protected database function; never ship the Super Admin email to the browser.
-    void supabase.rpc("is_super_admin").then(({ data, error }) => {
-      if (!alive) return;
-      setIsSuperAdmin(!error && data === true);
-    }).catch(() => {
-      if (alive) setIsSuperAdmin(false);
-    });
+    void (async () => {
+      try {
+        const { data, error } = await supabase.rpc("is_super_admin");
+        if (!alive) return;
+        setIsSuperAdmin(!error && data === true);
+      } catch {
+        if (alive) setIsSuperAdmin(false);
+      }
+    })();
     return () => {
       alive = false;
     };
