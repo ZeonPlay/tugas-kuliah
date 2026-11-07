@@ -1,9 +1,16 @@
+# Local environment and secrets
 .env
-.venv/
-venv/
-__pycache__/
-*.pyc
-.streamlit/secrets.toml
+.env.*
+!.env.example
+!.env.*.example
+web/.env.local
+web/.env.*.local
+
+# Node
+node_modules/
+web/node_modules/
+web/dist/
+*.tsbuildinfo
+
+# OS / editor
 .DS_Store
-__pycache__/
-*.pyc

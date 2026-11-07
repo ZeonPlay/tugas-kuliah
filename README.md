@@ -1,210 +1,113 @@
 # Tugas Kuliah
 
-Aplikasi sederhana untuk membantu mahasiswa melihat dan mengelola deadline tugas kuliah.
+Aplikasi web untuk mengelola tugas, deadline, kalender akademik, dan arsip materi kuliah.
 
-**Stack**
-- Python
-- Streamlit
-- Toast UI rich-text editor (WYSIWYG) (Markdown)
-- Supabase (PostgreSQL + Auth + Storage)
-- FullCalendar melalui `streamlit-calendar`
+> **Aplikasi utama saat ini adalah React + TypeScript di folder `web/`.**
+> Versi Streamlit sudah dihentikan dan tidak lagi menjadi bagian dari proyek aktif.
 
-## Fitur
+## Teknologi
 
-- Dashboard deadline terdekat
-- Kalender deadline
-- Pencarian dan filter tugas
-- Filter tugas berdasarkan KRS/mata kuliah yang sedang diambil
-- Pengaturan KRS per semester tanpa akun mahasiswa
-- Katalog mata kuliah berbasis database (semester + Wajib/Pilihan)
-- Arsip folder modul per mata kuliah
-- Tautan Google Drive langsung maupun tautan custom
-- Detail/instruksi tugas dengan rich-text editor
-- Link VClass
-- File soal/ketentuan
-- Login admin
-- Tambah, edit, dan hapus tugas
-- Manajemen daftar admin oleh Super Admin
-- Waktu deadline disimpan sebagai UTC dan ditampilkan dalam WIB
-- Tampilan yang disesuaikan untuk laptop dan layar Android
-- Instruksi tugas disimpan sebagai Markdown; data lama dari editor Quill dikonversi saat digunakan
+- React 19 + TypeScript
+- Vite
+- Supabase (Database, Authentication, Storage, Realtime)
+- FullCalendar untuk kalender deadline
+- Tiptap untuk editor instruksi tugas
+- Cloudflare Pages untuk deployment
 
-## Struktur
+## Menjalankan secara lokal
+
+Persyaratan: Node.js 22 atau lebih baru dan npm.
+
+```bash
+cd web
+npm ci
+cp .env.example .env.local
+```
+
+Isi `web/.env.local`:
+
+```env
+VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
+VITE_ADMIN_EMAIL=your-admin@email.com
+```
+
+Kemudian jalankan:
+
+```bash
+npm run dev
+```
+
+Untuk memeriksa build produksi:
+
+```bash
+npm run build
+npm run preview
+```
+
+## Deployment Cloudflare Pages
+
+Gunakan pengaturan berikut:
+
+| Pengaturan | Nilai |
+|---|---|
+| Production branch | `main` |
+| Root directory | `web` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Node.js | `22` |
+
+Tambahkan environment variables berikut di pengaturan Cloudflare Pages:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_ADMIN_EMAIL`
+
+Setelah deployment berhasil, setiap push ke `main` akan menjadi versi produksi.
+
+## Setup Supabase
+
+1. Jalankan `sql/setup.sql` pada Supabase SQL Editor untuk menyiapkan tabel, index, trigger, dan RLS.
+2. Atur email Super Admin di `sql/super_admin_security.sql`, lalu jalankan skrip tersebut satu kali.
+3. Buat bucket Storage bernama `task-files` dan atur policy upload serta delete khusus admin.
+4. Pastikan URL dan publishable/anon key Supabase sudah dimasukkan ke environment variables frontend.
+
+Frontend hanya boleh menggunakan publishable key (atau anon key lama). **Jangan pernah menaruh service-role/secret key di variabel `VITE_*` atau mengirimkannya ke browser.** Keamanan operasi database tetap harus ditegakkan oleh RLS Supabase.
+
+## Pemeriksaan otomatis
+
+GitHub Actions menjalankan:
+
+```bash
+cd web
+npm ci
+npm run build
+```
+
+Build diperiksa saat ada perubahan frontend di pull request maupun branch `main` dan `feat/web-migration`.
+
+## Struktur proyek
 
 ```
 tugas-kuliah/
 ├── .devcontainer/
-├── .streamlit/
-├── pages/
-│   ├── 1_Kalender.py
-│   ├── 2_Admin.py
-│   ├── 3_KRS.py
-│   └── 4_Modul.py
-├── utils/
-│   ├── auth.py
-│   ├── components.py
-│   ├── krs.py
-│   ├── helpers.py
-│   ├── styles.py
-│   └── supabase_client.py
+│   └── devcontainer.json
+├── .github/
+│   └── workflows/
+│       └── web-build.yml
 ├── sql/
-│   └── setup.sql
-├── .env.example
+│   ├── setup.sql
+│   └── super_admin_security.sql
+├── web/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── lib/
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── styles.css
+│   ├── .env.example
+│   ├── package.json
+│   └── vite.config.ts
 ├── .gitignore
-├── app.py
-├── requirements.txt
 └── README.md
 ```
-
-## Konfigurasi lokal
-
-Buat `.env` berdasarkan `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Isi:
-
-```env
-SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
-SUPABASE_ANON_KEY="YOUR-SUPABASE-PUBLISHABLE-OR-ANON-KEY"
-ADMIN_EMAIL="your-admin@email.com"
-```
-
-**Jangan commit `.env`.** File tersebut masuk `.gitignore`.
-
-Untuk Streamlit Community Cloud, gunakan Secrets dengan format TOML:
-
-```toml
-SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"
-SUPABASE_ANON_KEY = "YOUR-SUPABASE-PUBLISHABLE-OR-ANON-KEY"
-ADMIN_EMAIL = "your-admin@email.com"
-```
-
-Gunakan publishable/anon key, bukan service-role/secret key.
-
-## Supabase
-
-Database aplikasi menggunakan beberapa bagian Supabase:
-
-1. `tasks` — data tugas.
-2. `courses` — katalog mata kuliah, semester, dan kategori Wajib/Pilihan.
-3. `module_folders` — arsip folder modul/materi per mata kuliah beserta URL.
-4. `admin_users` — whitelist akun yang boleh masuk ke panel admin.
-5. Authentication — akun login admin.
-6. Storage bucket `task-files` — lampiran tugas.
-7. RLS — membatasi operasi database.
-
-`sql/setup.sql` berisi schema dan RLS untuk tabel `tasks` dan `courses`. Pada project yang sedang dipakai, tabel `admin_users` dan konfigurasi Storage dapat dikelola langsung dari Supabase Dashboard sesuai setup project.
-
-### Penting tentang authorization
-
-Aplikasi memiliki dua level:
-
-- **Super Admin** — email yang disimpan pada `ADMIN_EMAIL`; dapat mengelola daftar admin.
-- **Admin** — email yang terdaftar pada `admin_users`; dapat mengelola tugas sesuai policy RLS Supabase.
-
-Pastikan policy RLS di Supabase juga mengizinkan operasi yang memang dibutuhkan oleh admin. Jangan hanya mengandalkan tombol/UI Streamlit sebagai pengaman.
-
-
-### Arsip modul
-
-Admin dapat menyimpan folder arsip berdasarkan mata kuliah melalui tab **Arsip Modul**. Setiap entri memiliki nama folder, urutan, URL folder, dan keterangan opsional.
-
-URL dapat berupa tautan **folder Google Drive langsung** maupun **tautan custom** milik asisten/dosen yang pada akhirnya mengarah ke folder materi. Aplikasi tidak mengunduh atau menyalin file Google Drive; aplikasi hanya menyimpan URL folder dan menyediakan tombol untuk membukanya. Hak akses file/folder tetap mengikuti pengaturan berbagi pada Google Drive atau situs tujuan.
-
-### KRS dan mata kuliah
-
-Mata kuliah tidak lagi disimpan sebagai daftar hardcoded di Python. Admin dapat menambah mata kuliah dari tab **Mata Kuliah** pada Panel Admin dan mengatur semester serta kategorinya.
-
-Pada halaman **KRS Saya**, pengguna dapat memilih mata kuliah yang sedang diambil untuk setiap semester. Mata kuliah Wajib otomatis masuk, sedangkan mata kuliah Pilihan dipilih secara manual. Dashboard dan Kalender kemudian hanya menampilkan tugas dari KRS aktif.
-
-Pengaturan KRS saat ini disimpan di session Streamlit, sehingga belum memerlukan akun mahasiswa. Setelah session berakhir, pengguna dapat mengatur KRS kembali.
-
-Setelah perubahan ini, jalankan kembali `sql/setup.sql` di Supabase. File tersebut juga menambahkan tabel `courses` dan kolom `file_soal` bila belum ada. Data awal katalog berisi mata kuliah semester 3 saat ini; kategori/semester dapat disesuaikan oleh admin.
-
-## Menjalankan
-
-```bash
-python -m venv .venv
-```
-
-Linux/macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-Windows:
-
-```powershell
-.venv\\Scripts\\Activate.ps1
-```
-
-Install dependency:
-
-```bash
-pip install -r requirements.txt
-```
-
-Jalankan:
-
-```bash
-streamlit run app.py
-```
-
-Default URL:
-
-```
-http://localhost:8501
-```
-
-## Deployment
-
-Untuk Streamlit Community Cloud:
-
-1. Hubungkan repository GitHub.
-2. Pilih `app.py` sebagai Main file.
-3. Tambahkan `SUPABASE_URL`, `SUPABASE_ANON_KEY`, dan `ADMIN_EMAIL` pada Secrets.
-4. Pastikan database, Authentication, Storage, dan RLS Supabase sudah siap.
-5. Deploy.
-
-## Catatan UI
-
-Dashboard memakai komponen Streamlit native sebanyak mungkin agar lebih stabil di layar kecil. Custom CSS digunakan secara terpusat untuk spacing, tombol, navigasi, task card, daftar KRS, warna mata kuliah, dan kalender.
-
-Di Android, filter berada di dalam expandable section sehingga tidak memenuhi layar. Daftar KRS dan arsip modul dikelompokkan agar tetap ringkas. Di laptop, dashboard menggunakan dua kolom untuk memanfaatkan ruang yang lebih lebar.
-
-## Troubleshooting
-
-**Data kosong**
-- Pastikan policy SELECT pada `tasks` mengizinkan akses yang diinginkan.
-- Pastikan `SUPABASE_URL` dan key benar.
-
-**Login ditolak**
-- Pastikan email sudah ada di Authentication.
-- Pastikan email juga terdaftar di `admin_users`.
-- Pastikan `ADMIN_EMAIL` benar jika akun tersebut adalah Super Admin.
-- Periksa policy RLS untuk operasi admin.
-
-**Upload file gagal**
-- Pastikan bucket Storage `task-files` sudah ada.
-- Periksa Storage RLS/policy untuk upload dan delete.
-
-**Tanggal terlihat salah**
-- Aplikasi menggunakan timezone `Asia/Jakarta` untuk tampilan.
-- Deadline disimpan sebagai `timestamptz`.
-
-## Prinsip keamanan
-
-- Jangan commit `.env`.
-- Jangan memasukkan service-role/secret key ke aplikasi.
-- RLS Supabase tetap menjadi lapisan authorization database.
-- Jangan menganggap halaman Admin tersembunyi sebagai pengamanan.

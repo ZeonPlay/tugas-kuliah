@@ -57,6 +57,7 @@ create index if not exists courses_semester_idx
 alter table public.courses enable row level security;
 
 drop policy if exists courses_select_public on public.courses;
+drop policy if exists courses_select_admin on public.courses;
 drop policy if exists courses_insert_admin on public.courses;
 drop policy if exists courses_update_admin on public.courses;
 drop policy if exists courses_delete_admin on public.courses;
@@ -66,6 +67,19 @@ create policy courses_select_public
     for select
     to anon, authenticated
     using (aktif = true);
+
+-- Admin perlu melihat data nonaktif agar bisa mengaktifkan kembali mata kuliah.
+create policy courses_select_admin
+    on public.courses
+    for select
+    to authenticated
+    using (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
 
 -- Semua email yang sudah masuk admin_users boleh mengelola katalog.
 create policy courses_insert_admin
@@ -174,6 +188,7 @@ drop policy if exists modules_insert_admin on public.module_folders;
 drop policy if exists modules_update_admin on public.module_folders;
 drop policy if exists modules_delete_admin on public.module_folders;
 drop policy if exists module_folders_select_public on public.module_folders;
+drop policy if exists module_folders_select_admin on public.module_folders;
 drop policy if exists module_folders_insert_admin on public.module_folders;
 drop policy if exists module_folders_update_admin on public.module_folders;
 drop policy if exists module_folders_delete_admin on public.module_folders;
@@ -183,6 +198,19 @@ create policy module_folders_select_public
     for select
     to anon, authenticated
     using (aktif = true);
+
+-- Admin perlu melihat folder nonaktif agar dapat mengaktifkan atau menghapusnya.
+create policy module_folders_select_admin
+    on public.module_folders
+    for select
+    to authenticated
+    using (
+        exists (
+            select 1
+            from public.admin_users
+            where lower(email) = lower(auth.jwt() ->> 'email')
+        )
+    );
 
 create policy module_folders_insert_admin
     on public.module_folders
