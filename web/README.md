@@ -1,80 +1,62 @@
-# Tugas Kuliah — Web (React)
+# Tugas Kuliah — Web
 
-Frontend baru untuk menggantikan Streamlit secara bertahap. Aplikasi Streamlit di root repository tetap dipertahankan selama migrasi.
-
-## Teknologi
-
-- React + TypeScript + Vite
-- FullCalendar React 7.1.1 for the academic calendar
-- Tiptap WYSIWYG editor with Markdown serialization
-- Supabase JS Client
-- Cloudflare Pages untuk hosting frontend statis
+Frontend utama aplikasi Tugas Kuliah. Aplikasi dibangun menggunakan React, TypeScript, dan Vite, dengan Supabase sebagai backend.
 
 ## Menjalankan secara lokal
 
-Dari folder repository, jalankan:
+Dari root repository:
 
-    cd web
-    npm install
-    cp .env.example .env.local
+```bash
+cd web
+npm ci
+cp .env.example .env.local
+```
 
-Isi file .env.local dengan URL project dan publishable key / anon key dari Supabase:
+Isi environment variables di `.env.local`:
 
-    VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
-    VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
-    VITE_ADMIN_EMAIL=your-admin@email.com
+```env
+VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
+VITE_ADMIN_EMAIL=your-admin@email.com
+```
 
-Kemudian:
+Jalankan development server:
 
-    npm run dev
+```bash
+npm run dev
+```
 
-Untuk menguji build produksi:
+Build dan preview produksi:
 
-    npm run build
-    npm run preview
+```bash
+npm run build
+npm run preview
+```
 
-## Deploy ke Cloudflare Pages
+## Deployment Cloudflare Pages
 
-- Root directory: web
-- Build command: npm run build
-- Build output directory: dist
-- Environment variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, dan VITE_ADMIN_EMAIL
-- Gunakan Node.js 22 atau versi LTS yang didukung Vite untuk build.
+- Production branch: `main`
+- Root directory: `web`
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Node.js: `22`
+- Environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, dan `VITE_ADMIN_EMAIL`
 
-Frontend browser hanya boleh memakai publishable key (atau anon key lama) dan RLS Supabase yang benar. Jangan pernah menaruh service-role/secret key di frontend, file environment yang di-commit, atau variabel VITE_*.
+## Database dan keamanan
 
-## Status migrasi
+Jalankan `sql/setup.sql` dan `sql/super_admin_security.sql` dari root repository melalui Supabase SQL Editor. Atur email Super Admin di skrip kedua sebelum menjalankannya.
 
-- [x] Fondasi React + Vite + TypeScript
-- [x] Koneksi Supabase melalui environment variables
-- [x] Dashboard tugas membaca tabel tasks dan courses
-- [x] Pencarian, filter, tampilan mendatang/terlewat, dan katalog mata kuliah
-- [x] Ringkasan jumlah tugas, deadline dekat, dan tugas yang sudah lewat
-- [x] Peringatan tugas yang baru terlewat dalam tiga hari terakhir, termasuk tautan VClass/pengumpulan/lampiran
-- [x] Render ketentuan sebagai Markdown dengan daftar, tautan, tabel, dan format umum
-- [x] Navigasi ke Panel Admin
-- [x] Login dan pendaftaran admin yang memeriksa allowlist tabel admin_users
-- [x] Form tambah/edit tugas dengan validasi judul, mata kuliah, deadline, URL, dan ukuran lampiran
-- [x] Editor visual Tiptap dengan toolbar, format Markdown, tautan, daftar, dan tabel
-- [x] Alur admin terpisah: daftar tugas → form edit/tambah; hapus menggunakan dialog konfirmasi
-- [x] Upload, penggantian, dan penghapusan lampiran melalui bucket task-files
-- [x] Hapus tugas dengan konfirmasi
-- [x] Kalender bulanan dengan deadline per tanggal, agenda harian, navigasi bulan, dukungan WIB, dan refresh data 30 detik
-- [x] Manajemen mata kuliah dan status aktif/nonaktif
-- [x] Arsip modul per mata kuliah, termasuk pencarian/filter dan pengelolaan folder
-- [x] Pengelolaan daftar admin oleh Super Admin
-- [x] Kursor real-time lintas halaman melalui Supabase Realtime Presence/Broadcast
-- [ ] Jalankan `sql/super_admin_security.sql` setelah mengganti email placeholder
-- [ ] Pengujian manual RLS dan kebijakan Storage untuk akun admin serta non-admin
-- [ ] Uji visual pada lebar 320, 375, 414, dan 768 px; deploy Cloudflare Pages
+Buat bucket Storage `task-files` dan terapkan policy yang hanya mengizinkan admin melakukan upload serta penghapusan. Frontend hanya menggunakan publishable/anon key; service-role key tidak boleh masuk ke browser.
 
-## Catatan keamanan
+Semua izin operasi database wajib ditegakkan oleh Row Level Security Supabase. Variabel `VITE_ADMIN_EMAIL` hanya dipakai untuk identitas Super Admin di antarmuka, bukan sebagai pengganti RLS.
 
-- Panel Admin memeriksa email melalui tabel `admin_users`; operasi tulis tetap wajib dilindungi oleh RLS Supabase.
-- **Sebelum memakai Kelola Admin, jalankan `sql/super_admin_security.sql` di Supabase SQL Editor.** Ganti placeholder email di file itu dengan email `ADMIN_EMAIL` dari Streamlit dan `VITE_ADMIN_EMAIL` yang dipakai web.
-- Migrasi SQL membuat registry Super Admin yang tidak dapat diedit langsung dari browser dan membatasi INSERT/DELETE pada `admin_users` hanya untuk Super Admin. Ini juga menghapus policy lama yang mungkin mengizinkan semua admin mengubah allowlist.
-- `VITE_ADMIN_EMAIL` bisa dibaca dari browser dan hanya mengatur tampilan menu. Batas keamanan sesungguhnya ada di RLS/function SQL, bukan variabel frontend.
-- Untuk menjaga login Streamlit tetap berfungsi selama transisi, policy SELECT `admin_users` masih mempertahankan akses baca lama. Pertimbangkan mengubah alur autentikasi Streamlit sebelum membatasi pembacaan daftar email.
-- Bucket `task-files` harus mengizinkan upload dan penghapusan hanya untuk akun admin yang sah. Jika upload ditolak, periksa policy Storage; jangan membuat bucket dapat ditulis publik.
-- Frontend hanya memakai publishable key (atau anon key lama). Jangan pernah menaruh service-role/secret key di frontend, file environment yang di-commit, atau variabel `VITE_*`.
-- Streamlit di root repository tetap dipertahankan dan belum digantikan. Uji akun, Storage, dan RLS sebelum menjadikan frontend ini website utama.
+## Fitur
+
+- Dashboard deadline dengan pencarian dan filter.
+- Kalender bulanan dan agenda harian dalam WIB.
+- Panel admin untuk tugas dan lampiran.
+- Katalog mata kuliah.
+- Arsip modul per mata kuliah.
+- Login admin dan pengelolaan Super Admin.
+- Editor instruksi berbasis Markdown.
+- Kursor pengunjung real-time melalui Supabase Realtime.
