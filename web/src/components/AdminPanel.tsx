@@ -51,7 +51,6 @@ type TaskDraft = {
 };
 
 const TASK_TYPES = ["Teori", "Praktikum", "Quiz", "Ujian"];
-const SUPER_ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase() ?? "";
 const ALLOWED_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "docx", "zip"];
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -580,6 +579,7 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
   const [authReady, setAuthReady] = useState(false);
   const [access, setAccess] = useState<AccessState>("none");
   const [accessMessage, setAccessMessage] = useState("");
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -619,13 +619,22 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
     if (!supabase || !sessionEmail) {
       setAccess("none");
       setAccessMessage("");
+      setIsSuperAdmin(false);
       return;
     }
     setAccess("checking");
+    setIsSuperAdmin(false);
     void checkAdminAllowlist(sessionEmail).then((result) => {
       if (!alive) return;
       setAccessMessage(result.error ?? "");
       setAccess(result.error ? "error" : result.allowed ? "allowed" : "denied");
+    });
+    // Ask the protected database function; never ship the Super Admin email to the browser.
+    void supabase.rpc("is_super_admin").then(({ data, error }) => {
+      if (!alive) return;
+      setIsSuperAdmin(!error && data === true);
+    }).catch(() => {
+      if (alive) setIsSuperAdmin(false);
     });
     return () => {
       alive = false;
@@ -781,13 +790,13 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
               <button type="button" aria-pressed={adminSection === "tasks"} className={adminSection === "tasks" ? "is-current" : ""} onClick={() => setAdminSection("tasks")}>Kelola tugas</button>
               <button type="button" aria-pressed={adminSection === "courses"} className={adminSection === "courses" ? "is-current" : ""} onClick={() => setAdminSection("courses")}>Mata kuliah</button>
               <button type="button" aria-pressed={adminSection === "modules"} className={adminSection === "modules" ? "is-current" : ""} onClick={() => setAdminSection("modules")}>Arsip Modul</button>
-              {SUPER_ADMIN_EMAIL && sessionEmail?.trim().toLowerCase() === SUPER_ADMIN_EMAIL && (
+              {isSuperAdmin && (
                 <button type="button" aria-pressed={adminSection === "admins"} className={adminSection === "admins" ? "is-current" : ""} onClick={() => setAdminSection("admins")}>Kelola Admin</button>
               )}
             </div>
           )}
-          {adminSection === "admins" ? (
-            <AdminUsersManager currentEmail={sessionEmail ?? ""} superAdminEmail={SUPER_ADMIN_EMAIL} />
+          {adminSection === "admins" && isSuperAdmin ? (
+            <AdminUsersManager currentEmail={sessionEmail ?? ""} isSuperAdmin={isSuperAdmin} />
           ) : adminSection === "courses" ? (
             <CourseManager onDataChanged={onDataChanged} />
           ) : adminSection === "modules" ? (

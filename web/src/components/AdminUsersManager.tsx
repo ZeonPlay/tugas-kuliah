@@ -4,12 +4,12 @@ import { supabase } from "../lib/supabase";
 
 type Props = {
   currentEmail: string;
-  superAdminEmail: string;
+  isSuperAdmin: boolean;
 };
 
 type AdminUser = { email: string };
 
-export default function AdminUsersManager({ currentEmail, superAdminEmail }: Props) {
+export default function AdminUsersManager({ currentEmail, isSuperAdmin }: Props) {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -19,9 +19,7 @@ export default function AdminUsersManager({ currentEmail, superAdminEmail }: Pro
   const [errorMessage, setErrorMessage] = useState("");
   const [notice, setNotice] = useState("");
 
-  const normalizedSuperAdmin = superAdminEmail.trim().toLowerCase();
-  const isSuperAdmin = Boolean(normalizedSuperAdmin) &&
-    currentEmail.trim().toLowerCase() === normalizedSuperAdmin;
+  const normalizedCurrentEmail = currentEmail.trim().toLowerCase();
 
   async function loadAdmins() {
     if (!supabase || !isSuperAdmin) {
@@ -49,7 +47,7 @@ export default function AdminUsersManager({ currentEmail, superAdminEmail }: Pro
     void loadAdmins();
     // loadAdmins uses the current authenticated session and role from props.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentEmail, superAdminEmail]);
+  }, [currentEmail, isSuperAdmin]);
 
   async function addAdmin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -85,7 +83,7 @@ export default function AdminUsersManager({ currentEmail, superAdminEmail }: Pro
   }
 
   async function removeAdmin(targetEmail: string) {
-    if (!supabase || !isSuperAdmin || targetEmail === normalizedSuperAdmin || removing) return;
+    if (!supabase || !isSuperAdmin || targetEmail === normalizedCurrentEmail || removing) return;
 
     setRemoving(targetEmail);
     setErrorMessage("");
@@ -110,7 +108,7 @@ export default function AdminUsersManager({ currentEmail, superAdminEmail }: Pro
       <section className="admin-users-section">
         <div className="form-error-summary" role="alert">
           <strong>Akses Super Admin diperlukan.</strong>
-          <p>Bagian ini hanya dapat digunakan oleh email yang diatur pada VITE_ADMIN_EMAIL.</p>
+          <p>Bagian ini hanya dapat digunakan oleh akun yang terdaftar sebagai Super Admin di database.</p>
         </div>
       </section>
     );
@@ -168,7 +166,7 @@ export default function AdminUsersManager({ currentEmail, superAdminEmail }: Pro
       ) : (
         <ul className="admin-users-list">
           {admins.map((admin) => {
-            const isProtected = admin.email === normalizedSuperAdmin;
+            const isProtected = admin.email === normalizedCurrentEmail;
             return (
               <li className="admin-users-row" key={admin.email}>
                 <span className="admin-users-avatar" aria-hidden="true">{admin.email.charAt(0).toUpperCase()}</span>

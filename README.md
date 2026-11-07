@@ -24,13 +24,14 @@ npm ci
 cp .env.example .env.local
 ```
 
-Isi `web/.env.local`:
+Isi `web/.env.local` dengan konfigurasi koneksi Supabase:
 
 ```env
 VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
-VITE_ADMIN_EMAIL=your-admin@email.com
 ```
+
+Konfigurasi dan provisioning akun dengan hak istimewa tidak disertakan dalam dokumentasi publik.
 
 Kemudian jalankan:
 
@@ -57,22 +58,20 @@ Gunakan pengaturan berikut:
 | Build output directory | `dist` |
 | Node.js | `22` |
 
-Tambahkan environment variables berikut di pengaturan Cloudflare Pages:
+Tambahkan environment variables koneksi Supabase berikut di pengaturan Cloudflare Pages:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
-- `VITE_ADMIN_EMAIL`
+
+Jangan menambahkan identitas atau kredensial admin ke variabel frontend. Nilai dengan awalan `VITE_` akan tersedia di browser.
 
 Setelah deployment berhasil, setiap push ke `main` akan menjadi versi produksi.
 
-## Setup Supabase
+## Keamanan
 
-1. Jalankan `sql/setup.sql` pada Supabase SQL Editor untuk menyiapkan tabel, index, trigger, dan RLS.
-2. Atur email Super Admin di `sql/super_admin_security.sql`, lalu jalankan skrip tersebut satu kali.
-3. Buat bucket Storage bernama `task-files` dan atur policy upload serta delete khusus admin.
-4. Pastikan URL dan publishable/anon key Supabase sudah dimasukkan ke environment variables frontend.
+Aplikasi menggunakan Supabase Authentication dan Row Level Security (RLS). Hak istimewa admin ditentukan dan diverifikasi di sisi database, bukan dari konfigurasi frontend.
 
-Frontend hanya boleh menggunakan publishable key (atau anon key lama). **Jangan pernah menaruh service-role/secret key di variabel `VITE_*` atau mengirimkannya ke browser.** Keamanan operasi database tetap harus ditegakkan oleh RLS Supabase.
+Panduan provisioning akun istimewa dan konfigurasi internal sengaja tidak dipublikasikan. Frontend hanya boleh menggunakan publishable key (atau anon key lama). **Jangan pernah menaruh service-role/secret key di variabel `VITE_*` atau mengirimkannya ke browser.**
 
 ## Pemeriksaan otomatis
 

@@ -1,12 +1,8 @@
 -- =====================================================================
 -- super_admin_security.sql
--- Lock down admin_users writes and separate Super Admin identity from
--- ordinary admin access. This migration is intentionally separate from
--- setup.sql so the existing Streamlit app can keep running during migration.
---
--- BEFORE RUNNING: replace the placeholder email below with the same value
--- used by ADMIN_EMAIL in Streamlit and VITE_ADMIN_EMAIL in the web frontend.
--- Run once in Supabase Dashboard > SQL Editor.
+-- Lock down admin_users writes and store privileged identity server-side.
+-- Keep the initial Super Admin identity out of public source and frontend builds.
+-- Configure the owner identity only in a private deployment copy before use.
 -- =====================================================================
 
 create table if not exists public.admin_users (
@@ -61,17 +57,15 @@ grant execute on function public.is_super_admin() to authenticated;
 revoke all on function public.is_protected_super_admin(text) from public, anon;
 grant execute on function public.is_protected_super_admin(text) to authenticated;
 
--- Register the original server-side Super Admin in a protected table and
--- ensure that identity remains an allowed admin account. Set this value
--- to the intended Super Admin login email before running the script.
+-- Register the privately configured Super Admin in the protected registry.
 do $block$
 declare
-    v_super_admin_email text := lower(trim('zeonplaychannel@gmail.com'));
+    v_super_admin_email text := lower(trim('configure_super_admin_privately'));
 begin
     if v_super_admin_email is null
        or v_super_admin_email = ''
        or v_super_admin_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' then
-        raise exception 'Set a valid Super Admin email in sql/super_admin_security.sql before running.';
+        raise exception 'The Super Admin identity is not configured in this private migration copy.';
     end if;
 
     insert into public.super_admins (email)
@@ -101,9 +95,8 @@ begin
 end;
 $block$;
 
--- Keep the current read policy during the Streamlit transition: the existing
--- Streamlit login/signup flow checks admin_users before opening a session.
--- This preserves compatibility, while all browser writes are now role-gated.
+-- Admin allowlist reads remain available for the login eligibility check.
+-- All browser writes are restricted to the server-verified Super Admin role.
 create policy admin_users_select
 on public.admin_users
 for select

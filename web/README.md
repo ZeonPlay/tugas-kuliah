@@ -12,13 +12,14 @@ npm ci
 cp .env.example .env.local
 ```
 
-Isi environment variables di `.env.local`:
+Isi environment variables koneksi Supabase di `.env.local`:
 
 ```env
 VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
-VITE_ADMIN_EMAIL=your-admin@email.com
 ```
+
+Konfigurasi akun istimewa tidak disertakan dalam dokumentasi publik.
 
 Jalankan development server:
 
@@ -40,15 +41,13 @@ npm run preview
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Node.js: `22`
-- Environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, dan `VITE_ADMIN_EMAIL`
+- Environment variables: `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY`
 
-## Database dan keamanan
+## Keamanan
 
-Jalankan `sql/setup.sql` dan `sql/super_admin_security.sql` dari root repository melalui Supabase SQL Editor. Atur email Super Admin di skrip kedua sebelum menjalankannya.
+Hak istimewa admin ditentukan dan diverifikasi oleh Supabase di sisi database. Dokumentasi publik ini tidak memuat panduan provisioning akun istimewa.
 
-Buat bucket Storage `task-files` dan terapkan policy yang hanya mengizinkan admin melakukan upload serta penghapusan. Frontend hanya menggunakan publishable/anon key; service-role key tidak boleh masuk ke browser.
-
-Semua izin operasi database wajib ditegakkan oleh Row Level Security Supabase. Variabel `VITE_ADMIN_EMAIL` hanya dipakai untuk identitas Super Admin di antarmuka, bukan sebagai pengganti RLS.
+Frontend hanya menggunakan publishable/anon key. Service-role/secret key tidak boleh masuk ke browser atau variabel `VITE_*`. Semua izin operasi database wajib ditegakkan oleh Row Level Security Supabase.
 
 ## Fitur
 
