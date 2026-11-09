@@ -2889,3 +2889,20 @@ input[type="checkbox"] {
     padding-inline: 12px;
   }
 }
+
+/* Keep the three primary destinations centered in the viewport.
+   Logo and utility actions must not influence the navigation's center. */
+@media (min-width: 701px) {
+  .app-navigation-header {
+    position: relative;
+  }
+
+  .app-navigation-header .app-primary-nav {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: auto;
+    margin: 0;
+    transform: translate(-50%, -50%);
+  }
+}
