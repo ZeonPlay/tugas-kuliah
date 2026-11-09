@@ -2826,3 +2826,66 @@ input[type="checkbox"] {
     transition-duration: .01ms !important;
   }
 }
+
+/* Focused polish requested after the first live review:
+   full-bleed navigation chrome, with content aligned to the page grid. */
+.app-navigation-header {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding-inline: max(36px, calc((100vw - 1320px) / 2));
+  box-sizing: border-box;
+}
+
+/* Keep each archive filter to one visible outline. The label sits above
+   the control instead of inside a second framed container. */
+.module-manager-tools .course-status-select {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.module-manager-tools .course-status-select > span {
+  padding-left: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.module-manager-tools .course-status-select select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #201e2c;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.module-manager-tools .course-status-select select:hover {
+  border-color: var(--line-strong);
+  background-color: #242235;
+}
+
+@media (max-width: 700px) {
+  .app-navigation-header {
+    padding-inline: 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .app-navigation-header {
+    padding-inline: 12px;
+  }
+}
