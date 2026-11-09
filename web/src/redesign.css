@@ -234,8 +234,7 @@ a:hover {
   box-shadow: 0 0 0 3px rgba(138, 197, 166, .10);
 }
 
-.connection-state.is-warning .connection-dot,
-.footer-status:has(.connection-dot) .connection-dot {
+.connection-state.is-warning .connection-dot {
   background: var(--amber);
 }
 
