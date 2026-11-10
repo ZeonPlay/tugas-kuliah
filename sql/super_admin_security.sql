@@ -5,6 +5,8 @@
 -- Configure the initial Super Admin only in a private SQL copy.
 -- =====================================================================
 
+begin;
+
 create table if not exists public.admin_users (
     email text primary key,
     created_at timestamptz not null default now()
@@ -117,3 +119,5 @@ begin
     on conflict (email) do nothing;
 end;
 $block$;
+
+commit;
