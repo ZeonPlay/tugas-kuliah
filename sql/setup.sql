@@ -353,6 +353,29 @@ create policy tasks_delete_admin
     );
 
 -- ---------------------------------------------------------------------
+-- Browser-role SQL privileges:
+-- public visitors are read-only; signed-in users keep row-scoped CRUD
+-- controlled by the RLS policies below. RLS does not protect TRUNCATE.
+-- ---------------------------------------------------------------------
+revoke all privileges on table
+    public.tasks,
+    public.courses,
+    public.module_folders
+from public, anon, authenticated;
+
+grant select on table
+    public.tasks,
+    public.courses,
+    public.module_folders
+to anon;
+
+grant select, insert, update, delete on table
+    public.tasks,
+    public.courses,
+    public.module_folders
+to authenticated;
+
+-- ---------------------------------------------------------------------
 -- 6. (Opsional) Data contoh untuk mengetes tampilan kalender.
 --    Hapus tanda komentar kalau mau dipakai.
 -- ---------------------------------------------------------------------
