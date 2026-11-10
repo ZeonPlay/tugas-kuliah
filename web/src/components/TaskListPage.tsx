@@ -102,13 +102,14 @@ export default function TaskListPage({ tasks, loading, errorMessage, onNavigate,
   }, [progress]);
 
   useEffect(() => {
-    if (loading) return;
+    // Do not discard local progress when a refresh fails and the task array is empty.
+    if (loading || errorMessage) return;
     const validIds = new Set(tasks.map((task) => task.id));
     setProgress((current) => {
       const next = Object.fromEntries(Object.entries(current).filter(([id]) => validIds.has(id)));
       return Object.keys(next).length === Object.keys(current).length ? current : next;
     });
-  }, [tasks, loading]);
+  }, [tasks, loading, errorMessage]);
 
   const courses = useMemo(
     () => [...new Set(tasks.map((task) => task.mata_kuliah).filter(Boolean))].sort((a, b) => a.localeCompare(b, "id-ID")),
