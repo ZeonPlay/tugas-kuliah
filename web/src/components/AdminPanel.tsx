@@ -52,6 +52,14 @@ type TaskDraft = {
 
 const TASK_TYPES = ["Teori", "Praktikum", "Quiz", "Ujian"];
 const ALLOWED_EXTENSIONS = ["pdf", "png", "jpg", "jpeg", "docx", "zip"];
+const FILE_MIME_TYPES: Record<string, string> = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  zip: "application/zip",
+};
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 function wibDateInput(value?: string): string {
@@ -222,7 +230,7 @@ function TaskForm({
           .from("task-files")
           .upload(uploadedPath, draft.file, {
             upsert: false,
-            contentType: draft.file.type || "application/octet-stream",
+            contentType: FILE_MIME_TYPES[ext],
           });
         if (uploadError) throw new Error("Lampiran gagal diunggah. Periksa izin Storage dan coba lagi.");
         newFileUrl = supabase.storage.from("task-files").getPublicUrl(uploadedPath).data.publicUrl;
