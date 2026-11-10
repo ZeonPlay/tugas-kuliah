@@ -22,7 +22,7 @@ type RemoteCursor = {
 };
 
 const CHAT_MAX_LENGTH = 240;
-const CHAT_SHORTCUT = "Ctrl + Shift + Y";
+const CHAT_SHORTCUT = "Alt + Shift + C";
 
 const PAGE_LABELS: Record<string, string> = {
   home: "Beranda",
@@ -481,11 +481,11 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
         ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
       ));
       const shortcutPressed =
-        event.ctrlKey &&
+        event.altKey &&
         event.shiftKey &&
-        !event.altKey &&
+        !event.ctrlKey &&
         !event.metaKey &&
-        event.code === "KeyY";
+        event.code === "KeyC";
 
       if (shortcutPressed && !event.repeat && (!isEditing || target === chatInputRef.current)) {
         event.preventDefault();
