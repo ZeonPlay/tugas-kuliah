@@ -125,12 +125,23 @@ async function checkAdminAllowlist(email: string): Promise<{ allowed: boolean; e
     .maybeSingle();
 
   if (error) {
-    return {
-      allowed: false,
-      error: "Daftar admin tidak bisa diperiksa. Pastikan tabel admin_users mengizinkan pembacaan email untuk proses verifikasi.",
-    };
+    return { allowed: false, error: "Akses admin tidak dapat diperiksa. Coba lagi atau hubungi Super Admin." };
   }
   return { allowed: Boolean(data), error: null };
+}
+
+async function checkSuperAdmin(email: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { data, error } = await supabase
+    .from("super_admins")
+    .select("email")
+    .eq("email", email)
+    .maybeSingle();
+  if (!error && data) return true;
+
+  // Compatibility while an existing project is waiting for security_hardening.sql.
+  const legacy = await supabase.rpc("is_super_admin");
+  return !legacy.error && legacy.data === true;
 }
 
 function TaskForm({
@@ -483,23 +494,20 @@ function AdminLogin({
 
     setBusy(true);
     try {
-      const allowlist = await checkAdminAllowlist(normalizedEmail);
-      if (allowlist.error) {
-        setErrorMessage(allowlist.error);
-        return;
-      }
-      if (!allowlist.allowed) {
-        setErrorMessage("Email ini belum terdaftar sebagai admin. Minta Super Admin menambahkannya terlebih dahulu.");
-        return;
-      }
-
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email: normalizedEmail,
           password,
         });
-        if (error) {
+        if (signInError) {
           setErrorMessage("Login gagal. Periksa kembali email dan kata sandi.");
+          return;
+        }
+
+        const allowlist = await checkAdminAllowlist(normalizedEmail);
+        if (allowlist.error || !allowlist.allowed) {
+          await supabase.auth.signOut();
+          setErrorMessage(allowlist.error ?? "Email ini belum memiliki akses admin. Minta Super Admin menambahkannya terlebih dahulu.");
           return;
         }
         onAuthenticated();
@@ -513,10 +521,16 @@ function AdminLogin({
           return;
         }
         if (data.session) {
-          setNotice("Akun berhasil dibuat. Memeriksa akses admin…");
+          const allowlist = await checkAdminAllowlist(normalizedEmail);
+          if (allowlist.error || !allowlist.allowed) {
+            await supabase.auth.signOut();
+            setErrorMessage(allowlist.error ?? "Akun berhasil dibuat, tetapi email ini belum diizinkan sebagai admin. Hubungi Super Admin.");
+            return;
+          }
+          setNotice("Akun berhasil dibuat dan akses admin terverifikasi.");
           onAuthenticated();
         } else {
-          setNotice("Pendaftaran dikirim. Periksa email untuk konfirmasi, lalu masuk menggunakan kata sandi tadi.");
+          setNotice("Pendaftaran dikirim. Setelah Super Admin mengizinkan email ini, periksa email konfirmasi lalu masuk.");
           setMode("login");
           setPassword("");
           setConfirmPassword("");
@@ -630,15 +644,9 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
       setAccess(result.error ? "error" : result.allowed ? "allowed" : "denied");
     });
     // Ask the protected database function; never ship the Super Admin email to the browser.
-    void (async () => {
-      try {
-        const { data, error } = await supabase.rpc("is_super_admin");
-        if (!alive) return;
-        setIsSuperAdmin(!error && data === true);
-      } catch {
-        if (alive) setIsSuperAdmin(false);
-      }
-    })();
+    void checkSuperAdmin(sessionEmail).then((allowed) => {
+      if (alive) setIsSuperAdmin(allowed);
+    });
     return () => {
       alive = false;
     };
