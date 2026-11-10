@@ -57,7 +57,7 @@ export async function checkPwnedPassword(password: string): Promise<boolean> {
       throw new Error("Pemeriksaan kata sandi bocor sedang tidak tersedia. Coba lagi nanti.");
     }
 
-    const lines = (await response.text()).split(/\\r?\\n/);
+    const lines = (await response.text()).split(/\r?\n/);
     const match = lines.find((line) => {
       const separator = line.indexOf(":");
       return separator > 0 && line.slice(0, separator).trim().toUpperCase() === suffix;
