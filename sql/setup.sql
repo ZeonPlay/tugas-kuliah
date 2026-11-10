@@ -3,9 +3,10 @@
 -- Cara pakai: Supabase Dashboard > SQL Editor > New query >
 --             paste seluruh isi file ini > Run.
 --
--- Tidak ada email admin yang perlu di-hardcode di SQL ini.
--- ADMIN_EMAIL digunakan oleh aplikasi sebagai identitas Super Admin,
--- sedangkan hak tulis database memeriksa tabel public.admin_users.
+-- Jangan masukkan email Super Admin ke file publik ini.
+-- Siapkan identitas Super Admin melalui salinan privat
+-- sql/super_admin_security.sql, lalu terapkan sql/security_hardening.sql
+-- setelah frontend terbaru sudah ter-deploy.
 -- =====================================================================
 
 create extension if not exists pgcrypto;
