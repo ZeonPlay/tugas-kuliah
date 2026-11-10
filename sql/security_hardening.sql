@@ -39,8 +39,9 @@ grant select on table public.super_admins to authenticated;
 revoke all on table public.admin_users from public, anon, authenticated;
 -- The anon role retains SQL SELECT privilege only so nested policies can
 -- safely evaluate to zero rows; there is deliberately no anon SELECT policy.
-grant select, insert, delete on table public.admin_users to anon, authenticated;
-revoke update on table public.admin_users from anon, authenticated;
+grant select on table public.admin_users to anon;
+grant select, insert, delete on table public.admin_users to authenticated;
+revoke insert, update, delete on table public.admin_users from anon;
 
 create policy admin_users_select_self
 on public.admin_users
