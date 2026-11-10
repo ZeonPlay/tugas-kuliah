@@ -19,7 +19,6 @@ type Position = { x: number; y: number; device: string };
 
 const PAGE_LABELS: Record<string, string> = {
   home: "Beranda",
-  tasks: "Semua Tugas",
   calendar: "Kalender Tugas",
   archive: "Arsip Modul",
   admin: "Panel Admin",
