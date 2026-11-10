@@ -1,7 +1,7 @@
 import type { MouseEvent, ReactNode } from "react";
 import PresenceLayer from "./PresenceLayer";
 
-export type AppPage = "home" | "calendar" | "archive" | "admin";
+export type AppPage = "home" | "tasks" | "calendar" | "archive" | "admin";
 
 type PrimaryPage = Exclude<AppPage, "admin">;
 
@@ -17,15 +17,19 @@ type Props = {
   trailingActions?: ReactNode;
 };
 
-const primaryItems: { page: PrimaryPage; label: string; icon: "home" | "calendar" | "archive" }[] = [
+const primaryItems: { page: PrimaryPage; label: string; icon: "home" | "tasks" | "calendar" | "archive" }[] = [
   { page: "home", label: "Beranda", icon: "home" },
+  { page: "tasks", label: "Semua Tugas", icon: "tasks" },
   { page: "calendar", label: "Kalender", icon: "calendar" },
   { page: "archive", label: "Arsip Modul", icon: "archive" },
 ];
 
-function NavIcon({ name }: { name: "home" | "calendar" | "archive" | "more" }) {
+function NavIcon({ name }: { name: "home" | "tasks" | "calendar" | "archive" | "more" }) {
   if (name === "home") {
     return <svg className="app-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7" /><path d="M5.5 9v11h13V9M9.5 20v-6h5v6" /></svg>;
+  }
+  if (name === "tasks") {
+    return <svg className="app-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12" /><path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2" /></svg>;
   }
   if (name === "calendar") {
     return <svg className="app-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2" /><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17M8 13h2M14 13h2M8 17h2" /></svg>;
