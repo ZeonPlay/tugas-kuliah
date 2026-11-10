@@ -13,6 +13,29 @@
 begin;
 
 -- ---------------------------------------------------------------------
+-- Browser-role SQL privileges:
+-- public visitors are read-only; signed-in users keep row-scoped CRUD
+-- controlled by the RLS policies below. RLS does not protect TRUNCATE.
+-- ---------------------------------------------------------------------
+revoke all privileges on table
+    public.tasks,
+    public.courses,
+    public.module_folders
+from public, anon, authenticated;
+
+grant select on table
+    public.tasks,
+    public.courses,
+    public.module_folders
+to anon;
+
+grant select, insert, update, delete on table
+    public.tasks,
+    public.courses,
+    public.module_folders
+to authenticated;
+
+-- ---------------------------------------------------------------------
 -- 1. Admin identity access: no anonymous email enumeration.
 -- ---------------------------------------------------------------------
 alter table public.admin_users enable row level security;
