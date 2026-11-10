@@ -31,7 +31,7 @@ VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
 ```
 
-Konfigurasi dan provisioning akun dengan hak istimewa tidak disertakan dalam dokumentasi publik.
+Konfigurasi dan provisioning identitas Super Admin tidak disertakan dalam dokumentasi publik. Untuk instalasi baru, jalankan `sql/setup.sql`, siapkan `sql/super_admin_security.sql` secara privat, lalu jalankan `sql/security_hardening.sql` setelah frontend terbaru sudah ter-deploy.
 
 Kemudian jalankan:
 
@@ -69,9 +69,17 @@ Setelah deployment berhasil, setiap push ke `main` akan menjadi versi produksi.
 
 ## Keamanan
 
-Aplikasi menggunakan Supabase Authentication dan Row Level Security (RLS). Hak istimewa admin ditentukan dan diverifikasi di sisi database, bukan dari konfigurasi frontend.
+Aplikasi menggunakan Supabase Authentication dan Row Level Security (RLS). Hak istimewa admin ditentukan dan diverifikasi di sisi database, bukan dari konfigurasi frontend. Pengguna biasa hanya dapat memeriksa emailnya sendiri dalam daftar admin; seluruh daftar hanya dapat dilihat Super Admin. Bucket lampiran dapat dibaca melalui URL publik, sedangkan upload, perubahan, dan penghapusan dibatasi untuk admin.
 
 Panduan provisioning akun istimewa dan konfigurasi internal sengaja tidak dipublikasikan. Frontend hanya boleh menggunakan publishable key (atau anon key lama). **Jangan pernah menaruh service-role/secret key di variabel `VITE_*` atau mengirimkannya ke browser.**
+
+## Fitur utama
+
+- Dashboard deadline dan kalender tugas.
+- Halaman Semua Tugas dengan pencarian, filter, dan pengurutan.
+- Progress pribadi per tugas: belum mulai, sedang dikerjakan, dan selesai.
+- Progress disimpan lokal di browser/perangkat, bukan di database bersama dan tidak tersinkron antarperangkat.
+- Sinkronisasi perubahan tugas, mata kuliah, dan arsip modul melalui Supabase Realtime setelah hardening SQL diterapkan.
 
 ## Pemeriksaan otomatis
 
