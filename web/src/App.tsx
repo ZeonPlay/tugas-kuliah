@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase, supabaseConfigMissing } from "./lib/supabase";
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const CalendarPage = lazy(() => import("./components/CalendarPage"));
+const TaskListPage = lazy(() => import("./components/TaskListPage"));
 const ArchiveModules = lazy(() => import("./components/ArchiveModules"));
 import MarkdownContent from "./components/MarkdownContent";
 import AppNavigation, { type AppPage } from "./components/AppNavigation";
@@ -210,6 +211,30 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!supabase) return;
+    const client = supabase;
+    let refreshTimer: number | undefined;
+    const scheduleRefresh = () => {
+      if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => {
+        setRefreshKey((key) => key + 1);
+        refreshTimer = undefined;
+      }, 250);
+    };
+    const channel = client
+      .channel("tugas-kuliah-data-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "courses" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "module_folders" }, scheduleRefresh)
+      .subscribe();
+
+    return () => {
+      if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
+      void client.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadDashboard() {
@@ -341,6 +366,27 @@ function App() {
       : errorMessage
         ? "Koneksi bermasalah"
         : "Tersinkron";
+
+  if (page === "tasks") {
+    return (
+      <Suspense fallback={
+        <main className="app-shell calendar-loading-page" role="status">
+          <div className="calendar-loading">
+            <span className="loading-mark" />
+            <strong>Membuka semua tugas…</strong>
+          </div>
+        </main>
+      }>
+        <TaskListPage
+          tasks={tasks}
+          loading={loading}
+          errorMessage={errorMessage}
+          onNavigate={setPage}
+          onRefresh={() => setRefreshKey((key) => key + 1)}
+        />
+      </Suspense>
+    );
+  }
 
   if (page === "calendar") {
     return (
