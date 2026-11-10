@@ -234,7 +234,7 @@ function safeDevice(value: unknown): string {
 
 function safeChatText(value: unknown): string {
   return String(value ?? "")
-    .replace(/[\\u0000-\\u001F\\u007F]/g, " ")
+    .replace(/[\x00-\x1F\x7F]/g, " ")
     .slice(0, CHAT_MAX_LENGTH);
 }
 
