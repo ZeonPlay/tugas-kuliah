@@ -7,6 +7,7 @@ import AppNavigation, { type AppPage } from "./AppNavigation";
 import CourseManager from "./CourseManager";
 import ModuleManager from "./ModuleManager";
 import AdminUsersManager from "./AdminUsersManager";
+import { checkPwnedPassword, getPasswordPolicyError, PASSWORD_MIN_LENGTH } from "../lib/passwordSecurity";
 
 type Task = {
   id: string;
@@ -487,7 +488,13 @@ function AdminLogin({
       setErrorMessage("Masukkan alamat email yang valid.");
       return;
     }
-    if (password.length < 6) {
+    if (mode === "signup") {
+      const passwordPolicyError = getPasswordPolicyError(password);
+      if (passwordPolicyError) {
+        setErrorMessage(passwordPolicyError);
+        return;
+      }
+    } else if (password.length < 6) {
       setErrorMessage("Kata sandi minimal 6 karakter.");
       return;
     }
@@ -520,6 +527,13 @@ function AdminLogin({
         }
         onAuthenticated();
       } else {
+        // Screen the complete password only after submission; only a 5-char SHA-1 prefix leaves the browser.
+        const compromised = await checkPwnedPassword(password);
+        if (compromised) {
+          setErrorMessage("Kata sandi ini pernah ditemukan dalam kebocoran data. Pilih kata sandi lain yang unik.");
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
@@ -544,8 +558,10 @@ function AdminLogin({
           setConfirmPassword("");
         }
       }
-    } catch {
-      setErrorMessage("Permintaan belum berhasil. Periksa koneksi internet dan coba lagi.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error
+        ? error.message
+        : "Permintaan belum berhasil. Periksa koneksi internet dan coba lagi.");
     } finally {
       setBusy(false);
     }
@@ -578,13 +594,14 @@ function AdminLogin({
         </div>
         <div className="form-field">
           <label htmlFor="admin-password">Kata sandi</label>
-          <input id="admin-password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} minLength={6} required />
-          <p className="field-hint">Minimal 6 karakter.</p>
+          <input id="admin-password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} minLength={mode === "signup" ? PASSWORD_MIN_LENGTH : 6} required />
+          <p className="field-hint">{mode === "signup" ? "Minimal 12 karakter: huruf besar, huruf kecil, angka, dan simbol. Kata sandi juga diperiksa dari daftar kebocoran." : "Masukkan kata sandi akun yang sudah terdaftar."}</p>
         </div>
         {mode === "signup" && (
           <div className="form-field">
             <label htmlFor="admin-confirm-password">Ulangi kata sandi</label>
-            <input id="admin-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={6} required />
+            <input id="admin-confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} minLength={PASSWORD_MIN_LENGTH} required />
+            <p className="field-hint">Harus sama dengan kata sandi di atas.</p>
           </div>
         )}
         <button className="primary-action" type="submit" disabled={busy}>
