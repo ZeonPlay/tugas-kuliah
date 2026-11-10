@@ -51,6 +51,9 @@ Frontend hanya menggunakan publishable/anon key. Service-role/secret key tidak b
 
 ## Fitur
 
+- Halaman Semua Tugas dengan pencarian, filter, pengurutan, dan progress pribadi lokal di browser.
+- Supabase Realtime untuk menyegarkan tugas, mata kuliah, dan arsip modul (aktif setelah `sql/security_hardening.sql` diterapkan).
+
 - Dashboard deadline dengan pencarian dan filter.
 - Kalender bulanan dan agenda harian dalam WIB.
 - Panel admin untuk tugas dan lampiran.

@@ -19,6 +19,7 @@ type Position = { x: number; y: number; device: string };
 
 const PAGE_LABELS: Record<string, string> = {
   home: "Beranda",
+  tasks: "Semua Tugas",
   calendar: "Kalender Tugas",
   archive: "Arsip Modul",
   admin: "Panel Admin",
@@ -77,7 +78,7 @@ function deviceIcon(device: string): string {
   return device === "touch" ? "●" : device === "pen" ? "✎" : "↖";
 }
 
-export default function PresenceLayer({ page }: { page: "home" | "calendar" | "archive" | "admin" }) {
+export default function PresenceLayer({ page }: { page: "home" | "tasks" | "calendar" | "archive" | "admin" }) {
   const [sessionId] = useState(getSessionId);
   const [cursors, setCursors] = useState<RemoteCursor[]>([]);
 
