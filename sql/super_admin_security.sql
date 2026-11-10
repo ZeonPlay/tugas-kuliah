@@ -40,8 +40,9 @@ revoke all on table public.super_admins from public, anon, authenticated;
 grant select on table public.super_admins to authenticated;
 
 revoke all on table public.admin_users from public, anon, authenticated;
-grant select, insert, delete on table public.admin_users to anon, authenticated;
-revoke update on table public.admin_users from anon, authenticated;
+grant select on table public.admin_users to anon;
+grant select, insert, delete on table public.admin_users to authenticated;
+revoke insert, update, delete on table public.admin_users from anon;
 
 -- A signed-in user can check only their own allowlist entry.
 create policy admin_users_select_self
