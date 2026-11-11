@@ -261,7 +261,7 @@ export default function PresenceLayer({ page }: { page: "home" | "calendar" | "a
     const text = safeChatText(value);
     chatTextRef.current = text;
     const channel = channelRef.current;
-    if (!channel || !channelReadyRef.current || peerCountRef.current < 1) return;
+    if (!channel || !channelReadyRef.current) return;
 
     const position = latestPositionRef.current ?? { x: 0.5, y: 0.5, device: "mouse" };
     void channel.send({
