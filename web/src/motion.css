@@ -1,20 +1,20 @@
-/* A calm motion system: deliberate ease-in/ease-out instead of springy overshoot. */
+/* One coherent page transition. Avoid named header/nav snapshots: they caused
+   the outgoing and incoming navigation bars to be composited on top of each other. */
 :root {
   --motion-spring: cubic-bezier(.18, .82, .22, 1);
   --motion-smooth: cubic-bezier(.16, 1, .3, 1);
-  --motion-ease-in: cubic-bezier(.4, 0, 1, 1);
-  --motion-ease-out: cubic-bezier(0, 0, .2, 1);
+  --motion-ease-in: cubic-bezier(.55, 0, .85, .36);
+  --motion-ease-out: cubic-bezier(.16, 1, .3, 1);
   --motion-ease-in-out: cubic-bezier(.65, 0, .35, 1);
-  --motion-duration: 360ms;
+  --motion-duration: 380ms;
   --motion-long: 680ms;
 }
 
-/* Replace the old overshooting entrance with one continuous, soft deceleration. */
 @keyframes surface-enter {
   from {
     opacity: 0;
-    transform: translate3d(0, 18px, 0) scale(.988);
-    filter: blur(5px);
+    transform: translate3d(0, 16px, 0) scale(.99);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
@@ -24,18 +24,12 @@
 }
 
 @keyframes soft-pop {
-  from {
-    transform: scale(.96);
-    border-radius: 15px;
-  }
-  to {
-    transform: scale(1);
-    border-radius: inherit;
-  }
+  from { transform: scale(.96); }
+  to { transform: scale(1); }
 }
 
 @keyframes icon-turn {
-  from { transform: rotate(-14deg) scale(.92); }
+  from { transform: rotate(-12deg) scale(.94); }
   to { transform: rotate(0) scale(1); }
 }
 
@@ -51,89 +45,32 @@
 .app-shell > .archive-tools,
 .app-shell > .admin-workspace,
 .app-shell > .auth-section {
-  animation-duration: 680ms;
-  animation-timing-function: var(--motion-smooth);
+  animation: surface-enter 620ms var(--motion-smooth) both;
 }
 
-button:not(:disabled),
-a,
-summary,
-[role="button"] {
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    color 240ms var(--motion-ease-out),
-    background-color 280ms var(--motion-ease-out),
-    border-color 280ms var(--motion-ease-out),
-    border-radius 360ms var(--motion-smooth),
-    box-shadow 280ms var(--motion-ease-out),
-    transform 360ms var(--motion-smooth),
-    opacity 280ms var(--motion-ease-out);
-}
-
-.app-nav-item,
-.app-bottom-nav-item,
-.task-tab,
-.calendar-view-switch button,
-.admin-section-switch button,
-.archive-filter-toggle,
-.archive-expand-toggle,
-.calendar-nav-arrow,
-.calendar-today-button {
-  transition:
-    color 280ms var(--motion-ease-out),
-    background-color 320ms var(--motion-ease-out),
-    border-color 320ms var(--motion-ease-out),
-    border-radius 380ms var(--motion-smooth),
-    box-shadow 320ms var(--motion-ease-out),
-    transform 380ms var(--motion-smooth);
-}
-
-.task-tab::after {
-  transition:
-    transform 520ms var(--motion-smooth),
-    opacity 260ms var(--motion-ease-out);
-}
-
-.task-row,
-.calendar-task-card,
-.managed-task-row,
-.recent-overdue-item,
-.admin-users-row,
-.archive-folder-row,
-.course-task-group {
-  transition:
-    background-color 320ms var(--motion-ease-out),
-    border-color 320ms var(--motion-ease-out),
-    transform 380ms var(--motion-smooth);
-}
-
-/* Shared names let the page surface and active navigation item morph in place. */
-.app-shell { view-transition-name: app-page; }
-.app-navigation-header { view-transition-name: app-header; }
-.app-primary-nav .app-nav-item.is-current {
-  view-transition-name: app-primary-nav-active;
-}
-.app-bottom-nav-item.is-current {
-  view-transition-name: app-bottom-nav-active;
+/* The page is the only named snapshot. The header travels with it instead of
+   producing a second, duplicated navigation layer. */
+.app-shell {
+  view-transition-name: app-page;
 }
 
 @keyframes motion-page-out {
   to {
     opacity: 0;
-    transform: translate3d(-28px, 0, 0) scale(.988);
-    filter: blur(5px);
-    clip-path: inset(1% 0 1% 0 round 24px);
+    transform: translate3d(-2.4vw, 0, 0) scale(.99);
+    filter: blur(4px);
+    clip-path: inset(0 0 0 0 round 22px);
   }
 }
 
 @keyframes motion-page-in {
   from {
     opacity: 0;
-    transform: translate3d(42px, 0, 0) scale(.974);
-    filter: blur(9px);
-    clip-path: inset(2% 0 2% 0 round 30px);
+    transform: translate3d(3.2vw, 0, 0) scale(.982);
+    filter: blur(7px);
+    clip-path: inset(1.5% 0 1.5% 0 round 26px);
   }
-  68% { opacity: 1; }
+  72% { opacity: 1; }
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
@@ -142,82 +79,21 @@ summary,
   }
 }
 
-@keyframes motion-nav-out {
-  to {
-    opacity: .55;
-    transform: scale(.94);
-    border-radius: 18px;
-  }
-}
-
-@keyframes motion-nav-in {
-  from {
-    opacity: .65;
-    transform: scale(.94);
-    border-radius: 18px;
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-    border-radius: inherit;
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  ::view-transition-group(root) {
-    animation-duration: 420ms;
-    animation-timing-function: var(--motion-ease-in-out);
-  }
-
-  ::view-transition-old(root) {
-    animation: fade-only 260ms var(--motion-ease-in) both;
-  }
-
-  ::view-transition-new(root) {
-    animation: fade-only 420ms var(--motion-ease-out) both;
-  }
-
   ::view-transition-group(app-page) {
     animation-duration: 680ms;
     animation-timing-function: var(--motion-ease-in-out);
   }
 
   ::view-transition-old(app-page) {
-    animation: motion-page-out 340ms var(--motion-ease-in) both;
+    animation: motion-page-out 300ms var(--motion-ease-in) both;
   }
 
   ::view-transition-new(app-page) {
-    animation: motion-page-in 700ms var(--motion-smooth) both;
-  }
-
-  ::view-transition-group(app-header) {
-    animation-duration: 620ms;
-    animation-timing-function: var(--motion-smooth);
-  }
-
-  ::view-transition-old(app-header),
-  ::view-transition-new(app-header) {
-    animation: none;
-  }
-
-  ::view-transition-group(app-primary-nav-active),
-  ::view-transition-group(app-bottom-nav-active) {
-    animation-duration: 560ms;
-    animation-timing-function: var(--motion-smooth);
-  }
-
-  ::view-transition-old(app-primary-nav-active),
-  ::view-transition-old(app-bottom-nav-active) {
-    animation: motion-nav-out 180ms var(--motion-ease-in) both;
-  }
-
-  ::view-transition-new(app-primary-nav-active),
-  ::view-transition-new(app-bottom-nav-active) {
-    animation: motion-nav-in 520ms var(--motion-smooth) both;
+    animation: motion-page-in 700ms var(--motion-ease-out) both;
   }
 }
 
-/* Reduced-motion users get immediate state changes without decorative movement. */
 @media (prefers-reduced-motion: reduce) {
   body::before,
   body::after,
@@ -234,20 +110,5 @@ summary,
   .delete-dialog-backdrop,
   .delete-dialog {
     animation: none !important;
-  }
-
-  button,
-  a,
-  summary,
-  [role="button"],
-  .task-row,
-  .calendar-task-card,
-  .managed-task-row,
-  .recent-overdue-item,
-  .admin-users-row,
-  .archive-folder-row,
-  .course-task-group,
-  .task-tab::after {
-    transition: none !important;
   }
 }

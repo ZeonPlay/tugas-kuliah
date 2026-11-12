@@ -6,6 +6,7 @@ const CalendarPage = lazy(() => import("./components/CalendarPage"));
 const ArchiveModules = lazy(() => import("./components/ArchiveModules"));
 import MarkdownContent from "./components/MarkdownContent";
 import AppNavigation, { type AppPage } from "./components/AppNavigation";
+import PresenceLayer from "./components/PresenceLayer";
 
 type Task = {
   id: string;
@@ -206,13 +207,17 @@ function App() {
   const [now, setNow] = useState(() => Date.now());
 
   const navigationRequest = useRef(0);
+  const activeTransition = useRef<{
+    finished: Promise<void>;
+    skipTransition: () => void;
+  } | null>(null);
 
   async function navigateTo(nextPage: AppPage) {
     const request = ++navigationRequest.current;
     if (nextPage === page) return;
 
-    // Preload lazy pages before taking the outgoing snapshot, so Suspense never
-    // replaces the incoming page with a loading screen during the transition.
+    // Load the destination before starting the transition so Suspense cannot
+    // flash a second loading page over the current screen.
     switch (nextPage) {
       case "calendar":
         await import("./components/CalendarPage");
@@ -225,20 +230,44 @@ function App() {
         break;
     }
 
-    // Ignore stale navigation requests when the user clicks another page
-    // while a lazy chunk is still loading.
     if (request !== navigationRequest.current) return;
 
+    // Never overlap two browser view transitions. Finish the previous snapshot
+    // before starting the newest navigation request.
+    const previousTransition = activeTransition.current;
+    if (previousTransition) {
+      previousTransition.skipTransition();
+      try {
+        await previousTransition.finished;
+      } catch {
+        // A skipped transition may reject in some browser implementations.
+      }
+      if (request !== navigationRequest.current) return;
+      if (activeTransition.current === previousTransition) activeTransition.current = null;
+    }
+
     const commitNavigation = () => flushSync(() => setPage(nextPage));
-    const transitionDocument = document as unknown as {
-      startViewTransition?: (callback: () => void) => unknown;
+    const transitionDocument = document as Document & {
+      startViewTransition?: (callback: () => void) => {
+        finished: Promise<void>;
+        skipTransition: () => void;
+      };
     };
 
     if (
       typeof transitionDocument.startViewTransition === "function" &&
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      transitionDocument.startViewTransition(commitNavigation);
+      const transition = transitionDocument.startViewTransition(commitNavigation);
+      activeTransition.current = transition;
+      void transition.finished.then(
+        () => {
+          if (activeTransition.current === transition) activeTransition.current = null;
+        },
+        () => {
+          if (activeTransition.current === transition) activeTransition.current = null;
+        },
+      );
     } else {
       commitNavigation();
     }
@@ -408,6 +437,8 @@ function App() {
 
   if (page === "calendar") {
     return (
+      <>
+      <PresenceLayer page={page} />
       <Suspense fallback={
         <main className="app-shell calendar-loading-page" role="status">
           <div className="calendar-loading">
@@ -424,11 +455,14 @@ function App() {
           onRefresh={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
+      </>
     );
   }
 
   if (page === "archive") {
     return (
+      <>
+      <PresenceLayer page={page} />
       <Suspense fallback={
         <main className="app-shell calendar-loading-page" role="status">
           <div className="calendar-loading">
@@ -444,11 +478,14 @@ function App() {
           onRefresh={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
+      </>
     );
   }
 
   if (page === "admin") {
     return (
+      <>
+      <PresenceLayer page={page} />
       <Suspense fallback={
         <main className="app-shell calendar-loading-page" role="status">
           <div className="calendar-loading">
@@ -464,10 +501,13 @@ function App() {
           onDataChanged={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
+      </>
     );
   }
 
   return (
+    <>
+    <PresenceLayer page={page} />
     <main className="app-shell">
       <AppNavigation
         currentPage="home"
@@ -696,6 +736,7 @@ function App() {
         </span>
       </footer>
     </main>
+    </>
   );
 }
 
