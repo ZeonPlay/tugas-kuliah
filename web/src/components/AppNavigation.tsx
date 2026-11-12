@@ -1,5 +1,4 @@
 import type { MouseEvent, ReactNode } from "react";
-import PresenceLayer from "./PresenceLayer";
 
 export type AppPage = "home" | "calendar" | "archive" | "admin";
 
@@ -54,7 +53,6 @@ export default function AppNavigation({
 
   return (
     <>
-      <PresenceLayer page={currentPage} />
       <header className="app-header app-navigation-header">
         <a
           className="wordmark"
