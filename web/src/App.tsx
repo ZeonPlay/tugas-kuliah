@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { supabase, supabaseConfigMissing } from "./lib/supabase";
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const CalendarPage = lazy(() => import("./components/CalendarPage"));
@@ -204,6 +205,45 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [now, setNow] = useState(() => Date.now());
 
+  const navigationRequest = useRef(0);
+
+  async function navigateTo(nextPage: AppPage) {
+    const request = ++navigationRequest.current;
+    if (nextPage === page) return;
+
+    // Preload lazy pages before taking the outgoing snapshot, so Suspense never
+    // replaces the incoming page with a loading screen during the transition.
+    switch (nextPage) {
+      case "calendar":
+        await import("./components/CalendarPage");
+        break;
+      case "archive":
+        await import("./components/ArchiveModules");
+        break;
+      case "admin":
+        await import("./components/AdminPanel");
+        break;
+    }
+
+    // Ignore stale navigation requests when the user clicks another page
+    // while a lazy chunk is still loading.
+    if (request !== navigationRequest.current) return;
+
+    const commitNavigation = () => flushSync(() => setPage(nextPage));
+    const transitionDocument = document as unknown as {
+      startViewTransition?: (callback: () => void) => unknown;
+    };
+
+    if (
+      typeof transitionDocument.startViewTransition === "function" &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      transitionDocument.startViewTransition(commitNavigation);
+    } else {
+      commitNavigation();
+    }
+  }
+
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(timer);
@@ -380,7 +420,7 @@ function App() {
           tasks={tasks}
           loading={loading}
           errorMessage={errorMessage}
-          onNavigate={setPage}
+          onNavigate={navigateTo}
           onRefresh={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
@@ -400,7 +440,7 @@ function App() {
         <ArchiveModules
           key={refreshKey}
           courses={courses}
-          onNavigate={setPage}
+          onNavigate={navigateTo}
           onRefresh={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
@@ -420,7 +460,7 @@ function App() {
         <AdminPanel
           tasks={tasks}
           courses={courses}
-          onNavigate={setPage}
+          onNavigate={navigateTo}
           onDataChanged={() => setRefreshKey((key) => key + 1)}
         />
       </Suspense>
@@ -431,7 +471,7 @@ function App() {
     <main className="app-shell">
       <AppNavigation
         currentPage="home"
-        onNavigate={setPage}
+        onNavigate={navigateTo}
         connectionLabel={connectionLabel}
         connectionWarning={Boolean(errorMessage || supabaseConfigMissing)}
         onRefresh={() => setRefreshKey((key) => key + 1)}
