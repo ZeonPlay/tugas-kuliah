@@ -1,0 +1,325 @@
+/* Global interaction language: rounded controls, responsive feedback, and
+   animated state changes across the whole app rather than only the main nav. */
+:root {
+  --control-pill: 999px;
+  --control-round: 15px;
+  --control-round-large: 19px;
+  --control-ease: cubic-bezier(.16, 1, .3, 1);
+  --control-ease-in: cubic-bezier(.4, 0, 1, 1);
+  --control-time: 340ms;
+}
+
+/* Buttons are pills by default. Large row controls keep a soft card silhouette. */
+button:not(.course-group-toggle):not(.archive-course-heading) {
+  border-radius: var(--control-pill);
+}
+
+button:not(:disabled),
+a[href],
+summary,
+[role="button"],
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea,
+.web-presence-chat-close {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 260ms var(--control-ease),
+    background-color 300ms var(--control-ease),
+    border-color 300ms var(--control-ease),
+    border-radius 360ms var(--control-ease),
+    box-shadow 320ms var(--control-ease),
+    transform 360ms var(--control-ease),
+    opacity 260ms var(--control-ease),
+    filter 300ms var(--control-ease);
+}
+
+button:not(:disabled):active,
+a[href]:active,
+summary:active,
+[role="button"]:active {
+  transform: translateY(1px) scale(.975);
+  transition-duration: 120ms;
+  transition-timing-function: var(--control-ease-in);
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  filter: saturate(.72);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):hover {
+    filter: brightness(1.045);
+  }
+
+  a[href]:hover,
+  summary:hover,
+  [role="button"]:hover {
+    filter: brightness(1.035);
+  }
+
+  .app-nav-item:hover,
+  .app-bottom-nav-item:hover,
+  .app-more-popover button:hover,
+  .admin-section-switch button:hover,
+  .auth-tab:hover,
+  .calendar-view-switch button:hover,
+  .archive-filter-toggle:hover,
+  .archive-expand-toggle:hover,
+  .calendar-nav-arrow:hover,
+  .calendar-today-button:hover {
+    transform: translateY(-2px);
+  }
+
+  .task-row:hover,
+  .managed-task-row:hover,
+  .calendar-task-card:hover,
+  .recent-overdue-item:hover,
+  .archive-folder-row:hover,
+  .admin-users-row:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Main navigation and segmented controls: one outer capsule, no inner borders. */
+.app-nav-item,
+.app-bottom-nav-item,
+.app-more-menu > summary,
+.app-more-popover button,
+.admin-section-switch button,
+.auth-tab,
+.calendar-view-switch button,
+.task-tab,
+.archive-filter-toggle,
+.archive-expand-toggle,
+.calendar-nav-arrow,
+.calendar-today-button,
+.text-button,
+.group-tool-button,
+.back-to-list,
+.task-search-clear,
+.clear-search {
+  border: 0 !important;
+  border-radius: var(--control-pill) !important;
+}
+
+.app-nav-item.is-current,
+.app-bottom-nav-item.is-current,
+.admin-section-switch button.is-current,
+.auth-tab.is-current,
+.calendar-view-switch button.is-active,
+.task-tab.is-current {
+  animation: soft-pop 360ms var(--control-ease) both;
+}
+
+.app-nav-item.is-current .app-nav-icon,
+.app-bottom-nav-item.is-current .app-nav-icon {
+  animation: icon-turn 360ms var(--control-ease) both;
+}
+
+.admin-section-switch,
+.auth-tabs,
+.calendar-view-switch {
+  border-radius: var(--control-pill);
+  padding: 4px;
+}
+
+.admin-section-switch button,
+.auth-tab,
+.calendar-view-switch button {
+  min-height: 36px;
+  padding-inline: 15px;
+}
+
+/* Accordion rows are broad interactive surfaces, not capsule-shaped text pills. */
+.course-group-toggle,
+.archive-course-heading {
+  border: 0;
+  border-radius: var(--control-round) !important;
+  transition:
+    color 300ms var(--control-ease),
+    background-color 320ms var(--control-ease),
+    border-radius 360ms var(--control-ease),
+    transform 360ms var(--control-ease),
+    padding 360ms var(--control-ease);
+}
+
+.archive-course-group,
+.course-task-group,
+.course-semester-group,
+.course-edit-row,
+.module-edit-row {
+  border-radius: var(--control-round-large);
+  transition:
+    border-color 320ms var(--control-ease),
+    background-color 320ms var(--control-ease),
+    box-shadow 360ms var(--control-ease);
+}
+
+/* Inputs animate on focus without placing an extra outlined box around their
+   wrapper. Search wrappers own the border; their nested input stays borderless. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  border-radius: var(--control-round);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+select:focus,
+textarea:focus,
+[contenteditable="true"]:focus,
+.ProseMirror:focus {
+  outline: none;
+  border-color: var(--color-focus, #a99af2);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-focus, #a99af2) 19%, transparent);
+}
+
+.search-field:focus-within,
+.select-field:focus-within,
+.archive-search:focus-within,
+.task-search-input:focus-within {
+  border-color: var(--color-focus, #a99af2);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-focus, #a99af2) 16%, transparent);
+}
+
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] {
+  accent-color: var(--color-accent, #b7a5ff);
+  transition: transform 240ms var(--control-ease), filter 240ms var(--control-ease);
+}
+
+input[type="checkbox"]:hover,
+input[type="radio"]:hover,
+input[type="range"]:hover {
+  transform: scale(1.08);
+}
+
+input[type="checkbox"]:active,
+input[type="radio"]:active {
+  transform: scale(.92);
+}
+
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]) {
+  transition: color 260ms var(--control-ease), opacity 260ms var(--control-ease);
+}
+
+label:has(input[type="checkbox"]:checked),
+label:has(input[type="radio"]:checked) {
+  color: var(--color-ink, inherit);
+}
+
+/* Remove second framed cards from forms already inside a bordered disclosure
+   or edit row. Keep one separator and comfortable spacing inside the parent. */
+.course-create-form,
+.course-edit-form,
+.module-edit-form {
+  margin: 0 !important;
+  padding: 16px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--line, var(--color-rule, rgb(255 255 255 / 10%))) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.course-create-disclosure,
+.module-create-disclosure,
+.course-edit-row,
+.module-edit-row {
+  overflow: hidden;
+  border-radius: var(--control-round-large);
+}
+
+.course-create-disclosure > summary,
+.course-semester-group > summary,
+.course-edit-row > summary,
+.module-edit-row > summary,
+.calendar-filter > summary {
+  transition:
+    color 260ms var(--control-ease),
+    background-color 300ms var(--control-ease),
+    border-radius 360ms var(--control-ease);
+}
+
+/* Reveal expanding content with a short ease-out rather than a hard pop. */
+@keyframes reveal-content {
+  from {
+    opacity: 0;
+    transform: translateY(-7px);
+    clip-path: inset(0 0 10% 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes interactive-enter {
+  from {
+    opacity: 0;
+    transform: translateY(9px) scale(.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.course-edit-row[open] > .course-edit-form,
+.module-edit-row[open] > .module-edit-form,
+.course-semester-group[open] > .course-semester-items,
+.calendar-filter[open] > .calendar-filter-content,
+.archive-course-group.is-expanded .archive-folder-list,
+.course-task-group.is-expanded .course-group-tasks {
+  animation: reveal-content 420ms var(--control-ease) both;
+  transform-origin: top;
+}
+
+.task-row,
+.course-row,
+.managed-task-row,
+.calendar-task-card,
+.archive-course-group,
+.archive-folder-row,
+.recent-overdue-item,
+.admin-users-row {
+  animation: interactive-enter 420ms var(--control-ease) both;
+}
+
+.course-edit-chevron,
+.archive-chevron,
+.course-group-chevron,
+.calendar-filter > summary::after {
+  transition: transform 380ms var(--control-ease), color 260ms var(--control-ease);
+}
+
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-focus, #a99af2);
+  outline-offset: 3px;
+  transition:
+    outline-offset 220ms var(--control-ease),
+    box-shadow 260ms var(--control-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
