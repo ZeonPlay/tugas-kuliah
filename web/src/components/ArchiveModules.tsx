@@ -88,7 +88,6 @@ export default function ArchiveModules({ courses, onNavigate, onRefresh }: Props
       <AppNavigation currentPage="archive" onNavigate={onNavigate} onRefresh={onRefresh} />
 
       <section className="archive-heading">
-        <p className="welcome-kicker">MATERI KULIAH <span aria-hidden="true">·</span> PUSAT REFERENSI</p>
         <h1>Arsip Modul</h1>
         <p>Kumpulan folder modul dan materi yang dibagikan untuk tiap mata kuliah.</p>
         <div className="archive-summary"><strong>{loading ? "—" : visibleFolders.length}</strong><span>folder tersedia</span><span className="archive-summary-divider" /><strong>{grouped.length}</strong><span>mata kuliah</span></div>
@@ -137,7 +136,7 @@ export default function ArchiveModules({ courses, onNavigate, onRefresh }: Props
                 return <article className="archive-folder-row" key={folder.id}>
                   <span className="archive-folder-icon" aria-hidden="true">↗</span>
                   <div className="archive-folder-copy"><strong>{folder.keterangan?.trim() || "Folder materi"}</strong><span>{url ? new URL(url).hostname.replace(/^www\./, "") : "Tautan tidak valid"}</span></div>
-                  {url ? <a className="archive-open-link" href={url} target="_blank" rel="noopener noreferrer">Buka folder <span aria-hidden="true">↗</span></a> : <span className="archive-invalid-link">Tautan tidak valid</span>}
+                  {url ? <a className="archive-open-link" href={url} target="_blank" rel="noopener noreferrer">Buka folder</a> : <span className="archive-invalid-link">Tautan tidak valid</span>}
                 </article>;
               })}
             </div>}
