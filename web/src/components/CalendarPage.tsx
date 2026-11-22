@@ -191,7 +191,7 @@ export default function CalendarPage({ tasks, loading, errorMessage, onNavigate,
       {errorMessage && <section className="notice notice-error" role="alert"><strong>Data kalender belum berhasil dimuat.</strong><span>{errorMessage}</span><button className="text-button" type="button" onClick={onRefresh}>Coba lagi</button></section>}
 
       <details className="calendar-filter" open={filterOpen} onToggle={(event) => setFilterOpen(event.currentTarget.open)}>
-        <summary>🔎 Filter kalender{filtersActive ? " · Filter aktif" : ""}</summary>
+        <summary>Filter kalender{filtersActive ? " (filter aktif)" : ""}</summary>
         <div className="calendar-filter-content">
           <fieldset className="calendar-filter-fieldset">
             <legend>Jenis</legend>
