@@ -16,7 +16,7 @@ Aplikasi web untuk mengelola tugas, deadline, kalender akademik, dan arsip mater
 
 ## Menjalankan secara lokal
 
-Persyaratan: Node.js 22 atau lebih baru dan npm.
+Persyaratan: Node.js 22.12 atau lebih baru (atau 20.19+), serta npm.
 
 ```bash
 cd web
@@ -56,7 +56,7 @@ Gunakan pengaturan berikut:
 | Root directory | `web` |
 | Build command | `npm run build` |
 | Build output directory | `dist` |
-| Node.js | `22` |
+| Node.js | `22.12` atau lebih baru |
 
 Tambahkan environment variables koneksi Supabase berikut di pengaturan Cloudflare Pages:
 
