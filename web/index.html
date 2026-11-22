@@ -3,9 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#12111b" />
-    <meta name="description" content="Agenda kuliah untuk mengelola tugas, deadline, kalender, dan materi perkuliahan." />
-    <title>Tugas Kuliah — Study Workspace</title>
+    <meta name="theme-color" content="#f5f5f1" />
+    <meta name="description" content="Atur tugas, pantau deadline, lihat kalender, dan temukan materi kuliah dalam satu tempat." />
+    <title>Tugas Kuliah</title>
+    <script>
+      try {
+        const savedTheme = localStorage.getItem("tugas-kuliah-theme");
+        document.documentElement.dataset.theme =
+          savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

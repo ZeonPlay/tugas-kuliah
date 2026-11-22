@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 
 export type AppPage = "home" | "calendar" | "archive" | "admin";
 
 type PrimaryPage = Exclude<AppPage, "admin">;
+type Theme = "light" | "dark";
 
 type Props = {
   currentPage: AppPage;
@@ -16,11 +18,29 @@ type Props = {
   trailingActions?: ReactNode;
 };
 
+const THEME_STORAGE_KEY = "tugas-kuliah-theme";
+
 const primaryItems: { page: PrimaryPage; label: string; icon: "home" | "calendar" | "archive" }[] = [
-  { page: "home", label: "Beranda", icon: "home" },
+  { page: "home", label: "Tugas", icon: "home" },
   { page: "calendar", label: "Kalender", icon: "calendar" },
   { page: "archive", label: "Arsip Modul", icon: "archive" },
 ];
+
+function initialTheme(): Theme {
+  if (typeof document !== "undefined") {
+    const applied = document.documentElement.dataset.theme;
+    if (applied === "light" || applied === "dark") return applied;
+  }
+
+  try {
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === "light" || saved === "dark") return saved;
+  } catch {
+    // Theme switching still works for this session when storage is unavailable.
+  }
+
+  return "light";
+}
 
 function NavIcon({ name }: { name: "home" | "calendar" | "archive" | "more" }) {
   if (name === "home") {
@@ -35,6 +55,19 @@ function NavIcon({ name }: { name: "home" | "calendar" | "archive" | "more" }) {
   return <svg className="app-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></svg>;
 }
 
+function ThemeIcon({ theme }: { theme: Theme }) {
+  return theme === "dark" ? (
+    <svg className="theme-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+    </svg>
+  ) : (
+    <svg className="theme-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.6 8.6 0 1 0 20.2 15.1Z" />
+    </svg>
+  );
+}
+
 export default function AppNavigation({
   currentPage,
   onNavigate,
@@ -46,6 +79,22 @@ export default function AppNavigation({
   onSignOut,
   trailingActions,
 }: Props) {
+  const [theme, setTheme] = useState<Theme>(initialTheme);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute(
+      "content",
+      theme === "dark" ? "#191b1a" : "#f5f5f1",
+    );
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // The selected theme remains active until the page is closed.
+    }
+  }, [theme]);
+
   function refreshFromMenu(event: MouseEvent<HTMLButtonElement>) {
     onRefresh?.();
     event.currentTarget.closest("details")?.removeAttribute("open");
@@ -57,11 +106,11 @@ export default function AppNavigation({
         <a
           className="wordmark"
           href="/"
-          aria-label="Tugas Kuliah, kembali ke beranda"
+          aria-label="Tugas Kuliah, kembali ke daftar tugas"
           onClick={(event) => { event.preventDefault(); onNavigate("home"); }}
         >
           <span className="wordmark-symbol" aria-hidden="true">t<span>.</span></span>
-          <span className="wordmark-name">tugas kuliah</span>
+          <span className="wordmark-name">Tugas Kuliah</span>
         </a>
 
         <nav className="app-primary-nav" aria-label="Navigasi utama">
@@ -85,6 +134,16 @@ export default function AppNavigation({
               {connectionLabel}
             </span>
           )}
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}
+            aria-label={theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
+            title={theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
+          >
+            <ThemeIcon theme={theme} />
+            <span>{theme === "dark" ? "Tema terang" : "Tema gelap"}</span>
+          </button>
           {onRefresh && (
             <button
               className="refresh-button app-nav-refresh"
