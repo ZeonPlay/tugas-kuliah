@@ -1,10 +1,10 @@
 # Tugas Kuliah — Web
 
-Frontend utama aplikasi Tugas Kuliah. Aplikasi dibangun menggunakan React, TypeScript, dan Vite, dengan Supabase sebagai backend.
+Frontend utama aplikasi Tugas Kuliah. Aplikasi dibangun menggunakan React 19, TypeScript 7, Vite 8, Tailwind CSS 4, dan Supabase sebagai backend.
 
 ## Menjalankan secara lokal
 
-Dari root repository:
+Persyaratan: Node.js 22.12 atau lebih baru (atau 20.19+), serta npm.\n\nDari root repository:
 
 ```bash
 cd web
@@ -40,7 +40,7 @@ npm run preview
 - Root directory: `web`
 - Build command: `npm run build`
 - Build output directory: `dist`
-- Node.js: `22`
+- Node.js: `22.12` atau lebih baru
 - Environment variables: `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY`
 
 ## Keamanan
