@@ -4,7 +4,9 @@ Frontend utama aplikasi Tugas Kuliah. Aplikasi dibangun menggunakan React 19, Ty
 
 ## Menjalankan secara lokal
 
-Persyaratan: Node.js 22.12 atau lebih baru (atau 20.19+), serta npm.\n\nDari root repository:
+Persyaratan: Node.js 22.12 atau lebih baru (atau 20.19+), serta npm.
+
+Dari root repository:
 
 ```bash
 cd web
