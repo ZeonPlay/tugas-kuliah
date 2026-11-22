@@ -4,10 +4,7 @@ import dayGridPlugin from "@fullcalendar/react/daygrid";
 import listPlugin from "@fullcalendar/react/list";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import type { ComponentRef, ReactNode } from "react";
-import pulseTheme from "@fullcalendar/react/themes/pulse";
 import "@fullcalendar/react/skeleton.css";
-import "@fullcalendar/react/themes/pulse/theme.css";
-import "@fullcalendar/react/themes/pulse/palettes/red.css";
 import MarkdownContent from "./MarkdownContent";
 import AppNavigation, { type AppPage } from "./AppNavigation";
 
@@ -182,8 +179,9 @@ export default function CalendarPage({ tasks, loading, errorMessage, onNavigate,
   }
 
   return (
-    <main className="app-shell calendar-page">
+    <main className="app-shell">
       <AppNavigation currentPage="calendar" onNavigate={onNavigate} onRefresh={onRefresh} />
+      <div className="page-stage secondary-stage calendar-stage">
 
       <section className="calendar-page-heading">
         <h1>Kalender Tugas</h1>
@@ -234,9 +232,8 @@ export default function CalendarPage({ tasks, loading, errorMessage, onNavigate,
         </div>
         <FullCalendar
           ref={calendarRef}
-          plugins={[pulseTheme, dayGridPlugin, listPlugin, interactionPlugin]}
+          plugins={[dayGridPlugin, listPlugin, interactionPlugin]}
           initialView="dayGridMonth"
-          colorScheme="dark"
           dayCellClass="calendar-date-cell"
           dayHeaderClass="calendar-weekday-cell"
           initialDate={todayWib()}
@@ -279,6 +276,7 @@ export default function CalendarPage({ tasks, loading, errorMessage, onNavigate,
         <span className="footer-wordmark">tugas kuliah<span>.</span></span><span>Kalender akademik · Semua jam dalam WIB</span>
         <span className="footer-status"><span className="connection-dot" />{errorMessage ? "Koneksi bermasalah" : loading ? "Memuat data" : "Data tersinkron"}</span>
       </footer>
+      </div>
     </main>
   );
 }
