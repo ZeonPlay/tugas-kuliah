@@ -1,7 +1,7 @@
 {
   "name": "tugas-kuliah-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -10,26 +10,28 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1",
-    "@tiptap/react": "^3.0.0",
-    "@tiptap/starter-kit": "^3.0.0",
-    "@tiptap/markdown": "^3.0.0",
+    "@fullcalendar/react": "7.1.1",
     "@tiptap/extension-placeholder": "^3.0.0",
     "@tiptap/extension-table": "^3.0.0",
-    "@tiptap/extension-table-row": "^3.0.0",
     "@tiptap/extension-table-cell": "^3.0.0",
     "@tiptap/extension-table-header": "^3.0.0",
-    "@fullcalendar/react": "7.1.1",
+    "@tiptap/extension-table-row": "^3.0.0",
+    "@tiptap/markdown": "^3.0.0",
+    "@tiptap/react": "^3.0.0",
+    "@tiptap/starter-kit": "^3.0.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "temporal-polyfill": "^1.0.1"
   },
   "devDependencies": {
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^5.0.4",
-    "typescript": "~5.9.2",
-    "vite": "^7.1.7"
+    "@tailwindcss/vite": "4.3.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "tailwindcss": "4.3.5",
+    "typescript": "7.0.2",
+    "vite": "8.3.8"
   }
 }
