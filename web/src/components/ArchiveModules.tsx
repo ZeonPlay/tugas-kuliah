@@ -84,8 +84,9 @@ export default function ArchiveModules({ courses, onNavigate, onRefresh }: Props
   }
 
   return (
-    <main className="app-shell archive-page">
+    <main className="app-shell">
       <AppNavigation currentPage="archive" onNavigate={onNavigate} onRefresh={onRefresh} />
+      <div className="page-stage secondary-stage archive-stage">
 
       <section className="archive-heading">
         <p className="welcome-kicker">MATERI KULIAH <span aria-hidden="true">·</span> PUSAT REFERENSI</p>
@@ -146,6 +147,7 @@ export default function ArchiveModules({ courses, onNavigate, onRefresh }: Props
       </div>}
 
       <footer className="app-footer"><span className="footer-wordmark">tugas kuliah<span>.</span></span><span>Materi kuliah, tersusun per mata kuliah.</span><span className="footer-status"><span className="connection-dot" />{error ? "Koneksi bermasalah" : loading ? "Memuat data" : "Data tersinkron"}</span></footer>
+      </div>
     </main>
   );
 }
