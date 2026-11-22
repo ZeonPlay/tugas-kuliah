@@ -88,47 +88,36 @@ function countdownText(value: string, now: number): string {
 
 function ExternalTaskLink({ href, children }: { href: string | null; children: string }) {
   if (!href) return null;
-
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer">
-      {children}
-      <span aria-hidden="true"> ↗</span>
-    </a>
-  );
+  return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
 }
 
 function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boolean }) {
-  const deadlineDate = new Date(task.deadline);
-  const safeDate = Number.isNaN(deadlineDate.getTime()) ? new Date(now) : deadlineDate;
+  const date = new Date(task.deadline);
+  const validDate = Number.isNaN(date.getTime()) ? new Date(now) : date;
 
   return (
-    <article className={"task-row" + (overdue ? " task-row-overdue" : "")}>
-      <time className="task-date" dateTime={task.deadline}>
-        <span>{WEEKDAY_FORMAT.format(safeDate).replace(".", "")}</span>
-        <strong>{DAY_MONTH_FORMAT.format(safeDate)}</strong>
-      </time>
-
-      <div className="task-main">
-        <div className="task-meta">
-          <span className="task-course">{task.mata_kuliah || "Tanpa mata kuliah"}</span>
-          <span className="meta-divider" aria-hidden="true">·</span>
-          <span>{task.jenis}</span>
+    <article className={"agenda-item" + (overdue ? " is-overdue" : "")}>
+      <div className="agenda-date" aria-label={FULL_DATE_FORMAT.format(validDate)}>
+        <span>{WEEKDAY_FORMAT.format(validDate).replace(".", "")}</span>
+        <strong>{new Intl.DateTimeFormat("id-ID", { day: "2-digit", timeZone: "Asia/Jakarta" }).format(validDate)}</strong>
+        <span>{new Intl.DateTimeFormat("id-ID", { month: "short", timeZone: "Asia/Jakarta" }).format(validDate)}</span>
+      </div>
+      <div className="agenda-task-copy">
+        <div className="agenda-task-meta">
+          <span className="agenda-course-name">{task.mata_kuliah || "Tanpa mata kuliah"}</span>
+          <span className="agenda-task-type">{task.jenis}</span>
         </div>
         <h3>{task.judul || "Tugas tanpa judul"}</h3>
-        {task.ketentuan && <MarkdownContent className="task-description" content={task.ketentuan} />}
-        <div className="task-links" aria-label="Tautan tugas">
+        {task.ketentuan && <MarkdownContent className="agenda-task-description" content={task.ketentuan} />}
+        <div className="agenda-task-links">
           <ExternalTaskLink href={safeHttpUrl(task.link_vclass)}>VClass</ExternalTaskLink>
           <ExternalTaskLink href={safeHttpUrl(task.link_pengumpulan)}>Pengumpulan</ExternalTaskLink>
           <ExternalTaskLink href={safeHttpUrl(task.file_soal)}>File soal</ExternalTaskLink>
         </div>
       </div>
-
-      <div className="task-timing">
-        <span className={"deadline-status" + (overdue ? " is-overdue" : "")}>
-          <span className="status-dot" aria-hidden="true" />
-          {countdownText(task.deadline, now)}
-        </span>
-        <span className="task-time">{deadlineText(task.deadline)}</span>
+      <div className="agenda-task-deadline">
+        <span className={"deadline-countdown" + (overdue ? " is-overdue" : "")}>{countdownText(task.deadline, now)}</span>
+        <time dateTime={task.deadline}>{deadlineText(task.deadline)}</time>
       </div>
     </article>
   );
@@ -518,223 +507,167 @@ function App() {
         refreshDisabled={loading}
       />
 
-      <section className="welcome">
-        <div>
-          <p className="welcome-kicker">AGENDA KULIAH <span aria-hidden="true">·</span> {FULL_DATE_FORMAT.format(new Date(now))}</p>
-          <h1>Tugas kuliah,<br className="wide-break" /> satu per satu.</h1>
-          <p className="welcome-copy">Lihat yang paling dekat, pilih langkah berikutnya, lalu mulai dari sana.</p>
-        </div>
-        <p className="welcome-note">
-          {loading
-            ? "Menyiapkan daftar kamu…"
-            : urgentCount > 0
-              ? urgentCount + " deadline dalam 48 jam ke depan."
-              : "Tidak ada deadline mendesak dalam 48 jam."}
-        </p>
-      </section>
+      <div className="page-stage home-stage">
+        <header className="desk-heading">
+          <div>
+            <p className="desk-date">{FULL_DATE_FORMAT.format(new Date(now))}</p>
+            <h1>Agenda belajar</h1>
+            <p className="desk-intro">Semua tenggat kuliahmu ada di satu tempat. Mulai dari yang paling dekat.</p>
+          </div>
+          <div className="desk-heading-count">
+            <strong>{loading ? "—" : upcomingTasks.length}</strong>
+            <span>tugas mendatang</span>
+            <span>{urgentCount} deadline dalam 48 jam</span>
+          </div>
+        </header>
 
-      {supabaseConfigMissing && (
-        <section className="notice notice-warning" role="alert">
-          <strong>Supabase belum dikonfigurasi.</strong>
-          <span>
-            Salin file .env.example menjadi .env.local, lalu isi VITE_SUPABASE_URL dan
-            VITE_SUPABASE_ANON_KEY dengan URL project serta publishable/anon key.
-          </span>
-        </section>
-      )}
+        {supabaseConfigMissing && (
+          <section className="notice notice-warning" role="alert">
+            <strong>Supabase belum dikonfigurasi.</strong>
+            <span>Salin .env.example menjadi .env.local, lalu isi URL project dan publishable key.</span>
+          </section>
+        )}
 
-      {errorMessage && (
-        <section className="notice notice-error" role="alert">
-          <strong>Data tugas belum berhasil dimuat.</strong>
-          <span>{errorMessage}. Periksa koneksi Supabase dan kebijakan akses tabel, lalu coba lagi.</span>
-          <button className="text-button" type="button" onClick={() => setRefreshKey((key) => key + 1)}>
-            Coba lagi
-          </button>
-        </section>
-      )}
+        {errorMessage && (
+          <section className="notice notice-error" role="alert">
+            <strong>Data tugas belum berhasil dimuat.</strong>
+            <span>{errorMessage}. Periksa koneksi dan kebijakan akses tabel, lalu coba lagi.</span>
+            <button className="text-button" type="button" onClick={() => setRefreshKey((key) => key + 1)}>Coba lagi</button>
+          </section>
+        )}
 
-      <DashboardMetrics
-        taskCount={filteredTasks.length}
-        nearCount={nearDeadlineCount}
-        overdueCount={overdueTasks.length}
-        loading={loading}
-      />
-
-      <NewlyOverdueNotice tasks={newlyOverdueTasks} />
-
-      <div className="workspace-grid">
-        <section className="task-section" aria-labelledby="task-section-title">
-          <div className="section-heading">
-            <div>
-              <h2 id="task-section-title">{taskView === "upcoming" ? "Yang akan datang" : "Sudah lewat"}</h2>
-              <p className="section-subtitle">
-                {taskView === "upcoming"
-                  ? "Urut berdasarkan deadline terdekat."
-                  : "Tugas yang tenggatnya sudah berlalu."}
-              </p>
+        <section className="focus-panel" aria-labelledby="focus-heading">
+          <div className="focus-panel-label">
+            <span className="focus-orbit" aria-hidden="true" />
+            <span id="focus-heading">Berikutnya</span>
+          </div>
+          {upcomingTasks.length > 0 ? (
+            <div className="focus-panel-content">
+              <div className="focus-task-main">
+                <p>{upcomingTasks[0].mata_kuliah} <span>{upcomingTasks[0].jenis}</span></p>
+                <h2>{upcomingTasks[0].judul}</h2>
+                <time dateTime={upcomingTasks[0].deadline}>{deadlineText(upcomingTasks[0].deadline)}</time>
+                <div className="focus-task-links">
+                  <ExternalTaskLink href={safeHttpUrl(upcomingTasks[0].link_vclass)}>Buka VClass</ExternalTaskLink>
+                  <ExternalTaskLink href={safeHttpUrl(upcomingTasks[0].link_pengumpulan)}>Pengumpulan</ExternalTaskLink>
+                </div>
+              </div>
+              <div className="focus-countdown">
+                <strong>{countdownText(upcomingTasks[0].deadline, now)}</strong>
+                <span>menuju deadline</span>
+              </div>
             </div>
-            <span className="result-count">{loading ? "…" : selectedTasks.length} tugas</span>
-          </div>
+          ) : (
+            <div className="focus-panel-empty">
+              <div>
+                <h2>{loading ? "Menyiapkan daftar tugas" : "Tidak ada deadline mendatang"}</h2>
+                <p>{loading ? "Tugas dari mata kuliahmu sedang dimuat." : "Semua tenggat yang tercatat sudah terlewati. Cek daftar terlewat atau kembali lagi nanti."}</p>
+              </div>
+              {!loading && overdueTasks.length > 0 && <button type="button" className="focus-link-button" onClick={() => setTaskView("overdue")}>Lihat tugas terlewat</button>}
+            </div>
+          )}
+        </section>
 
-          <div className="task-tabs" role="group" aria-label="Tampilan tugas">
-            <button
-              type="button"
-              className={taskView === "upcoming" ? "task-tab is-current" : "task-tab"}
-              onClick={() => setTaskView("upcoming")}
-              aria-pressed={taskView === "upcoming"}
-            >
-              Mendatang <span>{loading ? "—" : upcomingTasks.length}</span>
-            </button>
-            <button
-              type="button"
-              className={taskView === "overdue" ? "task-tab is-current" : "task-tab"}
-              onClick={() => setTaskView("overdue")}
-              aria-pressed={taskView === "overdue"}
-            >
-              Terlewat <span>{loading ? "—" : overdueTasks.length}</span>
-            </button>
-          </div>
+        <DashboardMetrics taskCount={filteredTasks.length} nearCount={nearDeadlineCount} overdueCount={overdueTasks.length} loading={loading} />
+        <NewlyOverdueNotice tasks={newlyOverdueTasks} />
 
-          <div className="filters">
-            <label className="search-field">
-              <span className="search-symbol" aria-hidden="true">⌕</span>
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Cari tugas atau mata kuliah"
-                aria-label="Cari tugas atau mata kuliah"
-              />
-              {search && (
-                <button type="button" className="clear-search" onClick={() => setSearch("")} aria-label="Hapus pencarian">
-                  ×
+        <div className="agenda-layout">
+          <section className="agenda-main" aria-labelledby="agenda-title">
+            <header className="agenda-heading">
+              <div>
+                <h2 id="agenda-title">Daftar tugas</h2>
+                <p>{taskView === "upcoming" ? "Urut dari tenggat paling dekat." : "Tenggat yang sudah berlalu."}</p>
+              </div>
+              <div className="agenda-tabs" role="group" aria-label="Tampilan tugas">
+                <button type="button" className={taskView === "upcoming" ? "is-current" : ""} onClick={() => setTaskView("upcoming")} aria-pressed={taskView === "upcoming"}>
+                  Mendatang <span>{loading ? "—" : upcomingTasks.length}</span>
                 </button>
-              )}
-            </label>
+                <button type="button" className={taskView === "overdue" ? "is-current" : ""} onClick={() => setTaskView("overdue")} aria-pressed={taskView === "overdue"}>
+                  Terlewat <span>{loading ? "—" : overdueTasks.length}</span>
+                </button>
+              </div>
+            </header>
 
-            <label className="select-field">
-              <span className="sr-only">Mata kuliah</span>
-              <select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}>
-                <option value="all">Semua mata kuliah</option>
-                {courseOptions.map((courseName) => (
-                  <option value={courseName} key={courseName}>{courseName}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="select-field">
-              <span className="sr-only">Jenis tugas</span>
-              <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
-                <option value="all">Semua jenis</option>
-                <option value="Teori">Teori</option>
-                <option value="Praktikum">Praktikum</option>
-                <option value="Quiz">Quiz</option>
-                <option value="Ujian">Ujian</option>
-              </select>
-            </label>
-          </div>
-
-          {loading ? (
-            <div className="empty-state" role="status">
-              <span className="loading-mark" aria-hidden="true" />
-              <strong>Memuat tugas</strong>
-              <span>Sebentar, daftar kamu sedang disiapkan.</span>
+            <div className="agenda-filters">
+              <label className="agenda-search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari tugas atau mata kuliah" aria-label="Cari tugas atau mata kuliah" />
+                {search && <button type="button" onClick={() => setSearch("")} aria-label="Hapus pencarian">×</button>}
+              </label>
+              <label className="agenda-select">
+                <span className="sr-only">Mata kuliah</span>
+                <select value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)}>
+                  <option value="all">Semua mata kuliah</option>
+                  {courseOptions.map((courseName) => <option value={courseName} key={courseName}>{courseName}</option>)}
+                </select>
+              </label>
+              <label className="agenda-select">
+                <span className="sr-only">Jenis tugas</span>
+                <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+                  <option value="all">Semua jenis</option>
+                  <option value="Teori">Teori</option>
+                  <option value="Praktikum">Praktikum</option>
+                  <option value="Quiz">Quiz</option>
+                  <option value="Ujian">Ujian</option>
+                </select>
+              </label>
             </div>
-          ) : visibleTasks.length > 0 ? (
-            <div className="task-list">
-              {visibleTasks.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  now={now}
-                  overdue={taskView === "overdue"}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <span className="empty-mark" aria-hidden="true">{taskView === "upcoming" ? "—" : "✓"}</span>
-              <strong>
-                {filteredTasks.length === 0
-                  ? "Tidak ada tugas yang cocok"
-                  : taskView === "upcoming"
-                    ? "Tidak ada deadline mendatang"
-                    : "Tidak ada tugas yang terlewat"}
-              </strong>
-              <span>
-                {filteredTasks.length === 0
-                  ? "Coba kata kunci atau filter yang lain."
-                  : taskView === "upcoming"
-                    ? "Bagus, tidak ada tenggat yang perlu dikejar sekarang."
-                    : "Semua tugas masih berada dalam tenggat."}
-              </span>
-              {(search || courseFilter !== "all" || typeFilter !== "all") && (
-                <button className="text-button" type="button" onClick={clearFilters}>Bersihkan filter</button>
-              )}
-            </div>
-          )}
 
-          {!loading && selectedTasks.length > visibleTasks.length && (
-            <p className="list-footnote">
-              Menampilkan {visibleTasks.length} dari {selectedTasks.length} tugas.
-            </p>
-          )}
-        </section>
+            {loading ? (
+              <div className="agenda-empty" role="status"><span className="loading-mark" /><strong>Memuat tugas</strong><p>Daftar tugas sedang disiapkan.</p></div>
+            ) : visibleTasks.length > 0 ? (
+              <div className="agenda-list">
+                {visibleTasks.map((task) => <TaskRow key={task.id} task={task} now={now} overdue={taskView === "overdue"} />)}
+              </div>
+            ) : (
+              <div className="agenda-empty">
+                <strong>{filteredTasks.length === 0 ? "Tugas tidak ditemukan" : taskView === "upcoming" ? "Tidak ada deadline mendatang" : "Tidak ada tugas terlewat"}</strong>
+                <p>{filteredTasks.length === 0 ? "Ubah kata kunci atau hapus filter." : taskView === "upcoming" ? "Belum ada tenggat berikutnya di daftar." : "Tidak ada tugas dengan tenggat yang lewat."}</p>
+                {(search || courseFilter !== "all" || typeFilter !== "all") && <button className="text-button" type="button" onClick={clearFilters}>Hapus filter</button>}
+              </div>
+            )}
 
-        <aside className="course-section" aria-labelledby="course-section-title">
-          <div className="course-heading">
-            <div>
-              <h2 id="course-section-title">Mata kuliah</h2>
-              <p className="section-subtitle">Pilih satu untuk menyaring daftar.</p>
-            </div>
-            <span className="course-total">{loading ? "…" : courseOptions.length}</span>
-          </div>
+            {!loading && selectedTasks.length > visibleTasks.length && (
+              <p className="agenda-footnote">Menampilkan {visibleTasks.length} dari {selectedTasks.length} tugas.</p>
+            )}
+          </section>
 
-          {loading ? (
-            <p className="aside-message">Memuat mata kuliah…</p>
-          ) : courseOptions.length === 0 ? (
-            <p className="aside-message">Belum ada mata kuliah yang tercatat.</p>
-          ) : (
-            <div className="course-list">
-              {courseOptions
-                .filter((courseName) => (taskCountsByCourse.get(courseName) ?? 0) > 0)
-                .map((courseName) => {
+          <aside className="course-shelf" aria-labelledby="course-shelf-title">
+            <header>
+              <div>
+                <h2 id="course-shelf-title">Mata kuliah</h2>
+                <p>Pilih mata kuliah untuk menyaring agenda.</p>
+              </div>
+              <span>{loading ? "—" : courseOptions.length}</span>
+            </header>
+            {loading ? (
+              <p className="course-shelf-empty">Memuat mata kuliah…</p>
+            ) : courseOptions.filter((name) => (taskCountsByCourse.get(name) ?? 0) > 0).length === 0 ? (
+              <p className="course-shelf-empty">Belum ada mata kuliah dengan tugas aktif.</p>
+            ) : (
+              <div className="course-shelf-list">
+                {courseOptions.filter((name) => (taskCountsByCourse.get(name) ?? 0) > 0).map((courseName, index) => {
                   const course = courses.find((item) => item.nama === courseName);
                   return (
-                    <button
-                      className={"course-row" + (courseFilter === courseName ? " is-selected" : "")}
-                      key={courseName}
-                      type="button"
-                      onClick={() => setCourseFilter(courseFilter === courseName ? "all" : courseName)}
-                      aria-pressed={courseFilter === courseName}
-                    >
-                      <span className="course-row-copy">
-                        <strong>{courseName}</strong>
-                        <small>{course ? `Semester ${course.semester} · ${course.kategori}` : "Di luar katalog aktif"}</small>
-                      </span>
-                      <span className="course-count">{taskCountsByCourse.get(courseName) ?? 0}</span>
+                    <button key={courseName} type="button" className={"course-shelf-row" + (courseFilter === courseName ? " is-selected" : "")} onClick={() => setCourseFilter(courseFilter === courseName ? "all" : courseName)} aria-pressed={courseFilter === courseName}>
+                      <span className={"course-swatch course-swatch-" + (index % 5)} />
+                      <span className="course-shelf-copy"><strong>{courseName}</strong><small>{course ? "Semester " + course.semester : "Mata kuliah"}</small></span>
+                      <span className="course-shelf-count">{taskCountsByCourse.get(courseName) ?? 0}</span>
                     </button>
                   );
                 })}
-            </div>
-          )}
+              </div>
+            )}
+            {courseFilter !== "all" && <button className="clear-course-filter" type="button" onClick={() => setCourseFilter("all")}>Tampilkan semua mata kuliah</button>}
+          </aside>
+        </div>
 
-          {courseFilter !== "all" && (
-            <button className="text-button clear-course-filter" type="button" onClick={() => setCourseFilter("all")}>
-              Tampilkan semua mata kuliah
-            </button>
-          )}
-        </aside>
+        <footer className="desk-footer">
+          <span>Tugas Kuliah</span>
+          <span>{connectionLabel}</span>
+        </footer>
       </div>
 
-      <footer className="app-footer">
-        <span className="footer-wordmark">tugas kuliah<span>.</span></span>
-        <span>Semoga kuliahmu hari ini lancar.</span>
-        <span className="footer-status">
-          <span className="connection-dot" aria-hidden="true" />
-          {connectionLabel}
-        </span>
-      </footer>
     </main>
     </>
   );
