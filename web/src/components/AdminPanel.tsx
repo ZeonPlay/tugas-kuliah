@@ -793,13 +793,14 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
   }
 
   return (
-    <main className="app-shell admin-shell">
+    <main className="app-shell">
       <AppNavigation
         currentPage="admin"
         onNavigate={onNavigate}
         adminEmail={sessionEmail}
         onSignOut={sessionEmail ? () => void signOut() : undefined}
       />
+      <div className="page-stage secondary-stage admin-stage">
 
       {!authReady ? (
         <section className="auth-section" role="status"><span className="loading-mark" /><p>Memeriksa sesi…</p></section>
@@ -1095,6 +1096,7 @@ export default function AdminPanel({ tasks, courses, onNavigate, onDataChanged }
           )}
         </section>
       )}
+      </div>
     </main>
   );
 }
