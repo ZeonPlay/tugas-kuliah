@@ -89,9 +89,8 @@ export default function ArchiveModules({ courses, onNavigate, onRefresh }: Props
       <div className="page-stage secondary-stage archive-stage">
 
       <section className="archive-heading">
-        <p className="welcome-kicker">MATERI KULIAH <span aria-hidden="true">·</span> PUSAT REFERENSI</p>
-        <h1>Arsip Modul</h1>
-        <p>Kumpulan folder modul dan materi yang dibagikan untuk tiap mata kuliah.</p>
+        <h1>Arsip materi</h1>
+        <p>Folder modul dan bahan kuliah yang disusun berdasarkan mata kuliah.</p>
         <div className="archive-summary"><strong>{loading ? "—" : visibleFolders.length}</strong><span>folder tersedia</span><span className="archive-summary-divider" /><strong>{grouped.length}</strong><span>mata kuliah</span></div>
       </section>
 
