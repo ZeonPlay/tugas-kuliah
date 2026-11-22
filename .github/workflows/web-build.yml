@@ -14,12 +14,8 @@ on:
       - "web/**"
       - ".github/workflows/web-build.yml"
 
-permissions:
-  contents: write
-
 jobs:
   build:
-    if: github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore: refresh web lockfile')
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,28 +23,15 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: true
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22.12.0"
           cache: npm
           cache-dependency-path: web/package-lock.json
-      - name: Resolve and update lockfile
+      - name: Resolve dependencies and update the lockfile in the runner
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - name: Install locked dependencies
+      - name: Install dependencies
         run: npm ci
       - name: Check TypeScript and build
         run: npm run build
-      - name: Commit the resolved lockfile
-        if: github.event_name == 'push'
-        working-directory: .
-        run: |
-          if ! git diff --quiet -- web/package-lock.json; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add web/package-lock.json
-            git commit -m "chore: refresh web lockfile"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
