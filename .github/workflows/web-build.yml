@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feat/web-migration
+      - redesign/human-first-ui
     paths:
       - "web/**"
       - ".github/workflows/web-build.yml"
