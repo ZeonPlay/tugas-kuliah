@@ -92,7 +92,6 @@ function ExternalTaskLink({ href, children }: { href: string | null; children: s
   return (
     <a href={href} target="_blank" rel="noopener noreferrer">
       {children}
-      <span aria-hidden="true"> ↗</span>
     </a>
   );
 }
@@ -112,7 +111,7 @@ function TaskRow({ task, now, overdue }: { task: Task; now: number; overdue: boo
         <div className="task-meta">
           <span className="task-course">{task.mata_kuliah || "Tanpa mata kuliah"}</span>
           <span className="meta-divider" aria-hidden="true">·</span>
-          <span>{task.jenis}</span>
+          <span className="task-kind">{task.jenis}</span>
         </div>
         <h3>{task.judul || "Tugas tanpa judul"}</h3>
         {task.ketentuan && <MarkdownContent className="task-description" content={task.ketentuan} />}
@@ -178,7 +177,8 @@ function NewlyOverdueNotice({ tasks }: { tasks: Task[] }) {
           <article className="recent-overdue-item" key={task.id}>
             <div className="recent-overdue-copy">
               <strong>{task.judul || "Tugas tanpa judul"}</strong>
-              <span>{task.mata_kuliah || "Tanpa mata kuliah"} · Deadline {deadlineText(task.deadline)}</span>
+              <span>{task.mata_kuliah || "Tanpa mata kuliah"}</span>
+              <span>Deadline {deadlineText(task.deadline)}</span>
             </div>
             <div className="recent-overdue-links" aria-label={"Tautan " + (task.judul || "tugas")}>
               <ExternalTaskLink href={safeHttpUrl(task.link_vclass)}>VClass</ExternalTaskLink>
@@ -520,9 +520,9 @@ function App() {
 
       <section className="welcome">
         <div>
-          <p className="welcome-kicker">AGENDA KULIAH <span aria-hidden="true">·</span> {FULL_DATE_FORMAT.format(new Date(now))}</p>
-          <h1>Tugas kuliah,<br className="wide-break" /> satu per satu.</h1>
-          <p className="welcome-copy">Lihat yang paling dekat, pilih langkah berikutnya, lalu mulai dari sana.</p>
+          <p className="welcome-kicker">{FULL_DATE_FORMAT.format(new Date(now))}</p>
+          <h1>Apa yang perlu diselesaikan?</h1>
+          <p className="welcome-copy">Mulai dari deadline terdekat. Detail tugas dan tautan pengumpulan tersedia di setiap baris.</p>
         </div>
         <p className="welcome-note">
           {loading
