@@ -255,6 +255,13 @@ summary:focus-visible {
   white-space: nowrap;
 }
 
+.app-navigation-header .app-primary-nav {
+  position: static;
+  top: auto;
+  left: auto;
+  transform: none;
+}
+
 .app-primary-nav {
   display: flex;
   align-items: center;
