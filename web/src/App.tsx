@@ -41,12 +41,6 @@ const WEEKDAY_FORMAT = new Intl.DateTimeFormat("id-ID", {
   timeZone: "Asia/Jakarta",
 });
 
-const DAY_MONTH_FORMAT = new Intl.DateTimeFormat("id-ID", {
-  day: "numeric",
-  month: "short",
-  timeZone: "Asia/Jakarta",
-});
-
 const FULL_DATE_FORMAT = new Intl.DateTimeFormat("id-ID", {
   weekday: "long",
   day: "numeric",
