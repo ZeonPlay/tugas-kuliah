@@ -85,7 +85,7 @@ export default function AppNavigation({
     document.documentElement.dataset.theme = theme;
     document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute(
       "content",
-      theme === "dark" ? "#191b1a" : "#f5f5f1",
+      theme === "dark" ? "#17212B" : "#F1F4F7",
     );
 
     try {
@@ -139,6 +139,7 @@ export default function AppNavigation({
             type="button"
             onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}
             aria-label={theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
+            aria-pressed={theme === "dark"}
             title={theme === "dark" ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
           >
             <ThemeIcon theme={theme} />
