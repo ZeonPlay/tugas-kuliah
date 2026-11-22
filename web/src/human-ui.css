@@ -1,30 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
 
-/* Tugas Kuliah — practical interface refresh.
-   Clear hierarchy, familiar controls, minimal decoration. */
+/* Tugas Kuliah — Campus Ledger
+   A clear working surface for deadlines, courses, and study materials. */
 
 :root,
 html[data-theme="light"] {
   color-scheme: light;
-  --page: #f5f5f1;
-  --page-raised: #f9f9f6;
-  --surface: #ffffff;
-  --surface-raised: #f1f2ed;
-  --surface-soft: #e9ebe4;
-  --line: #e1e3db;
-  --line-strong: #cfd3c8;
-  --text: #252820;
-  --text-soft: #55594f;
-  --muted: #777d71;
-  --accent: #59659d;
-  --accent-strong: #465184;
-  --accent-wash: #edf0fa;
-  --coral: #b65d50;
-  --coral-wash: #fff1ed;
-  --amber: #93651e;
-  --green: #3d7854;
-  --radius: 12px;
-  --radius-small: 8px;
-  --shadow: 0 5px 18px rgb(31 37 25 / 6%);
+  --page: #F1F4F7;
+  --page-raised: #F7F9FB;
+  --surface: #FFFFFF;
+  --surface-raised: #E9EEF3;
+  --surface-soft: #DDE5EC;
+  --line: #DCE3E9;
+  --line-strong: #C4CFD9;
+  --text: #263442;
+  --text-soft: #536474;
+  --muted: #748392;
+  --accent: #46678F;
+  --accent-strong: #355777;
+  --accent-wash: #E8EFF6;
+  --coral: #A95C52;
+  --coral-wash: #F8ECEA;
+  --amber: #A86F27;
+  --green: #3F755A;
+  --radius: 11px;
+  --radius-small: 7px;
+  --shadow: 0 3px 12px rgb(34 51 67 / 5%);
   --color-paper: var(--page);
   --color-paper-raised: var(--surface);
   --color-paper-soft: var(--surface-raised);
@@ -34,12 +35,12 @@ html[data-theme="light"] {
   --color-rule: var(--line);
   --color-rule-strong: var(--line-strong);
   --color-accent: var(--accent);
-  --color-accent-ink: #fff;
+  --color-accent-ink: #FFFFFF;
   --color-accent-soft: var(--accent-wash);
   --color-success: var(--green);
-  --color-success-soft: #eaf4ed;
+  --color-success-soft: #EAF2ED;
   --color-warning: var(--amber);
-  --color-warning-soft: #fbf3e3;
+  --color-warning-soft: #F7F0E4;
   --color-error: var(--coral);
   --color-error-soft: var(--coral-wash);
   --color-focus: var(--accent);
@@ -49,24 +50,24 @@ html[data-theme="light"] {
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --page: #191b1a;
-  --page-raised: #1e211f;
-  --surface: #222522;
-  --surface-raised: #292d29;
-  --surface-soft: #303630;
-  --line: #393f39;
-  --line-strong: #4a524a;
-  --text: #eeefe9;
-  --text-soft: #c6cbc1;
-  --muted: #9ba296;
-  --accent: #b4bee9;
-  --accent-strong: #c8d0f2;
-  --accent-wash: #30364b;
-  --coral: #e9a194;
-  --coral-wash: #352623;
-  --amber: #dfbd7f;
-  --green: #9ac8a6;
-  --shadow: 0 7px 24px rgb(0 0 0 / 20%);
+  --page: #17212B;
+  --page-raised: #1D2934;
+  --surface: #222F3B;
+  --surface-raised: #2B3946;
+  --surface-soft: #344453;
+  --line: #3A4A58;
+  --line-strong: #506171;
+  --text: #EAF0F5;
+  --text-soft: #C1CCD6;
+  --muted: #98A8B6;
+  --accent: #B3C9E2;
+  --accent-strong: #D1DDED;
+  --accent-wash: #2B3D50;
+  --coral: #E1A098;
+  --coral-wash: #3A2B2C;
+  --amber: #D7B173;
+  --green: #95C4A5;
+  --shadow: 0 5px 18px rgb(0 0 0 / 18%);
   --color-paper: var(--page);
   --color-paper-raised: var(--surface);
   --color-paper-soft: var(--surface-raised);
@@ -76,12 +77,12 @@ html[data-theme="dark"] {
   --color-rule: var(--line);
   --color-rule-strong: var(--line-strong);
   --color-accent: var(--accent);
-  --color-accent-ink: #1c201c;
+  --color-accent-ink: #17212B;
   --color-accent-soft: var(--accent-wash);
   --color-success: var(--green);
-  --color-success-soft: #263329;
+  --color-success-soft: #263B31;
   --color-warning: var(--amber);
-  --color-warning-soft: #352f22;
+  --color-warning-soft: #3A3328;
   --color-error: var(--coral);
   --color-error-soft: var(--coral-wash);
   --color-focus: var(--accent);
@@ -105,7 +106,7 @@ button,
 input,
 select,
 textarea {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -2028,5 +2029,677 @@ legend {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
+  }
+}
+
+
+/* Campus Ledger visual pass
+   The task date is the visual anchor; the rest of the interface stays quiet. */
+
+body {
+  background: var(--page) !important;
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  width: min(1260px, calc(100% - 56px));
+  max-width: 1260px;
+}
+
+.app-navigation-header {
+  grid-template-columns: minmax(175px, auto) minmax(0, 1fr) auto;
+  min-height: 66px;
+  gap: 22px;
+  padding-inline: max(28px, calc((100vw - 1260px) / 2));
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.wordmark-symbol {
+  background: var(--accent);
+  color: var(--color-accent-ink);
+}
+
+.wordmark-name {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-weight: 650;
+  letter-spacing: -.02em;
+}
+
+.app-primary-nav {
+  position: static;
+  top: auto;
+  left: auto;
+  transform: none;
+  justify-content: flex-start;
+  gap: 3px;
+}
+
+.app-nav-item {
+  min-height: 37px;
+  padding-inline: 12px;
+  border: 1px solid transparent;
+  border-radius: 7px !important;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.app-nav-item.is-current {
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.app-nav-item.is-current::after {
+  display: none;
+}
+
+.app-navigation-actions {
+  gap: 7px;
+}
+
+.app-nav-connection {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theme-toggle {
+  min-height: 37px;
+  padding-inline: 10px;
+  border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--text-soft);
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.theme-toggle-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.app-nav-refresh {
+  width: 37px;
+  height: 37px;
+}
+
+.app-more-menu > summary {
+  min-height: 37px;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--text-soft);
+}
+
+.app-more-popover {
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+.welcome {
+  align-items: flex-end;
+  gap: 28px;
+  margin: 36px 0 22px;
+  padding: 0;
+}
+
+.welcome-kicker {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.welcome h1,
+.archive-heading h1,
+.calendar-page-heading h1,
+.admin-welcome h1,
+.course-manager-heading h1,
+.module-manager-heading h1 {
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: clamp(29px, 3vw, 39px);
+  font-weight: 650;
+  letter-spacing: -.045em;
+  line-height: 1.16;
+}
+
+.welcome-copy {
+  max-width: 590px;
+  margin-top: 9px;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.welcome-note {
+  max-width: 290px;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.dashboard-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 0 22px;
+  padding: 13px 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+
+.dashboard-metric {
+  min-height: 55px;
+  padding: 2px 18px;
+  border-right: 1px solid var(--line);
+}
+
+.dashboard-metric strong {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -.035em;
+}
+
+.dashboard-metric span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.recent-overdue {
+  border-radius: 8px;
+  background: var(--coral-wash);
+}
+
+.recent-overdue-heading h2,
+.recent-overdue-copy strong {
+  color: var(--text);
+}
+
+.recent-overdue-heading p,
+.recent-overdue-more,
+.recent-overdue-copy span {
+  color: var(--text-soft);
+}
+
+.recent-overdue-copy {
+  gap: 3px;
+}
+
+.workspace-grid {
+  grid-template-columns: minmax(0, 1.7fr) minmax(250px, .8fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.task-section {
+  padding: 19px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.course-section {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--page-raised);
+  box-shadow: none;
+}
+
+.section-heading h2,
+.course-heading h2 {
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -.025em;
+}
+
+.section-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.result-count,
+.course-total {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text-soft);
+}
+
+.task-tabs {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--page-raised);
+}
+
+.task-tab {
+  border-radius: 5px !important;
+}
+
+.task-tab.is-current {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgb(38 52 66 / 8%);
+}
+
+.filters {
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.search-field,
+.select-field,
+.archive-search {
+  min-height: 39px;
+  border-color: var(--line-strong);
+  border-radius: 7px;
+  background: var(--page-raised);
+}
+
+.search-field input,
+.select-field select,
+.archive-search input {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.task-list {
+  border-top: 1px solid var(--line);
+}
+
+.task-row {
+  grid-template-columns: 66px minmax(0, 1fr) minmax(148px, auto);
+  gap: 13px;
+  padding: 13px 3px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.task-row:hover {
+  background: var(--page-raised);
+}
+
+.task-row-overdue {
+  background: color-mix(in srgb, var(--coral-wash) 40%, transparent);
+}
+
+.task-date {
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 5px 4px;
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  background: var(--accent-wash);
+  text-align: center;
+}
+
+.task-row-overdue .task-date {
+  border-left-color: var(--coral);
+  background: var(--coral-wash);
+}
+
+.task-date span {
+  color: var(--text-soft);
+  font-size: 10px;
+  font-weight: 550;
+  text-transform: capitalize;
+}
+
+.task-date strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.task-meta {
+  gap: 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.task-course {
+  color: var(--accent);
+  font-weight: 650;
+}
+
+.meta-divider {
+  display: none;
+}
+
+.task-kind {
+  padding-left: 7px;
+  border-left: 1px solid var(--line-strong);
+  color: var(--muted);
+}
+
+.task-main h3 {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.task-description {
+  color: var(--text-soft);
+}
+
+.task-links {
+  gap: 6px 13px;
+  margin-top: 7px;
+}
+
+.task-links a,
+.recent-overdue-links a {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.task-timing {
+  padding-top: 3px;
+}
+
+.deadline-status {
+  color: var(--green);
+  font-size: 11px;
+}
+
+.deadline-status.is-overdue {
+  color: var(--coral);
+}
+
+.task-time {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.course-list {
+  border-top: 1px solid var(--line);
+}
+
+.course-row {
+  padding: 10px 3px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 !important;
+  background: transparent;
+}
+
+.course-row:hover,
+.course-row.is-selected {
+  background: var(--surface);
+}
+
+.course-row-copy strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.course-row-copy small {
+  color: var(--muted);
+}
+
+.course-count {
+  width: 27px;
+  height: 27px;
+  flex-basis: 27px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-soft);
+}
+
+.empty-state,
+.calendar-empty-result,
+.archive-empty,
+.task-search-empty {
+  border-color: var(--line-strong);
+  border-radius: 8px;
+  background: var(--page-raised);
+}
+
+.app-footer {
+  border-top-color: var(--line);
+  color: var(--muted);
+}
+
+.archive-heading,
+.calendar-page-heading {
+  margin-top: 32px;
+}
+
+.archive-heading h1,
+.calendar-page-heading h1 {
+  font-size: clamp(28px, 3vw, 37px);
+}
+
+.archive-heading > p:not(.welcome-kicker),
+.calendar-page-heading p {
+  color: var(--text-soft);
+}
+
+.archive-summary,
+.calendar-filter,
+.calendar-surface,
+.calendar-task-panel {
+  border-color: var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.calendar-filter > summary,
+.archive-course-heading,
+.course-group-toggle,
+.admin-section-switch button,
+.auth-tab {
+  color: var(--text);
+}
+
+.calendar-surface .fc {
+  --fc-page-bg-color: var(--surface);
+  --fc-neutral-bg-color: var(--surface-raised);
+  --fc-neutral-text-color: var(--text-soft);
+  --fc-border-color: var(--line);
+  --fc-today-bg-color: var(--accent-wash);
+  --fc-list-event-hover-bg-color: var(--surface-raised);
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+.calendar-surface .fc .fc-col-header-cell-cushion,
+.calendar-surface .fc .fc-daygrid-day-number,
+.calendar-surface .fc .fc-list-day-text,
+.calendar-surface .fc .fc-list-day-side-text {
+  color: var(--text-soft);
+}
+
+.archive-course-group,
+.course-task-group,
+.course-semester-group,
+.course-edit-row,
+.module-edit-row {
+  border-color: var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.archive-course-heading {
+  background: var(--surface);
+}
+
+.archive-course-heading:hover,
+.course-group-toggle:hover {
+  background: var(--surface-raised);
+}
+
+.auth-section,
+.admin-task-list-section,
+.course-manager,
+.module-manager,
+.admin-users-manager,
+.task-editor-page,
+.admin-form,
+.course-create-form,
+.module-create-form {
+  border-color: var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  border-color: var(--line-strong);
+  border-radius: 7px;
+  background: var(--page-raised);
+  color: var(--text);
+}
+
+.notice {
+  border-color: var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-soft);
+}
+
+.notice strong {
+  color: var(--text);
+}
+
+.primary-button,
+.save-task-button,
+.admin-form button[type="submit"],
+.course-create-form button[type="submit"],
+.module-create-form button[type="submit"] {
+  border-radius: 7px !important;
+}
+
+.app-navigation-header,
+.app-shell > *,
+.task-row,
+.course-row,
+.archive-course-group,
+.admin-section-switch button,
+.app-nav-item,
+.app-more-popover {
+  animation: none !important;
+  filter: none !important;
+}
+
+@media (max-width: 900px) {
+  .app-navigation-header {
+    gap: 12px;
+    padding-inline: 22px;
+  }
+
+  .workspace-grid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(220px, .8fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .app-shell {
+    width: calc(100% - 28px);
+  }
+
+  .app-navigation-header {
+    grid-template-columns: 1fr auto;
+    padding-inline: 14px;
+  }
+
+  .welcome {
+    margin-top: 24px;
+  }
+
+  .welcome h1 {
+    max-width: 620px;
+    font-size: clamp(27px, 7.5vw, 35px);
+  }
+
+  .dashboard-metric {
+    min-height: 64px;
+    padding: 8px 9px;
+  }
+
+  .dashboard-metric strong {
+    font-size: 21px;
+  }
+
+  .dashboard-metric span {
+    font-size: 10px;
+  }
+
+  .task-section,
+  .course-section {
+    padding: 14px;
+  }
+
+  .task-row {
+    grid-template-columns: 55px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .task-date {
+    min-height: 53px;
+  }
+
+  .task-timing {
+    grid-column: 2;
+    align-items: flex-start;
+    padding-top: 0;
+    text-align: left;
+  }
+
+  .archive-summary {
+    margin-top: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+  .app-shell {
+    width: calc(100% - 22px);
+  }
+
+  .dashboard-metric span {
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
   }
 }
